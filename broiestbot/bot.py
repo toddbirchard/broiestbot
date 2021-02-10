@@ -35,7 +35,7 @@ class Bot(RoomManager):
         self.set_font_face("Arial")
         self.set_font_size(11)
 
-    def _create_message(
+    async def _create_message(
         self,
         cmd_type,
         content,
@@ -66,13 +66,13 @@ class Bot(RoomManager):
         elif cmd_type == "crypto" and not args:
             return get_crypto(command)
         elif cmd_type == "random":
-            return random_image(content)
+            return await random_image(content)
         elif cmd_type == "stock" and args:
             return get_stock(args)
         elif cmd_type == "storage":
-            return fetch_image_from_gcs(content)
+            return await fetch_image_from_gcs(content)
         elif cmd_type == "giphy":
-            return giphy_image_search(content)
+            return await giphy_image_search(content)
         elif cmd_type == "weather" and args:
             return weather_by_location(
                 args, self.weather, room.name, user.name.title().lower()
@@ -82,11 +82,11 @@ class Bot(RoomManager):
         elif cmd_type == "imdb" and args:
             return find_imdb_movie(args)
         elif cmd_type == "nsfw" and args is None:
-            return get_redgifs_gif("lesbians", after_dark_only=False)
+            return await get_redgifs_gif("lesbians", after_dark_only=False)
         elif cmd_type == "nsfw" and args:
-            return get_redgifs_gif(args, after_dark_only=True)
+            return await get_redgifs_gif(args, after_dark_only=True)
         elif cmd_type == "urban" and args:
-            return get_urban_definition(args)
+            return await get_urban_definition(args)
         elif cmd_type == "420" and args is None:
             return blaze_time_remaining()
         elif cmd_type == "sms" and args and user:
@@ -100,12 +100,14 @@ class Bot(RoomManager):
         LOGGER.warning(f"No response for command `{command}` {args}")
         return None
 
-    def on_message(self, room: Room, user: User, message: Message):
+    async def on_message(self, room: Room, user: User, message: Message):
         """Boilerplate function trigger on message."""
         chat_message = message.body.lower()
         if chat_message[0] == "!":
             cmd, args = self._parse_command(chat_message)
-            response = self._get_response(chat_message, cmd, args, room, user=user)
+            response = await self._get_response(
+                chat_message, cmd, args, room, user=user
+            )
             if response:
                 room.message(response)
 
@@ -143,7 +145,7 @@ class Bot(RoomManager):
             return cmd, args
         return user_msg, None
 
-    def _get_response(
+    async def _get_response(
         self,
         chat_message: str,
         cmd: str,
@@ -170,7 +172,7 @@ class Bot(RoomManager):
             return None
         command = self.commands.find_row("command", cmd)
         if command is not None:
-            return self._create_message(
+            return await self._create_message(
                 command["type"],
                 command["response"],
                 command=cmd,
@@ -178,7 +180,7 @@ class Bot(RoomManager):
                 room=room,
                 user=user,
             )
-        return self._giphy_fallback(chat_message)
+        return await self._giphy_fallback(chat_message)
 
     @staticmethod
     def _create_link_preview(room: Room, url: str) -> None:
@@ -206,7 +208,7 @@ class Bot(RoomManager):
         room.message("hellouughhgughhg?")
 
     @staticmethod
-    def _giphy_fallback(message: str) -> Optional[str]:
+    async def _giphy_fallback(message: str) -> Optional[str]:
         """
         Default to Giphy for non-existent commands.
 
@@ -214,9 +216,9 @@ class Bot(RoomManager):
         :type message: str
         :returns: Optional[str]
         """
-        query = message[1::].lower().lstrip().rstrip()
+        query = message[1::].lower().lstrip().rstrip().replace("!", "")
         if len(query) > 1:
-            return giphy_image_search(query)
+            return await giphy_image_search(query)
 
     @staticmethod
     def _ban_word(room: Room, message: Message, user: User, silent=False) -> None:

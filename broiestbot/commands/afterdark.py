@@ -8,7 +8,7 @@ import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
-from config import GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET, REDGIFS_ACCESS_KEY
+from config import REDGIFS_ACCESS_KEY
 from logger import LOGGER
 
 
@@ -28,7 +28,7 @@ def is_after_dark() -> bool:
     return False
 
 
-def get_redgifs_gif(query: str, after_dark_only: bool = False) -> Optional[str]:
+async def get_redgifs_gif(query: str, after_dark_only: bool = False) -> Optional[str]:
     """
     Fetch a special kind of gif, if you know what I mean ;).
 
@@ -53,10 +53,7 @@ def get_redgifs_gif(query: str, after_dark_only: bool = False) -> Optional[str]:
                     image_json = results[rand]
                     image_url = image_json.get("max1mbGif")
                     if image_url is not None:
-                        image_status = requests.get(image_url)
-                        if image_status.status_code != 200:
-                            get_redgifs_gif(query, after_dark_only=False)
-                        return image_url
+                        return await image_url
         except HTTPError as e:
             LOGGER.warning(
                 f"HTTPError while fetching nsfw image for `{query}`: {e.response.content}"
@@ -84,30 +81,6 @@ def get_redgifs_gif(query: str, after_dark_only: bool = False) -> Optional[str]:
             use_aliases=True,
         )
     return "https://i.imgur.com/oGMHkqT.jpg"
-
-
-@LOGGER.catch
-def gfycat_auth_token() -> Optional[str]:
-    """
-    Get auth token for gfycat.
-
-    :returns: Optional[str]
-    """
-    endpoint = "https://api.gfycat.com/v1/oauth/token"
-    body = {
-        "grant_type": "client_credentials",
-        "client_id": GFYCAT_CLIENT_ID,
-        "client_secret": GFYCAT_CLIENT_SECRET,
-    }
-    headers = {"Content-Type": "application/json"}
-    try:
-        req = requests.post(endpoint, json=body, headers=headers)
-        if req.status_code == 200:
-            return req.json().get("access_token")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError when fetching gfycat auth token: {e.response.content}")
-    except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching gfycat auth token: {e}")
 
 
 def redgifs_auth_token() -> Optional[str]:

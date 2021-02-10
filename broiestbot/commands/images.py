@@ -1,6 +1,5 @@
 """Fetch memes via a variety of methods."""
 from random import randint
-from typing import Optional
 
 import requests
 from emoji import emojize
@@ -12,7 +11,7 @@ from config import GIPHY_API_KEY, GOOGLE_BUCKET_NAME, GOOGLE_BUCKET_URL
 from logger import LOGGER
 
 
-def fetch_image_from_gcs(subdirectory: str) -> str:
+async def fetch_image_from_gcs(subdirectory: str) -> str:
     """
     Get a random image from Google Cloud Storage bucket.
 
@@ -24,10 +23,10 @@ def fetch_image_from_gcs(subdirectory: str) -> str:
     image_list = [image.name for image in images if "." in image.name]
     rand = randint(0, len(image_list) - 1)
     image = GOOGLE_BUCKET_URL + GOOGLE_BUCKET_NAME + "/" + image_list[rand]
-    return image
+    return await image
 
 
-def giphy_image_search(query: str) -> str:
+async def giphy_image_search(query: str) -> str:
     """
     Perform a gif image and return a random result from the top-20 images.
 
@@ -49,7 +48,7 @@ def giphy_image_search(query: str) -> str:
         if len(req.json()["data"]) == 0:
             return "image not found :("
         image = req.json()["data"][0]["images"]["downsized"]["url"]
-        return image
+        return await image
     except HTTPError as e:
         LOGGER.error(f"Giphy failed to fetch `{query}`: {e.response.content}")
         return emojize(
@@ -74,7 +73,7 @@ def giphy_image_search(query: str) -> str:
         )
 
 
-def random_image(message: str) -> str:
+async def random_image(message: str) -> str:
     """
     Select a random image from a fixed set associated with a command.
     NOTE: This is a legacy command which should later be replaced with `fetch_image_from_gcs`.
@@ -86,7 +85,7 @@ def random_image(message: str) -> str:
     try:
         image_list = message.replace(" ", "").split(";")
         random_pic = image_list[randint(0, len(image_list) - 1)]
-        return random_pic
+        return await random_pic
     except KeyError as e:
         LOGGER.warning(f"KeyError when fetching random image: {e}")
         return emojize(

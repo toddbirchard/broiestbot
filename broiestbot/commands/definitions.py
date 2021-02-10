@@ -7,7 +7,7 @@ from clients import wiki
 from logger import LOGGER
 
 
-def get_urban_definition(term: str) -> str:
+async def get_urban_definition(term: str) -> str:
     """
     Fetch Urban Dictionary definition for a given phrase or word.
 

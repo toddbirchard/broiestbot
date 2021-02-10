@@ -889,7 +889,7 @@ class Room:
     def disconnect(self):
         """Disconnect."""
         self._disconnect()
-        self._callEvent("on_disconnect")
+        self._call_event("on_disconnect")
 
     def _disconnect(self):
         """Disconnect from the server."""
@@ -907,15 +907,15 @@ class Room:
         """Authenticate."""
         # login as name with password
         if self.mgr.name and self.mgr.password:
-            self._sendCommand(
+            self._send_command(
                 "bauth", self.name, self._uid, self.mgr.name, self.mgr.password
             )
             self._currentname = self.mgr.name
         # login as anon
         else:
-            self._sendCommand("bauth", self.name, "", "", "")
+            self._send_command("bauth", self.name, "", "", "")
 
-        self._setWriteLock(True)
+        self._set_write_ock(True)
 
     ####
     # Properties
@@ -1013,7 +1013,7 @@ class Room:
     ####
     # Feed/process
     ####
-    def _feed(self, data):
+    async def _feed(self, data):
         """
         Feed data to the connection.
 
@@ -1027,7 +1027,7 @@ class Room:
                 key = _ws.check_headers(headers)
                 if key != "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=":
                     self._disconnect()
-                    self._callEvent("on_connect_fail")
+                    await self._call_event("on_connect_fail")
                 else:
                     self._auth()
                     self._connected = True
@@ -1042,7 +1042,7 @@ class Room:
                     if info.opcode == _ws.CLOSE:
                         self._disconnect()
                     elif info.opcode == _ws.TEXT:
-                        self._process(payload)
+                        await self._process(payload)
                     elif debug:
                         print(
                             "unhandled frame: "
@@ -1058,14 +1058,14 @@ class Room:
                     self._process(food.decode(errors="replace").rstrip("\r\n"))
                 self._rbuf = data[-1]
 
-    def _process(self, data):
+    async def _process(self, data):
         """
         Process a command string.
 
         :type data: str
         :param data: the command string
         """
-        self._callEvent("on_raw", data)
+        await self._call_event("on_raw", data)
         data = data.split(":")
         cmd, args = data[0], data[1:]
         func = "_rcmd_" + cmd
@@ -1087,11 +1087,11 @@ class Room:
             self.user._nameColor = n
         # if got name, join room as name and no password
         elif args[2] == "N" and self.mgr.password is None:
-            self._sendCommand("blogin", self.mgr.name)
+            self._send_command("blogin", self.mgr.name)
             self._currentname = self.mgr.name
         # if got password but fail to login
         elif args[2] != "M":  # unsuccessful login
-            self._callEvent("on_login_fail")
+            self._call_event("on_login_fail")
             self.disconnect()
         self._owner = get_user(args[0])
         self._uid = args[1]
@@ -1101,24 +1101,24 @@ class Room:
 
     def _rcmd_denied(self, args):
         self._disconnect()
-        self._callEvent("on_connect_fail")
+        self._call_event("on_connect_fail")
 
     def _rcmd_inited(self, args):
-        self._sendCommand("g_participants", "start")
-        self._sendCommand("getpremium", "1")
+        self._send_command("g_participants", "start")
+        self._send_command("getpremium", "1")
         self.requestBanlist()
         self.requestUnBanlist()
         if self._connectAmmount == 0:
-            self._callEvent("on_connect")
+            self._call_event("on_connect")
             for msg in reversed(self._i_log):
                 user = msg.user
-                self._callEvent("on_history_message", user, msg)
+                self._call_event("on_history_message", user, msg)
                 self._addHistory(msg)
             del self._i_log
         else:
-            self._callEvent("on_reconnect")
+            self._call_event("on_reconnect")
         self._connectAmmount += 1
-        self._setWriteLock(False)
+        self._set_write_ock(False)
 
     def _rcmd_premium(self, args):
         if float(args[1]) > time.time():
@@ -1136,11 +1136,11 @@ class Room:
         premods = self._mods
         for user in mods - premods:  # modded
             self._mods.add(user)
-            self._callEvent("on_mod_add", user)
+            self._call_event("on_mod_add", user)
         for user in premods - mods:  # demodded
             self._mods.remove(user)
-            self._callEvent("on_mod_remove", user)
-        self._callEvent("on_mod_change")
+            self._call_event("on_mod_remove", user)
+        self._call_event("on_mod_change")
 
     def _rcmd_b(self, args):
         mtime = float(args[0])
@@ -1198,7 +1198,7 @@ class Room:
             del self._mqueue[args[0]]
             msg.attach(self, args[1])
             self._addHistory(msg)
-            self._callEvent("on_message", msg.user, msg)
+            self._call_event("on_message", msg.user, msg)
         # possible this came first (out of order)
         else:
             self._uqueue[args[0]] = args[1]
@@ -1255,7 +1255,7 @@ class Room:
             del self._uqueue[i]
             msg.attach(self, msgid)
             self._addHistory(msg)
-            self._callEvent("on_message", msg.user, msg)
+            self._call_event("on_message", msg.user, msg)
         else:
             self._mqueue[i] = msg
 
@@ -1282,7 +1282,7 @@ class Room:
             user.remove_session_id(self, args[1])
             self._userlist.remove(user)
             if user not in self._userlist or not self.mgr._userlistEventUnique:
-                self._callEvent("on_leave", user, puid)
+                self._call_event("on_leave", user, puid)
         else:  # join
             user.add_session_id(self, args[1])
             if user not in self._userlist:
@@ -1291,23 +1291,23 @@ class Room:
                 doEvent = False
             self._userlist.append(user)
             if doEvent or not self.mgr._userlistEventUnique:
-                self._callEvent("on_join", user, puid)
+                self._call_event("on_join", user, puid)
 
     def _rcmd_show_fw(self, args):
-        self._callEvent("on_flood_warning")
+        self._call_event("on_flood_warning")
 
     def _rcmd_show_tb(self, args):
-        self._callEvent("on_flood_ban")
+        self._call_event("on_flood_ban")
 
     def _rcmd_tb(self, args):
-        self._callEvent("on_flood_ban_repeat")
+        self._call_event("on_flood_ban_repeat")
 
     def _rcmd_delete(self, args):
         msg = self._msgs.get(args[0])
         if msg:
             if msg in self._history:
                 self._history.remove(msg)
-                self._callEvent("on_message_delete", msg.user, msg)
+                self._call_event("on_message_delete", msg.user, msg)
                 msg.detach()
 
     def _rcmd_deleteall(self, args):
@@ -1316,7 +1316,7 @@ class Room:
 
     def _rcmd_n(self, args):
         self._userCount = int(args[0], 16)
-        self._callEvent("on_user_count_change")
+        self._call_event("on_user_count_change")
 
     def _rcmd_blocklist(self, args):
         self._banlist = dict()
@@ -1335,7 +1335,7 @@ class Room:
                 "time": float(params[3]),
                 "src": get_user(params[4]),
             }
-        self._callEvent("on_banlist_update")
+        self._call_event("on_banlist_update")
 
     def _rcmd_unblocklist(self, args):
         self._unbanlist = dict()
@@ -1354,7 +1354,7 @@ class Room:
                 "time": float(params[3]),
                 "src": get_user(params[4]),
             }
-        self._callEvent("on_unbanlist_update")
+        self._call_event("on_unbanlist_update")
 
     def _rcmd_blocked(self, args):
         if args[2] == "":
@@ -1368,7 +1368,7 @@ class Room:
             "time": float(args[4]),
             "src": user,
         }
-        self._callEvent("on_ban", user, target)
+        self._call_event("on_ban", user, target)
 
     def _rcmd_unblocked(self, args):
         if args[2] == "":
@@ -1383,7 +1383,7 @@ class Room:
             "time": float(args[4]),
             "src": user,
         }
-        self._callEvent("on_unban", user, target)
+        self._call_event("on_unban", user, target)
 
     ####
     # Commands
@@ -1391,20 +1391,20 @@ class Room:
     def login(self, name, password=None):
         """login as a user or set a name in room"""
         if password:
-            self._sendCommand("blogin", name, password)
+            self._send_command("blogin", name, password)
         else:
-            self._sendCommand("blogin", name)
+            self._send_command("blogin", name)
         self._currentname = name
 
     def logout(self):
         """logout of user in a room"""
-        self._sendCommand("blogout")
+        self._send_command("blogout")
         self._currentname = self._botname
 
     def ping(self):
         """Send a ping."""
-        self._sendCommand("")
-        self._callEvent("on_ping")
+        self._send_command("")
+        self._call_event("on_ping")
 
     def rawMessage(self, msg):
         """
@@ -1414,7 +1414,7 @@ class Room:
         :param msg: message
         """
         if not self._silent:
-            self._sendCommand("bmsg:tl2r", msg)
+            self._send_command("bmsg:tl2r", msg)
 
     def message(self, msg, **kwargs):
         """
@@ -1462,17 +1462,17 @@ class Room:
         if self.mgr._password is not None:
             msg = "<n" + self.user.nameColor + "/>" + msg
         if channels_flags:
-            self._sendCommand("bm", "ibrs", str(channels_flags), msg)
+            self._send_command("bm", "ibrs", str(channels_flags), msg)
         else:
             self.rawMessage(msg)
 
     def setBgMode(self, mode):
         """turn on/off bg"""
-        self._sendCommand("msgbg", str(mode))
+        self._send_command("msgbg", str(mode))
 
     def setRecordingMode(self, mode):
         """turn on/off rcecording"""
-        self._sendCommand("msgmedia", str(mode))
+        self._send_command("msgmedia", str(mode))
 
     def addMod(self, user):
         """
@@ -1481,8 +1481,8 @@ class Room:
         :type user: User
         :param user: User to mod.
         """
-        if self.getLevel(get_user(self.currentname)) == 2:
-            self._sendCommand("addmod", user.name)
+        if self.get_level(get_user(self.currentname)) == 2:
+            self._send_command("addmod", user.name)
 
     def removeMod(self, user):
         """
@@ -1491,8 +1491,8 @@ class Room:
         :type user: User
         :param user: User to demod.
         """
-        if self.getLevel(get_user(self.currentname)) == 2:
-            self._sendCommand("removemod", user.name)
+        if self.get_level(get_user(self.currentname)) == 2:
+            self._send_command("removemod", user.name)
 
     def flag(self, message):
         """
@@ -1501,7 +1501,7 @@ class Room:
         :type message: Message
         :param message: message to flag
         """
-        self._sendCommand("g_flag", message.msgid)
+        self._send_command("g_flag", message.msgid)
 
     def flagUser(self, user):
         """
@@ -1513,7 +1513,7 @@ class Room:
         @rtype: bool
         @return: whether a message to flag was found
         """
-        msg = self.getLastMessage(user)
+        msg = self.get_last_message(user)
         if msg:
             self.flag(msg)
             return True
@@ -1526,8 +1526,8 @@ class Room:
         :type message: Message
         :param message: message to delete
         """
-        if self.getLevel(self.user) > 0:
-            self._sendCommand("delmsg", message.msgid)
+        if self.get_level(self.user) > 0:
+            self._send_command("delmsg", message.msgid)
 
     def deleteUser(self, user):
         """
@@ -1536,10 +1536,10 @@ class Room:
         :type message: User
         :param message: delete user's last message
         """
-        if self.getLevel(self.user) > 0:
-            msg = self.getLastMessage(user)
+        if self.get_level(self.user) > 0:
+            msg = self.get_last_message(user)
             if msg:
-                self._sendCommand("delmsg", msg.msgid)
+                self._send_command("delmsg", msg.msgid)
             return True
         return False
 
@@ -1551,7 +1551,7 @@ class Room:
         return self.deleteMessage(message)
 
     def rawClearUser(self, unid, ip, user):
-        self._sendCommand("delallmsg", unid, ip, user)
+        self._send_command("delallmsg", unid, ip, user)
 
     def clearUser(self, user):
         """
@@ -1563,8 +1563,8 @@ class Room:
         @rtype: bool
         @return: whether a message to delete was found
         """
-        if self.getLevel(self.user) > 0:
-            msg = self.getLastMessage(user)
+        if self.get_level(self.user) > 0:
+            msg = self.get_last_message(user)
             if msg:
                 if msg.user.name[0] in ["!", "#"]:
                     self.rawClearUser(msg.unid, msg.ip, "")
@@ -1575,8 +1575,8 @@ class Room:
 
     def clearall(self):
         """Clear all messages. (Owner only)"""
-        if self.getLevel(self.user) == 2:
-            self._sendCommand("clearall")
+        if self.get_level(self.user) == 2:
+            self._send_command("clearall")
 
     def rawBan(self, name, ip, unid):
         """
@@ -1590,7 +1590,7 @@ class Room:
         :type unid: str
         :param unid: unid
         """
-        self._sendCommand("block", unid, ip, name)
+        self._send_command("block", unid, ip, name)
 
     def ban(self, msg):
         """
@@ -1599,7 +1599,7 @@ class Room:
         :type message: Message
         :param message: message to ban sender of
         """
-        if self.getLevel(self.user) > 0:
+        if self.get_level(self.user) > 0:
             self.rawBan(msg.user.name, msg.ip, msg.unid)
 
     def banUser(self, user):
@@ -1612,7 +1612,7 @@ class Room:
         @rtype: bool
         @return: whether a message to ban the user was found
         """
-        msg = self.getLastMessage(user)
+        msg = self.get_last_message(user)
         if msg:
             self.ban(msg)
             return True
@@ -1620,11 +1620,11 @@ class Room:
 
     def requestBanlist(self):
         """Request an updated banlist."""
-        self._sendCommand("blocklist", "block", "", "next", "500")
+        self._send_command("blocklist", "block", "", "next", "500")
 
     def requestUnBanlist(self):
         """Request an updated banlist."""
-        self._sendCommand("blocklist", "unblock", "", "next", "500")
+        self._send_command("blocklist", "unblock", "", "next", "500")
 
     def rawUnban(self, name, ip, unid):
         """
@@ -1638,7 +1638,7 @@ class Room:
         :type unid: str
         :param unid: unid
         """
-        self._sendCommand("removeblock", unid, ip, name)
+        self._send_command("removeblock", unid, ip, name)
 
     def unban(self, user):
         """
@@ -1650,7 +1650,7 @@ class Room:
         @rtype: bool
         @return: whether it succeeded
         """
-        rec = self._getBanRecord(user)
+        rec = self._get_ban_record(user)
         if rec:
             self.rawUnban(rec["target"].name, rec["ip"], rec["unid"])
             return True
@@ -1660,12 +1660,12 @@ class Room:
     ####
     # Util
     ####
-    def _getBanRecord(self, user):
+    def _get_ban_record(self, user):
         if user in self._banlist:
             return self._banlist[user]
         return None
 
-    def _callEvent(self, evt, *args, **kw):
+    async def _call_event(self, evt, *args, **kw):
         getattr(self.mgr, evt)(self, *args, **kw)
         self.mgr.on_event_called(self, evt, *args, **kw)
 
@@ -1675,13 +1675,13 @@ class Room:
         else:
             self.mgr._write(self, data)
 
-    def _setWriteLock(self, lock):
+    def _set_write_ock(self, lock):
         self._wlock = lock
         if not self._wlock:
             self._write(self._wlockbuf)
             self._wlockbuf = b""
 
-    def _sendCommand(self, *args):
+    def _send_command(self, *args):
         """
         Send a command.
 
@@ -1700,7 +1700,7 @@ class Room:
         else:
             self._write(payload.encode())
 
-    def getLevel(self, user):
+    def get_level(self, user):
         """get the level of user in a room"""
         if user == self._owner:
             return 2
@@ -1708,7 +1708,7 @@ class Room:
             return 1
         return 0
 
-    def getLastMessage(self, user=None):
+    def get_last_message(self, user=None):
         """get last message said by user in a room"""
         if user:
             try:
@@ -1725,9 +1725,8 @@ class Room:
                 return self._history[-1]
             except IndexError:
                 return None
-        return None
 
-    def findUser(self, name):
+    def find_user(self, name):
         """
         check if user is in the room
 
@@ -2041,7 +2040,7 @@ class RoomManager:
             f"[{room.name}] [{user.name.title()}]: {user.name} was demodded in {room.name}."
         )
 
-    def on_message(self, room, user, message):
+    async def on_message(self, room, user, message):
         """
         Called when a message gets received.
 
