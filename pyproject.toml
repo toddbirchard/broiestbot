@@ -19,6 +19,8 @@ keywords = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
+asyncio = "*"
+aiohttp = "*"
 requests = "*"
 sqlalchemy = "*"
 pymysql = "*"

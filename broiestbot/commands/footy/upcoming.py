@@ -2,6 +2,8 @@
 from datetime import datetime
 from typing import List, Optional
 
+import asyncio
+from aiohttp import ClientError, ClientSession, InvalidURL
 import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
@@ -27,25 +29,49 @@ def footy_upcoming_fixtures(room: str, username: str) -> str:
 
     :returns: str
     """
-    upcoming_fixtures = "\n\n\n\n"
-    i = 0
-    for league_name, league_id in FOOTY_LEAGUES.items():
-        league_fixtures = footy_upcoming_fixtures_per_league(
-            league_name, league_id, room, username
-        )
-        if league_fixtures is not None and i < 5:
-            i += 1
-            upcoming_fixtures += emojize(f"<b>{league_name}:</b>\n", use_aliases=True)
-            upcoming_fixtures += league_fixtures + "\n"
-    if upcoming_fixtures != "\n\n\n\n":
-        return upcoming_fixtures
+    fixtures = asyncio.run(get_upcoming_fixtures(room, username)
+    if fixtures:
+        return "\n\n\n\n".join(fixtures[:5])
     return emojize(
         ":warning: Couldn't find any upcoming fixtures :( :warning:", use_aliases=True
     )
 
 
-def footy_upcoming_fixtures_per_league(
-    league_name, league_id: int, room: str, username: str
+async def get_upcoming_fixtures(room: str, username: str):
+    headers = {
+        "content-type": "application/json",
+        "connection": "keep-alive",
+        "accept": "*/*",
+    }
+    async with ClientSession(headers=headers) as session:
+        tasks = await create_tasks(session, room, username)
+        return await asyncio.gather(*tasks)
+
+
+async def create_tasks(
+    session: ClientSession, room: str, username: str
+) -> List[Task]:
+    """
+    Create asyncio tasks to be execute the `fetch_and_save_url` coroutinne.
+
+    :param ClientSession session: Async HTTP requests session.
+    :param List[str] urls: Resource URLs to fetch.
+    :param str directory: Target directory to save fetched data.
+
+    :returns: List[Task]
+    """
+    tasks = []
+    for league_name, league_id in FOOTY_LEAGUES.items():
+        task = asyncio.create_task(
+            footy_upcoming_fixtures_per_league(session, league_name, league_id, room, username)
+        )
+        tasks.append(task)
+    return tasks
+
+
+
+async def footy_upcoming_fixtures_per_league(
+    session: ClientSession, league_name, league_id: int, room: str, username: str
 ) -> Optional[str]:
     """
     Get this week's upcoming fixtures for a given league or tournament.
@@ -59,27 +85,29 @@ def footy_upcoming_fixtures_per_league(
     """
     try:
         upcoming_fixtures = ""
-        fixtures = upcoming_fixture_fetcher(league_name, league_id, room, username)
+        fixtures = await upcoming_fixture_fetcher(league_name, league_id, room, username)
         if bool(fixtures) is not False:
+            upcoming_fixtures += emojize(f"<b>{league_name}:</b>\n", use_aliases=True)
             for i, fixture in enumerate(fixtures):
                 date = datetime.strptime(
                     fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z"
                 )
-                upcoming_fixtures += add_upcoming_fixture(fixture, date, room, username)
-            return upcoming_fixtures
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
-    except KeyError as e:
-        LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
+                upcoming_fixtures += await add_upcoming_fixture(fixture, date, room, username)
+        upcoming_fixtures += "\n"
+        return upcoming_fixtures
+    except InvalidURL as e:
+        LOGGER.error(f"Unable to fetch invalid footy URL `{url}`: {e}")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching footy URL `{url}`: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def upcoming_fixture_fetcher(
+async def upcoming_fixture_fetcher(
     league_name: str, league_id: int, room: str, username: str
 ) -> Optional[List[dict]]:
     """
-    Fetch next 5 upcoming fixtures for a given league.
+    Fetch next 3-6 upcoming fixtures for a given league.
 
     :param str league_name: Name of the league/cup.
     :param int league_id: ID of footy league/cup.
@@ -95,7 +123,7 @@ def upcoming_fixture_fetcher(
             "status": "NS",
         }
         params.update(get_preferred_timezone(room, username))
-        return fetch_upcoming_fixtures(params)
+        return await fetch_upcoming_fixtures(params)
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
     except KeyError as e:
@@ -104,7 +132,7 @@ def upcoming_fixture_fetcher(
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_upcoming_fixtures(params: dict) -> Optional[List[dict]]:
+aync def fetch_upcoming_fixtures(params: dict) -> Optional[List[dict]]:
     """
     Makes request to fetch upcoming fixtures with retry in case season is wrong.
 
@@ -112,15 +140,19 @@ def fetch_upcoming_fixtures(params: dict) -> Optional[List[dict]]:
 
     :returns: Optional[List[dict]]
     """
-    resp = requests.get(
-        FOOTY_FIXTURES_ENDPOINT,
-        headers=FOOTY_HTTP_HEADERS,
-        params=params,
-    )
-    return resp.json().get("response")
+    fixture_list = []
+    async with session.get(FOOTY_FIXTURES_ENDPOINT, params=params) as resp:
+        body = await resp.read()
+        if body:
+            fixtures = body.get("response")
+            for fixture in fixtures:
+                formatted_fixture = await format_upcoming_fixture(fixture, date, room, username)
+                fixture_list.append(formatted_fixture)
+    if bool(fixture_list):
+        return fixture_list
 
 
-def add_upcoming_fixture(
+async def format_upcoming_fixture(
     fixture: dict, date: datetime, room: str, username: str
 ) -> str:
     """
