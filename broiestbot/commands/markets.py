@@ -80,16 +80,23 @@ def get_top_crypto() -> str:
             "Accepts": "application/json",
             "X-CMC_PRO_API_KEY": COINMARKETCAP_API_KEY,
         }
-        resp = requests.get(
-            COINMARKETCAP_LATEST_ENDPOINT, params=params, headers=headers
+        body = {
+            "aux": 5,
+            "convertIds": "1,1027,2781",
+            "cryptoAux": "ath,atl,high24h,low24h,max_supply,circulating_supply,total_supply,volume_7d,volume_30d,tvl,audit,cmc_rank",
+            "watchListType": "ORDINARY"
+        }
+        resp = requests.post(
+            COINMARKETCAP_LATEST_ENDPOINT, params=params, headers=headers, json=body
         )
+
         if resp.status_code == 200:
             top_coins = "\n\n\n"
-            coins = resp.json().get("data")
+            coins = resp.json().get("watchLists")[0]["cryptoCurrencies"]
             for i, coin in enumerate(coins):
-                top_coins += f"<b>{coin['name']} ({coin['symbol']})</b> ${'{:.3f}'.format(coin['quote']['USD']['price'])}\n"
-                top_coins += f"1d change of {'{:.2f}'.format(coin['quote']['USD']['percent_change_24h'])}%\n"
-                top_coins += f"7d change of {'{:.2f}'.format(coin['quote']['USD']['percent_change_7d'])}%\n"
+                top_coins += f"<b>{coin['name']} ({coin['symbol']})</b> ${'{:.3f}'.format(coin['quotes'][1]['price'])}\n"
+                top_coins += f"1d change of {'{:.2f}'.format(coin['quotes'][1]['percentChange24h'])}%\n"
+                top_coins += f"7d change of {'{:.2f}'.format(coin['quotes'][1]['percentChange7d'])}%\n"
                 if i < len(coins):
                     top_coins += "\n"
             return top_coins

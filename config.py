@@ -83,7 +83,7 @@ ALPHA_VANTAGE_API_KEY = environ.get("ALPHA_VANTAGE_API_KEY")
 ALPHA_VANTAGE_PRICE_BASE_URL = "https://api.cryptowat.ch/markets/bitfinex/"
 ALPHA_VANTAGE_CHART_BASE_URL = "https://www.alphavantage.co/query/"
 COINMARKETCAP_LATEST_ENDPOINT = (
-    "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
+    "https://api.coinmarketcap.com/asset/v3/watchlist/query"
 )
 COINMARKETCAP_API_KEY = getenv("COINMARKETCAP_API_KEY")
 
