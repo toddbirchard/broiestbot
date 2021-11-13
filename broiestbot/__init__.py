@@ -8,9 +8,7 @@ from config import CHATANGO_ROOMS, CHATANGO_TEST_ROOM, CHATANGO_USERS, ENVIRONME
 
 
 def join_rooms():
-    """
-    Create bot instance for single Chatango room.
-    """
+    """Create individual bot instance for each Chatango room."""
     if ENVIRONMENT == "development":
         start_bot_development_mode(
             CHATANGO_USERS["BROIESTBRO"]["USERNAME"],

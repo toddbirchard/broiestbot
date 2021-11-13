@@ -80,8 +80,10 @@ class Bot(RoomManager):
         """
         if cmd_type == "basic":
             return basic_message(content)
-        elif cmd_type == "crypto":
+        elif cmd_type == "topcrypto":
             return get_top_crypto()
+        elif cmd_type == "crypto" and args:
+            return get_crypto(args)
         elif cmd_type == "random":
             return random_image(content)
         elif cmd_type == "stock" and args:
