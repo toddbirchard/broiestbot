@@ -24,20 +24,23 @@ def json_formatter(record: dict):
 
         :returns: str
         """
-        chat_data = re.findall(r"\[(\S+)\]", log["message"])
-        if bool(chat_data):
-            room = chat_data[0]
-            user = chat_data[1]
-            ip = chat_data[2]
-            subset = {
-                "time": log["time"].strftime("%m/%d/%Y, %H:%M:%S"),
-                "message": log["message"].split(": ", 1)[1],
-                "level": log["level"].name,
-                "room": room,
-                "user": user,
-                "ip": ip,
-            }
-            return json.dumps(subset)
+        try:
+            chat_data = re.findall(r"\[(\S+)\]", log["message"])
+            if bool(chat_data):
+                room = chat_data[0]
+                user = chat_data[1]
+                ip = chat_data[2]
+                subset = {
+                    "time": log["time"].strftime("%m/%d/%Y, %H:%M:%S"),
+                    "message": log["message"].split(": ", 1)[1],
+                    "level": log["level"].name,
+                    "room": room,
+                    "user": user,
+                    "ip": ip,
+                }
+                return json.dumps(subset)
+        except Exception:
+            serialize_event(log)
 
     def serialize_event(log: dict) -> str:
         """
@@ -105,11 +108,10 @@ def log_formatter(record: dict) -> str:
 
     :param record: Log object containing log metadata & message.
     :type record: dict
+
     :returns: str
     """
-    if record["level"].name == "MESSAGE":
-        return "<fg #70acde>{time:MM-DD-YYYY HH:mm:ss}</fg #70acde> | <fg #cfe2f3>{level}</fg #cfe2f3>: <light-white>{message}</light-white>\n"
-    elif record["level"].name == "TRACE":
+    if record["level"].name == "TRACE":
         return "<fg #70acde>{time:MM-DD-YYYY HH:mm:ss}</fg #70acde> | <fg #cfe2f3>{level}</fg #cfe2f3>: <light-white>{message}</light-white>\n"
     elif record["level"].name == "INFO":
         return "<fg #70acde>{time:MM-DD-YYYY HH:mm:ss}</fg #70acde> | <fg #9cbfdd>{level}</fg #9cbfdd>: <light-white>{message}</light-white>\n"
@@ -127,7 +129,6 @@ def log_formatter(record: dict) -> str:
 def create_logger() -> logger:
     """Customer logger creation."""
     logger.remove()
-    logger.level("MESSAGE", no=1, color="<fg #70acde>", icon="💬")
     logger.add(stdout, colorize=True, catch=True, format=log_formatter)
     if ENVIRONMENT == "production":
         logger.add(

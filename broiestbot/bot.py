@@ -3,6 +3,7 @@ import re
 from typing import Optional, Tuple
 
 from emoji import emojize
+from ipdata.ipdata import IncompatibleParameters
 
 from broiestbot.commands import (
     all_leagues_golden_boot,
@@ -16,6 +17,7 @@ from broiestbot.commands import (
     fetch_fox_fixtures,
     fetch_image_from_gcs,
     find_imdb_movie,
+    footy_all_upcoming_fixtures,
     footy_live_fixtures,
     footy_predicts_today,
     footy_todays_upcoming_fixtures,
@@ -24,10 +26,12 @@ from broiestbot.commands import (
     get_crypto,
     get_english_translation,
     get_footy_odds,
+    get_live_nfl_games,
     get_olympic_medals_per_nation,
     get_redgifs_gif,
     get_song_lyrics,
     get_stock,
+    get_top_crypto,
     get_urban_definition,
     giphy_image_search,
     liga_standings,
@@ -37,8 +41,10 @@ from broiestbot.commands import (
     wiki_summary,
 )
 from chatango.ch import Message, Room, RoomManager, User
-from clients import db, geo
+from clients import geo
 from config import CHATANGO_BLACKLISTED_USERS
+from database import session
+from database.models import Chat, ChatangoUser, Command
 from logger import LOGGER
 
 
@@ -75,14 +81,14 @@ class Bot(RoomManager):
         """
         if cmd_type == "basic":
             return basic_message(content)
-        elif cmd_type == "crypto" and not args:
-            return get_crypto(command)
         elif cmd_type == "random":
             return random_image(content)
         elif cmd_type == "stock" and args:
             return get_stock(args)
         elif cmd_type == "storage":
             return fetch_image_from_gcs(content)
+        elif cmd_type == "crypto":
+            return get_crypto(content)
         elif cmd_type == "giphy":
             return giphy_image_search(content)
         elif cmd_type == "weather" and args:
@@ -91,8 +97,8 @@ class Bot(RoomManager):
             return wiki_summary(args)
         elif cmd_type == "imdb" and args:
             return find_imdb_movie(args)
-        elif cmd_type == "nsfw" and args is None:
-            return get_redgifs_gif("lesbians", user_name, after_dark_only=False)
+        elif cmd_type == "lesbians":
+            return get_redgifs_gif("lesbians", user_name)
         elif cmd_type == "nsfw" and args:
             return get_redgifs_gif(args, user_name, after_dark_only=True)
         elif cmd_type == "urban" and args:
@@ -109,6 +115,8 @@ class Bot(RoomManager):
             return bund_standings(content)
         elif cmd_type == "fixtures":
             return footy_upcoming_fixtures(room.room_name.lower(), user_name)
+        elif cmd_type == "allfixtures":
+            return footy_all_upcoming_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "livefixtures":
             return footy_live_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "livefixtureswithsubs":
@@ -135,6 +143,10 @@ class Bot(RoomManager):
             return get_footy_odds()
         elif cmd_type == "twitch":
             return get_all_live_twitch_streams()
+        elif cmd_type == "livenfl":
+            return get_live_nfl_games()
+        elif cmd_type == "topcrypto":
+            return get_top_crypto()
         # elif cmd_type == "youtube" and args:
         # return search_youtube_for_video(args)
         LOGGER.warning(f"No response for command `{command}` {args}")
@@ -142,7 +154,7 @@ class Bot(RoomManager):
 
     def on_message(self, room: Room, user: User, message: Message) -> None:
         """
-        Boilerplate function trigger on message.
+        Triggers upon every chat message to parse commands, validate users, and save chat logs.
 
         :param Room room: Chatango room.
         :param User user: User responsible for triggering command.
@@ -153,13 +165,15 @@ class Bot(RoomManager):
         chat_message = message.body.lower()
         user_name = user.name.title().lower()
         room_name = room.room_name.lower()
-        self.check_blacklisted_users(room, user_name, message)
+        self._check_blacklisted_users(room, user_name, message)
         self._get_user_data(room_name, user, message)
-        self.get_response(chat_message, room, user_name, message)
+        self._process_command(chat_message, room, user_name, message)
+        session.add(Chat(username=user_name, room=room_name, message=chat_message))
 
-    def get_response(
+    def _process_command(
         self, chat_message: str, room: Room, user_name: str, message: Message
     ) -> None:
+        """Determines if message is a bot command."""
         if re.match(r"^!!.+", chat_message):
             return self._giphy_fallback(chat_message[2::], room)
         elif re.match(r"^!ein+", chat_message):
@@ -204,17 +218,57 @@ class Bot(RoomManager):
 
         :returns: None
         """
-        if message.ip:
-            existing_user = db.fetch_user(room_name, user, message)
-            if existing_user is None:
-                ip_metadata = geo.lookup_user(message.ip)
-                metadata_df = geo.save_metadata(room_name, user.name, ip_metadata)
-                if type(metadata_df) != str:
-                    result, success = db.insert_data_from_dataframe(metadata_df)
-                    if success:
-                        LOGGER.success(result)
-                    else:
-                        LOGGER.error(result)
+        try:
+            if message.ip:
+                existing_user = (
+                    session.query(ChatangoUser)
+                    .filter(
+                        ChatangoUser.username == user.name.lower(),
+                        ChatangoUser.chatango_room == room_name,
+                        ChatangoUser.ip == message.ip,
+                    )
+                    .first()
+                )
+                if existing_user is None:
+                    user_metadata = geo.lookup_user(message.ip)
+                    # fmt: off
+                    session.add(
+                        ChatangoUser(
+                            username=user.name.lower().replace("!anon", "anon"),
+                            chatango_room=room_name,
+                            city=user_metadata.get("city"),
+                            region=user_metadata.get("region"),
+                            country_name=user_metadata.get("country_name"),
+                            latitude=user_metadata.get("latitude"),
+                            longitude=user_metadata.get("longitude"),
+                            postal=user_metadata.get("postal"),
+                            emoji_flag=user_metadata.get("emoji_flag"),
+                            status=user_metadata.get("status"),
+                            time_zone_name=user_metadata.get("time_zone").get("name") if user_metadata.get("time_zone") else None,
+                            time_zone_abbr=user_metadata.get("time_zone").get("abbr") if user_metadata.get("time_zone") else None,
+                            time_zone_offset=user_metadata.get("time_zone").get("offset") if user_metadata.get("time_zone") else None,
+                            time_zone_is_dst=user_metadata.get("time_zone").get("is_dst") if user_metadata.get("time_zone") else None,
+                            carrier_name=user_metadata.get("carrier").get("name") if user_metadata.get("carrier") else None,
+                            carrier_mnc=user_metadata.get("carrier").get("mnc") if user_metadata.get("carrier") else None,
+                            carrier_mcc=user_metadata.get("carrier").get("mcc") if user_metadata.get("carrier") else None,
+                            asn_asn=user_metadata.get("asn").get("asn") if user_metadata.get("asn") else None,
+                            asn_name=user_metadata.get("asn").get("name") if user_metadata.get("asn") else None,
+                            asn_domain=user_metadata.get("asn").get("domain") if user_metadata.get("asn") else None,
+                            asn_route=user_metadata.get("asn").get("route") if user_metadata.get("asn") else None,
+                            asn_type=user_metadata.get("asn").get("type") if user_metadata.get("asn") else None,
+                            time_zone_current_time=user_metadata.get("time_zone").get("current_time") if user_metadata.get("time_zone") else None,
+                            ip=message.ip
+                        )
+                    )
+                    # fmt: on
+        except IncompatibleParameters as e:
+            LOGGER.warning(
+                f"Failed to save data for {user.name} due to IncompatibleParameters: {e}"
+            )
+        except Exception as e:
+            LOGGER.warning(
+                f"Unexpected error while attempting to save data for {user.name}: {e}"
+            )
 
     @staticmethod
     def _parse_command(user_msg: str) -> Tuple[str, Optional[str]]:
@@ -247,11 +301,11 @@ class Bot(RoomManager):
         cmd, args = self._parse_command(chat_message[1::])
         if cmd == "tune":  # Avoid clashes with Acleebot
             return None
-        command = db.fetch_cmd_response(cmd)
+        command = session.query(Command).filter(Command.command == cmd).first()
         if command is not None:
             response = self.create_message(
-                command["type"],
-                command["response"],
+                command.type,
+                command.response,
                 command=cmd,
                 args=args,
                 room=room,
@@ -297,7 +351,7 @@ class Bot(RoomManager):
         """
         if user_name == "broiestbro":
             room.message(
-                f"lol stop talking to urself and get some friends u fuckin loser jfc kys @broiestbro"
+                f"stop talking to urself and get some friends u fuckin loser jfc kys @broiestbro"
             )
         else:
             room.message(f"@{user_name} *waves*")
@@ -347,7 +401,7 @@ class Bot(RoomManager):
         room.message("™")
 
     @staticmethod
-    def check_blacklisted_users(room: Room, user_name: str, message: Message) -> None:
+    def _check_blacklisted_users(room: Room, user_name: str, message: Message) -> None:
         """
         Ban and delete chat history of blacklisted user.
 

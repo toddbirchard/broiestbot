@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "broiestbot"
 version = "0.1.0"
-description = "Chatbot for the Chatango messaging platform."
+description = "Chat bot for the Chatango chat platform."
 authors = ["Todd Birchard <toddbirchard@gmail.com>"]
 maintainers = ["Todd Birchard <toddbirchard@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/toddbirchard/broiestbot/"
 repository = "https://github.com/toddbirchard/broiestbot/"
-documentation = "https://github.com/toddbirchard/broiestbot/"
+documentation = "https://github.com/toddbirchard/broiestbot/blob/master/README.md"
 keywords = [
     "Chatbot",
     "Chat",
@@ -50,11 +50,11 @@ google-api-python-client = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
-black = "^21.9b0"
-isort = "^5.9.3"
+black = "^21.11b1"
+isort = "^5.10.1"
 
 [tool.poetry.scripts]
-run = "broiestbot:init_bot"
+run = "wsgi:init_bot"
 
 [tool.poetry.urls]
 issues = "https://github.com/toddbirchard/broiestbot/issues"

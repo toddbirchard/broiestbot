@@ -1,10 +1,16 @@
 """Fetch crypto or stock market data."""
 import chart_studio
+import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
 from clients import cch, sch
-from config import PLOTLY_API_KEY, PLOTLY_USERNAME
+from config import (
+    COINMARKETCAP_API_KEY,
+    COINMARKETCAP_LATEST_ENDPOINT,
+    PLOTLY_API_KEY,
+    PLOTLY_USERNAME,
+)
 from logger import LOGGER
 
 # Plotly
@@ -60,3 +66,58 @@ def get_stock(symbol: str) -> str:
         return emojize(
             f":warning: i broke bc im a shitty bot :warning:", use_aliases=True
         )
+
+
+def get_top_crypto() -> str:
+    """
+    Fetch top 10 crypto coin performance.
+
+    :returns: str
+    """
+    try:
+        params = {"start": "1", "limit": "10", "convert": "USD"}
+        headers = {
+            "Accepts": "application/json",
+            "X-CMC_PRO_API_KEY": COINMARKETCAP_API_KEY,
+        }
+        resp = requests.get(
+            COINMARKETCAP_LATEST_ENDPOINT, params=params, headers=headers
+        )
+        if resp.status_code == 200:
+            coins = resp.json().get("data")
+            return format_top_crypto_response(coins)
+    except HTTPError as e:
+        LOGGER.warning(f"HTTPError while fetching top coins: {e.response.content}")
+        return emojize(
+            f":warning: FUCK the bot broke :warning:",
+            use_aliases=True,
+        )
+    except Exception as e:
+        LOGGER.warning(f"Unexpected exception while fetching top coins: {e}")
+        return emojize(
+            f":warning: FUCK the bot broke :warning:",
+            use_aliases=True,
+        )
+
+
+def format_top_crypto_response(coins: dict):
+    """
+    Format a response depicting top-10 coin performance by market cap.
+
+    :params dict coins: Performance of top 10 cryptocurrencies.
+
+    :returns: dict
+    """
+    try:
+        top_coins = "\n\n\n"
+        for i, coin in enumerate(coins):
+            top_coins += f"<b>{coin['name']} ({coin['symbol']})</b> ${'{:.3f}'.format(coin['quote']['USD']['price'])}\n"
+            top_coins += f"1d change of {'{:.2f}'.format(coin['quote']['USD']['percent_change_24h'])}%\n"
+            top_coins += f"7d change of {'{:.2f}'.format(coin['quote']['USD']['percent_change_7d'])}%\n"
+            if i < len(coins):
+                top_coins += "\n"
+        return top_coins
+    except KeyError as e:
+        LOGGER.error(f"KeyError while formatting top cryptocurrencies: {e}")
+    except Exception as e:
+        LOGGER.error(f"Unexpected exception while formatting top cryptocurrencies: {e}")
