@@ -1,8 +1,8 @@
+"""Define data models for chat commands, phrases, user logs, etc."""
+from database import engine
 from sqlalchemy import Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
-
-from database import engine
 
 Base = declarative_base()
 
@@ -84,6 +84,21 @@ class ChatangoUser(Base):
 
     def __repr__(self):
         return f"username={self.username}, chatango_room={self.chatango_room}, city={self.city}, region={self.ip}"
+
+
+class Weather(Base):
+    """Mapping of weather emojis to weather conditions."""
+
+    __tablename__ = "weather"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    code = Column(Integer, nullable=False)
+    condition = Column(Text, nullable=False)
+    icon = Column(String(255), nullable=False)
+    group = Column(String(255), nullable=False)
+
+    def __repr__(self):
+        return f"group={self.group}, icon={self.icon}, condition={self.condition}"
 
 
 Base.metadata.create_all(engine)
