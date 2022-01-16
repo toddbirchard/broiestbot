@@ -176,32 +176,28 @@ class Bot(RoomManager):
         persist_user_data(room_name, user, message, bot_username)
         persist_chat_data(user_name, room_name, chat_message, bot_username)
         if chat_message.startswith("!"):
-            self._process_command(chat_message, room, user_name, message)
+            self._process_command(chat_message, room, user_name)
         else:
-            self._process_phrase(chat_message, room, user_name, message)
+            self._process_phrase(chat_message, room, user_name, message, bot_username)
 
-    def _process_command(
-        self, chat_message: str, room: Room, user_name: str, message: Message
-    ) -> None:
+    def _process_command(self, chat_message: str, room: Room, user_name: str) -> None:
         """
         Determines if message is a bot command.
 
         :param str chat_message: Raw message sent by user.
         :param Room room: Chatango room object.
         :param str user_name: User responsible for triggering command.
-        :param Message message: Chatango message object to be parsed.
 
         :returns: None
         """
         if re.match(r"^!!.+", chat_message):
-            self._giphy_fallback(chat_message[2::], room)
+            return self._giphy_fallback(chat_message[2::], room)
         elif re.match(r"^!ein+", chat_message):
-            self._get_response("!ein", room, user_name)
+            return self._get_response("!ein", room, user_name)
         elif re.match(r"^!.+", chat_message):
-            self._get_response(chat_message, room, user_name)
+            return self._get_response(chat_message, room, user_name)
         # elif re.search(r"instagram.com/p/[a-zA-Z0-9_-]+", message.body):
         # self._create_link_preview(room, message.body)
-        LOGGER.info(f"[{room.room_name}] [{user_name}] [{message.ip}]: {message.body}")
 
     def _process_phrase(
         self, chat_message: str, room: Room, user_name: str, message: Message, bot_username: str
