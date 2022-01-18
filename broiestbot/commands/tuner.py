@@ -42,9 +42,7 @@ def get_channel_number(channel_name: str) -> str:
     :returns: str
     """
     try:
-        channel = [
-            channel for channel in CHANNEL_DATA if channel["channel"].lower() == channel_name
-        ]
+        channel = get_proper_caps(channel_name)
         return str(channel[0]["channelid"])
     except IndexError:
         err_msg = f"{channel_name} wasn't found, but I found the following channels: \n"
@@ -52,7 +50,7 @@ def get_channel_number(channel_name: str) -> str:
             channel for channel in CHANNEL_DATA if channel_name in channel["channel"].lower()
         ]
         for name in channel:
-            f"{err_msg} {name['channel']}\n"
+            err_msg += f"{name['channel']}\n"
         return err_msg
     except Exception as e:
         LOGGER.error(f"Unexpected error when getting channel number: {e}")
@@ -74,22 +72,19 @@ def tuner(channel_name: str, username: str) -> str:
                 channel_name = "Cartoon Network"
             if channel_name == "joop":
                 channel_name = "ABC"
-            num = get_channel_number(channel_name)
-            number = int(num)
-            number = str(number)
+            channel_number = get_channel_number(channel_name)
             capped = get_proper_caps(channel_name)
-            # some of this has to use ugly plus signs because format() breaks due to all the curlies
-            data = (
-                '{"jsonrpc":"2.0","method":"Player.Open","params":{"item":{"channelid":'
-                + number
-                + '}},"id":'
-                + current_milli_time()
-                + "}"
-            )
+            data = {
+                "jsonrpc": "2.0",
+                "method": "Player.Open",
+                "params": {"item": {"channelid": channel_number}},
+                "id": current_milli_time(),
+            }
             requests.post(
                 f"{CHANNEL_HOST}jsonrpc", headers=CHANNEL_TUNER_HEADERS, data=data, verify=False
             )
-            on_now = get_current_show(number)
+            time.sleep(3)
+            on_now = get_current_show(channel_name)
             return emojize(f":tv: Tuning to {capped}. On now: {on_now}", use_aliases=True)
         return emojize(
             f":warning: u don't have the poughwer to change da channol :warning:",
@@ -104,19 +99,24 @@ def tuner(channel_name: str, username: str) -> str:
         LOGGER.error(f"Unexpected error when changing channel: {e}")
 
 
-def get_current_show(number: str) -> str:
+def get_current_show(channel_name: str) -> str:
     """
     Fetch title of show currently on stream.
 
-    :param str number: Channel number.
+    :param str channel_name: Channel number.
 
     :returns: str
     """
-    data = (
-        '{"id":752,"jsonrpc":"2.0","method":"PVR.GetBroadcasts","params":{"channelid":'
-        + str(number)
-        + ',"properties":["isactive","starttime","endtime","title"], "limits":{ "end": 2}}}'
-    )
+    data = {
+        "id": 752,
+        "jsonrpc": "2.0",
+        "method": "PVR.GetBroadcasts",
+        "params": {
+            "channelid": f"{channel_name}",
+            "properties": ["isactive", "starttime", "endtime", "title"],
+            "limits": {"end": 2},
+        },
+    }
     resp = requests.post(
         f"{CHANNEL_HOST}jsonrpc", headers=CHANNEL_TUNER_HEADERS, data=data, verify=False
     )
