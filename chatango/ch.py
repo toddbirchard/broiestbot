@@ -200,7 +200,7 @@ def _genUid():
     """
     generate a uid
     """
-    return str(random.randrange(10 ** 15, 10 ** 16))
+    return str(random.randrange(10**15, 10**16))
 
 
 ################################################################
@@ -245,7 +245,7 @@ def _strip_html(msg):
         return "".join(ret)
 
 
-def _parseNameColor(n):
+def _parse_name_color(n):
     """This just returns its argument, should return the name color."""
     # probably is already the name
     return n
@@ -270,14 +270,13 @@ def _parse_font(f):
 ################################################################
 # Anon id
 ################################################################
-def _getAnonId(n, ssid):
+def _get_anon_id(n, ssid):
     """Gets the anon's id."""
     if n is None:
         n = "5504"
     try:
         return "".join(
-            str(x + y)[-1]
-            for x, y in zip((int(x) for x in n), (int(x) for x in ssid[4:]))
+            str(x + y)[-1] for x, y in zip((int(x) for x in n), (int(x) for x in ssid[4:]))
         )
     except ValueError:
         return "NNNN"
@@ -835,8 +834,8 @@ class Room:
         self._msgs = dict()
         self._wlock = False
         self._silent = False
-        self._banlist = dict()
-        self._unbanlist = dict()
+        self._ban_list = dict()
+        self._unban_list = dict()
         self._headers_parsed = False
 
         # Inited vars
@@ -905,9 +904,7 @@ class Room:
         """Authenticate."""
         # login as name with password
         if self.mgr.name and self.mgr.password:
-            self._send_command(
-                "bauth", self.room_name, self._uid, self.mgr.name, self.mgr.password
-            )
+            self._send_command("bauth", self.room_name, self._uid, self.mgr.name, self.mgr.password)
             self._currentname = self.mgr.name
         # login as anon
         else:
@@ -984,13 +981,11 @@ class Room:
     def _set_silent(self, val):
         self._silent = val
 
-    def _get_banlist(self):
-        return list(self._banlist.keys())
+    def _get_ban_list(self):
+        return list(self._ban_list.keys())
 
     def _get_unban_list(self):
-        return [
-            [record["target"], record["src"]] for record in self._unbanlist.values()
-        ]
+        return [[record["target"], record["src"]] for record in self._unban_list.values()]
 
     room_name = property(_get_room_name)
     botname = property(_get_bot_name)
@@ -1005,8 +1000,8 @@ class Room:
     modnames = property(_get_mod_names)
     usercount = property(_get_user_count)
     silent = property(_get_silent, _set_silent)
-    banlist = property(_get_banlist)
-    unbanlist = property(_get_unban_list)
+    ban_list = property(_get_ban_list)
+    unban_list = property(_get_unban_list)
 
     ####
     # Feed/process
@@ -1042,12 +1037,7 @@ class Room:
                     elif info.opcode == _ws.TEXT:
                         self._process(payload)
                     elif debug:
-                        print(
-                            "unhandled frame: "
-                            + repr(info)
-                            + " with payload "
-                            + repr(payload)
-                        )
+                        print("unhandled frame: " + repr(info) + " with payload " + repr(payload))
                     r = _ws.check_frame(self._rbuf)
         else:
             while b"\0" in self._rbuf:
@@ -1079,7 +1069,7 @@ class Room:
             n = args[4].rsplit(".", 1)[0]
             n = n[-4:]
             aid = args[1][0:8]
-            pid = "!anon" + _getAnonId(n, aid)
+            pid = "!anon" + _get_anon_id(n, aid)
             self._botname = pid
             self._currentname = pid
             self.user._name_color = n
@@ -1104,8 +1094,8 @@ class Room:
     def _rcmd_inited(self, args):
         self._send_command("g_participants", "start")
         self._send_command("getpremium", "1")
-        self.request_banlist()
-        self.request_unbanlist()
+        self.request_ban_list()
+        self.request_unban_list()
         if self._connectAmmount == 0:
             self._call_event("on_connect")
             for msg in reversed(self._i_log):
@@ -1153,10 +1143,10 @@ class Room:
             name_color = None
             name = "#" + args[2]
             if name == "#":
-                name = "!anon" + _getAnonId(n, puid)
+                name = "!anon" + _get_anon_id(n, puid)
         else:
             if n:
-                name_color = _parseNameColor(n)
+                name_color = _parse_name_color(n)
             else:
                 name_color = None
         i = args[5]
@@ -1212,10 +1202,10 @@ class Room:
             name_color = None
             name = "#" + args[2]
             if name == "#":
-                name = "!anon" + _getAnonId(n, puid)
+                name = "!anon" + _get_anon_id(n, puid)
         else:
             if n:
-                name_color = _parseNameColor(n)
+                name_color = _parse_name_color(n)
             else:
                 name_color = None
         i = args[5]
@@ -1317,7 +1307,7 @@ class Room:
         self._call_event("on_user_count_change")
 
     def _rcmd_blocklist(self, args):
-        self._banlist = dict()
+        self._ban_list = dict()
         sections = ":".join(args).split(";")
         for section in sections:
             params = section.split(":")
@@ -1326,17 +1316,17 @@ class Room:
             if params[2] == "":
                 continue
             user = get_user(params[2])
-            self._banlist[user] = {
+            self._ban_list[user] = {
                 "unid": params[0],
                 "ip": params[1],
                 "target": user,
                 "time": float(params[3]),
                 "src": get_user(params[4]),
             }
-        self._call_event("on_banlist_update")
+        self._call_event("on_ban_list_update")
 
     def _rcmd_unblocklist(self, args):
-        self._unbanlist = dict()
+        self._unban_list = dict()
         sections = ":".join(args).split(";")
         for section in sections:
             params = section.split(":")
@@ -1345,21 +1335,21 @@ class Room:
             if params[2] == "":
                 continue
             user = get_user(params[2])
-            self._unbanlist[user] = {
+            self._unban_list[user] = {
                 "unid": params[0],
                 "ip": params[1],
                 "target": user,
                 "time": float(params[3]),
                 "src": get_user(params[4]),
             }
-        self._call_event("on_unbanlist_update")
+        self._call_event("on_unban_list_update")
 
     def _rcmd_blocked(self, args):
         if args[2] == "":
             return
         target = get_user(args[2])
         user = get_user(args[3])
-        self._banlist[target] = {
+        self._ban_list[target] = {
             "unid": args[0],
             "ip": args[1],
             "target": target,
@@ -1373,8 +1363,8 @@ class Room:
             return
         target = get_user(args[2])
         user = get_user(args[3])
-        del self._banlist[target]
-        self._unbanlist[user] = {
+        del self._ban_list[target]
+        self._unban_list[user] = {
             "unid": args[0],
             "ip": args[1],
             "target": target,
@@ -1473,8 +1463,7 @@ class Room:
         """
         Add a moderator.
 
-        :type user: User
-        :param user: User to mod.
+        :param User user: User to mod.
         """
         if self.get_level(get_user(self.currentname)) == 2:
             self._send_command("addmod", user.name)
@@ -1483,8 +1472,7 @@ class Room:
         """
         Remove a moderator.
 
-        :type user: User
-        :param user: User to demod.
+        :param User user: User for which to remove moderator privileges.
         """
         if self.get_level(get_user(self.currentname)) == 2:
             self._send_command("removemod", user.name)
@@ -1493,7 +1481,6 @@ class Room:
         """
         Flag a message.
 
-        :type message: Message
         :param message: message to flag
         """
         self._send_command("g_flag", message.msgid)
@@ -1504,8 +1491,7 @@ class Room:
 
         :param User user: User to flag
 
-        @rtype: bool
-        @return: whether a message to flag was found
+        :returns: Boolean whether a message to flag was found.
         """
         msg = self.get_last_message(user)
         if msg:
@@ -1570,36 +1556,35 @@ class Room:
         if self.get_level(self.user) == 2:
             self._send_command("clearall")
 
-    def raw_ban(self, name, ip, unid):
+    def raw_ban(self, username, ip, unid):
         """
         Execute the block command using specified arguments.
-        (For advanced usage)
 
-        :param str name: name
-        :param str ip: ip address
-        :param str unid: unid
+        :param str username: Name of user to ban (not applicable to anons).
+        :param str ip: IP address of user to ban.
+        :param str unid: Unique ID assigned to user.
         """
+        name = username
+        if "!anon" in username:
+            name = ""
         self._send_command("block", unid, ip, name)
 
     def ban(self, msg):
         """
         Ban the author of a given message. (Moderator only)
 
-        :param msg: message to ban sender of
-        :type msg: Message
+        :param Message msg: Message to ban sender of.
         """
-        if self.get_level(self.user) > 0:
-            self.raw_ban(msg.user.name, msg.ip, msg.unid)
+        self.raw_ban(msg.user.name, msg.ip, msg.unid)
 
-    def ban_user(self, user):
+    def ban_user(self, user) -> bool:
         """
         Ban a user. (Moderator only)
 
+        TODO: Determine the data type of `user` parameter (is not `User`).
         :param user: Chatango user to ban from room.
-        :type user: User
 
-        @rtype: bool
-        @return: whether a message to ban the user was found
+        :returns: bool
         """
         msg = self.get_last_message(user)
         if msg:
@@ -1607,12 +1592,12 @@ class Room:
             return True
         return False
 
-    def request_banlist(self):
-        """Request an updated banlist."""
+    def request_ban_list(self):
+        """Request an updated ban list."""
         self._send_command("blocklist", "block", "", "next", "500")
 
-    def request_unbanlist(self):
-        """Request an updated banlist."""
+    def request_unban_list(self):
+        """Request an updated ban list."""
         self._send_command("blocklist", "unblock", "", "next", "500")
 
     def raw_unban(self, name, ip, unid):
@@ -1620,12 +1605,9 @@ class Room:
         Execute the unblock command using specified arguments.
         (For advanced usage)
 
-        :type name: str
-        :param name: name
-        :type ip: str
-        :param ip: ip address
-        :type unid: str
-        :param unid: unid
+        :param str name: Username of unbanned user.
+        :param str ip: IP address of unbanned user.
+        :param str unid: Unique ID of unbanned user.
         """
         self._send_command("removeblock", unid, ip, name)
 
@@ -1633,25 +1615,22 @@ class Room:
         """
         Unban a user. (Moderator only)
 
-        :param user: Chatango user to unban from room.
-        :type user: User
+        :param User user: Chatango user to unban from room.
 
-        @rtype: bool
-        @return: whether it succeeded
+        :returns: Boolean on whether unban succeeded.
         """
         rec = self._get_ban_record(user)
         if rec:
             self.raw_unban(rec["target"].name, rec["ip"], rec["unid"])
             return True
-        else:
-            return False
+        return False
 
     ####
     # Util
     ####
     def _get_ban_record(self, user):
-        if user in self._banlist:
-            return self._banlist[user]
+        if user in self._ban_list:
+            return self._ban_list[user]
         return None
 
     def _call_event(self, evt, *args, **kw):
@@ -1674,8 +1653,7 @@ class Room:
         """
         Send a command.
 
-        :type args: [str, str, ...]
-        :param args: command and list of arguments
+        :param List[str] args: Command & list of arguments
         """
         if self._firstCommand:
             terminator = "\0"
@@ -1690,7 +1668,7 @@ class Room:
             self._write(payload.encode())
 
     def get_level(self, user):
-        """get the level of user in a room"""
+        """Get the level of user in a room"""
         if user == self._owner:
             return 2
         if user.name in self.modnames:
@@ -1698,7 +1676,7 @@ class Room:
         return 0
 
     def get_last_message(self, user=None):
-        """get last message said by user in a room"""
+        """Get last message sent by user in a room."""
         if user:
             try:
                 i = 1
@@ -1711,15 +1689,15 @@ class Room:
                 return None
         else:
             try:
-                return self._history[-1]
+                return self._hiraw_banstory[-1]
             except IndexError:
                 return None
 
     def find_user(self, name):
         """
-        check if user is in the room
+        Check if user is in the room
 
-        return User(name) if name in room else None
+        :returns: User(name) if name in room, else None
         """
         name = name.lower()
         ul = self._get_userlist()
@@ -1742,8 +1720,7 @@ class Room:
         """
         Add a message to history.
 
-        :type msg: Message
-        :param msg: message
+        :param Message msg: message
         """
         self._history.append(msg)
         if len(self._history) > self.mgr._max_history_length:
@@ -1807,9 +1784,9 @@ class RoomManager:
     ####
     # Join/leave
     ####
-    def join_room(self, room):
+    def join_room(self, room: str):
         """
-        Join a room or return None if already joined.
+        Join a room by name (or return None if already joined).
 
         :param str room: Name of Chatango room to join.
 
@@ -1817,6 +1794,7 @@ class RoomManager:
         """
         if room not in self._rooms:
             self._rooms_queue.put(room)
+            LOGGER.success(f"Joined Chatango room {room}.")
             return True
         return None
 
@@ -1824,23 +1802,20 @@ class RoomManager:
         """
         Leave a room.
 
-        :type room: str
-        :param room: room to leave
+        :param str room: room to leave
         """
         if room in self._rooms:
             with self._rooms_lock:
                 con = self._rooms[room]
                 con.disconnect()
 
-    def get_room(self, room):
+    def get_room(self, room: Room):
         """
         Get room with a name, or None if not connected to this room.
 
-        :type room: str
-        :param room: room
+        :param Room room: room
 
-        @rtype: Room
-        @return: the room
+        :returns: Chatango room bot is connected to.
         """
         if room in self._rooms:
             return self._rooms[room]
@@ -1891,12 +1866,11 @@ class RoomManager:
             except UnicodeError as ex:
                 text = text[0 : ex.start] + "(unicode)" + text[ex.end :]
 
-    def on_connect(self, room):
+    def on_connect(self, room: Room):
         """
         Called when connected to the room.
 
-        :param room: Chatango room recently joined by bot.
-        :type room: Room
+        :param Room room: Chatango room recently joined by bot.
         """
         room.message("Beep boop I'm dead inside 🤖")
         LOGGER.success(
@@ -1909,7 +1883,7 @@ class RoomManager:
 
         :param Room room: Chatango room where the event occurred.
         """
-        LOGGER.success(f"Successfully connected to {room.room_name}.")
+        LOGGER.success(f"Successfully reconnected to {room.room_name}.")
 
     def on_connect_fail(self, room: Room):
         """
@@ -1919,8 +1893,8 @@ class RoomManager:
         """
         LOGGER.error(f"Failed to connect to {room.room_name}.")
         self.set_timeout(1200, self.stop)
-        LOGGER.info(f"Attempting to connect to {room.room_name} again...")
-        self.set_timeout(1200, self.join_room(room))
+        LOGGER.warning(f"Attempting to connect to {room.room_name} again...")
+        self.set_timeout(1200, self.join_room(room.room_name))
 
     def on_disconnect(self, room: Room):
         """
@@ -1930,8 +1904,6 @@ class RoomManager:
         """
         LOGGER.error(f"Disconnected from {room.room_name}.")
         self.set_timeout(60, self.stop)
-        LOGGER.info(f"Attempting to reconnect to {room.room_name}...")
-        self.set_timeout(60, self.join_room(room))
 
     def on_login_fail(self, room: Room):
         """
@@ -1947,8 +1919,7 @@ class RoomManager:
         """
         Called when either flood banned or flagged.
 
-        :param room: Chatango room where the event occurred
-        :type room: Room
+        :param Room room: Chatango room where the event occurred
         """
         LOGGER.error(f"Bot was spam banned from {room.room_name}.")
 
@@ -1965,8 +1936,7 @@ class RoomManager:
         """
         Called when an overflow warning gets received.
 
-        :param room: Chatango room where the event occurred
-        :type room: Room
+        :param Room room: Chatango room where the event occurred.
         """
         LOGGER.error(f"Bot is about to be banned for spamming {room.room_name}.")
 
@@ -1981,7 +1951,7 @@ class RoomManager:
         """
         if user.name.lower() != CHATANGO_USERS.keys():
             LOGGER.info(
-                f"[{room.room_name}] [{user.name.title()}] [no IP address]: {user.name} had message deleted from {room.room_name}: {message.body}",
+                f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} had message deleted from {room.room_name}: {message.body}",
             )
 
     def on_mod_change(self, room):
@@ -2001,7 +1971,7 @@ class RoomManager:
         :param User user: User promoted to mod.
         """
         LOGGER.info(
-            f"[{room.room_name}] [{user.name.title()}] [no IP address]: {user.name} was modded in {room.room_name}."
+            f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} was modded in {room.room_name}."
         )
 
     @staticmethod
@@ -2009,11 +1979,11 @@ class RoomManager:
         """
         Called when a moderator gets removed.
 
-        :param Room room: Chatango room where user was demodded.
+        :param Room room: Chatango room where user was demoted.
         :param User user: User demoted from mod.
         """
         LOGGER.info(
-            f"[{room.room_name}] [{user.name.title()}] [no IP address]: {user.name} was demodded in {room.room_name}.",
+            f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} was demodded in {room.room_name}.",
         )
 
     def on_message(self, room, user, message):
@@ -2024,14 +1994,7 @@ class RoomManager:
         :param User user: Author of message sent to chat.
         :param Message message: Received chat message
         """
-        if bool(message.ip):
-            LOGGER.info(
-                f"[{room.room_name}] [{user.name}] [{message.ip}]: {message.body}"
-            )
-        else:
-            LOGGER.info(
-                f"[{room.room_name}] [{user.name}] [no IP address]: {message.body}"
-            )
+        pass
 
     def on_history_message(self, room, user, message):
         """
@@ -2053,7 +2016,7 @@ class RoomManager:
         :param str puid: Personal unique id for a user.
         """
         LOGGER.info(
-            f"[{room.room_name}] [{user.name.title()}] [no IP address]: {user.name} joined {room.room_name}.",
+            f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} joined {room.room_name}.",
         )
 
     @staticmethod
@@ -2066,7 +2029,7 @@ class RoomManager:
         :param str puid: Personal unique id for a user.
         """
         LOGGER.info(
-            f"[{room.room_name}] [{user.name.title()}] [no IP address]: {user.name} left {room.room_name}.",
+            f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} left {room.room_name}.",
         )
 
     def on_raw(self, room: Room, raw):
@@ -2106,7 +2069,7 @@ class RoomManager:
         :param User target: User that got unbanned.
         """
         LOGGER.info(
-            f"[{room.room_name}] [{user.name.title()}] [no IP address]: {target.name} was banned from {room.room_name} by {user.name}.",
+            f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {target.name} was banned from {room.room_name} by {user.name}.",
         )
 
     @staticmethod
@@ -2119,20 +2082,20 @@ class RoomManager:
         :param User target: User that got unbanned.
         """
         LOGGER.info(
-            f"[{room.room_name}] [{user.name.title()}] [no IP address]: {target.name} was unbanned from {room.room_name} by {user.name}.",
+            f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {target.name} was unbanned from {room.room_name} by {user.name}.",
         )
 
-    def on_banlist_update(self, room: Room):
+    def on_ban_list_update(self, room: Room):
         """
-        Called when a banlist gets updated.
+        Called when a ban_list gets updated.
 
         :param Room room: Chatango room where the event occurred.
         """
         pass
 
-    def on_unbanlist_update(self, room):
+    def on_unban_list_update(self, room):
         """
-        Called when a unbanlist gets updated.
+        Called when a unban_list gets updated.
 
         :param room: Chatango room where the event occurred.
         :type room: Room
@@ -2152,6 +2115,7 @@ class RoomManager:
         Called when disconnected from the pm
 
         :param PM pm: Private message.
+        :param User user: Anon user whom disconnected.
         """
         pass
 

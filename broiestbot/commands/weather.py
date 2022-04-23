@@ -1,9 +1,10 @@
 """Fetch weather for a given location."""
 import requests
+from database import session
+from database.models import Weather
 from emoji import emojize
 from requests.exceptions import HTTPError
 
-from clients import db
 from config import (
     CHATANGO_OBI_ROOM,
     METRIC_SYSTEM_USERS,
@@ -35,9 +36,7 @@ def weather_by_location(location: str, room: str, user: str) -> str:
             return emojize(f":warning:️️ wtf even is `{location}` :warning:")
         data = res.json()
         if data.get("success") == "false":
-            return emojize(
-                f":warning:️️ {data['error']['info']} :warning:", use_aliases=True
-            )
+            return emojize(f":warning:️️ {data['error']['info']} :warning:", use_aliases=True)
         if data.get("current") is None:
             return emojize(
                 f":warning:️️ idk wtf you did but `{location}` fucked me up b :warning:",
@@ -50,18 +49,16 @@ def weather_by_location(location: str, room: str, user: str) -> str:
             f'\n\n{data["request"]["query"]}\n \
                         {weather_emoji} {data["current"]["weather_descriptions"][0]}\n \
                         Temp: {data["current"]["temperature"]}°{"c" if params["units"] == "m" else "f"} (feels like: {data["current"]["feelslike"]}{"c" if params["units"] == "m" else "f"}°)\n \
-                        Precipitation: {data["current"]["precip"]}%\n \
+                        Precipitation: {data["current"]["precip"] * 10}%\n \
                         Humidity: {data["current"]["humidity"]}%\n \
                         Cloud cover: {data["current"]["cloudcover"]}%\n \
-                        Wind speed: {data["current"]["wind_speed"]}',
+                        Wind speed: {data["current"]["wind_speed"]}{"km/h" if params["units"] == "m" else "mph"}',
             use_aliases=True,
         )
         return response
     except HTTPError as e:
         LOGGER.error(f"Failed to get weather for `{location}`: {e.response.content}")
-        return emojize(
-            f":warning:️️ fk me the weather API is down :warning:", use_aliases=True
-        )
+        return emojize(f":warning:️️ fk me the weather API is down :warning:", use_aliases=True)
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching weather for `{location}`: {e}")
         return emojize(
@@ -99,14 +96,14 @@ def get_weather_emoji(weather_code: int, is_day: str) -> str:
 
     :returns: str
     """
-    weather_emoji_response = db.fetch_weather_icon(weather_code)
-    if weather_emoji_response.get("icon") and is_day == "yes":
-        return weather_emoji_response.get("icon")
-    elif is_day == "no" and weather_emoji_response.get("group") in [
+    weather_emoji = session.query(Weather).filter(Weather.code == weather_code).one_or_none()
+    if weather_emoji is not None:
+        return weather_emoji.icon
+    elif is_day == "no" and weather_emoji.group in [
         "sun",
         None,
     ]:
         return emojize(":night_with_stars:")
-    elif weather_emoji_response.get("icon") and is_day == "no":
-        return weather_emoji_response.get("icon")
+    elif weather_emoji.icon and is_day == "no":
+        return weather_emoji.icon
     return ":sun:"

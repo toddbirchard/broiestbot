@@ -1,13 +1,15 @@
 """Bot configuration variables."""
 from os import environ, getenv, path
 
+import pytz
 from dotenv import load_dotenv
 
 BASE_DIR = path.abspath(path.dirname(__file__))
 load_dotenv(path.join(BASE_DIR, ".env"))
 
-# Environment
+# General config
 ENVIRONMENT = getenv("ENVIRONMENT")
+TIMEZONE_US_EASTERN = pytz.timezone("America/New_York")
 
 # Chatango credentials
 CHATANGO_USERS = {
@@ -20,6 +22,13 @@ CHATANGO_USERS = {
         "PASSWORD": getenv("CHATANGO_BRO_PASSWORD"),
     },
 }
+
+# Known Chatango bot usernames
+CHATANGO_BOTS = [
+    "BROIESTBRO",
+    "BROIESTBOT",
+    "ACLEEBOT",
+]
 
 # Chatango rooms
 CHATANGO_TEST_ROOM = getenv("CHATANGO_TEST_ROOM")
@@ -36,14 +45,14 @@ CHATANGO_UFC_ROOM = getenv("CHATANGO_UFC_ROOM")
 CHATANGO_ROOMS = [
     CHATANGO_ACLEE_ROOM,
     CHATANGO_SIXERS_ROOM,
-    # CHATANGO_PHILLIES_ROOM,
+    CHATANGO_PHILLIES_ROOM,
     CHATANGO_FLYERS_ROOM,
-    CHATANGO_EAGLES_ROOM,
+    # CHATANGO_EAGLES_ROOM,
     # CHATANGO_NFL_ROOM,
     CHATANGO_OBI_ROOM,
     # CHATANGO_REDZONE_ROOM,
     # CHATANGO_PATREON_ROOM,
-    # CHATANGO_UFC_ROOM,
+    CHATANGO_UFC_ROOM,
 ]
 
 # Chatango users with additional features
@@ -53,11 +62,24 @@ if CHATANGO_SPECIAL_USERS:
 
 # Users to be banned on sight
 CHATANGO_BLACKLISTED_USERS = getenv("CHATANGO_BLACKLISTED_USERS")
+CHATANGO_EGGSER_IP = getenv("CHATANGO_EGGSER_IP")
+CHATANGO_EGGSER_USERNAME_WHITELIST = getenv("CHATANGO_EGGSER_USERNAME_WHITELIST")
 
 # Database
 SQLALCHEMY_DATABASE_URI = getenv("SQLALCHEMY_DATABASE_URI")
 DATABASE_USERS_TABLE = getenv("DATABASE_USERS_TABLE")
 DATABASE_ARGS = {"ssl": {"ca": f"{BASE_DIR}/creds/ca-certificate.crt"}}
+
+# Redis
+REDIS_HOST = getenv("REDIS_HOST")
+REDIS_USERNAME = getenv("REDIS_USERNAME")
+REDIS_PASSWORD = getenv("REDIS_PASSWORD")
+REDIS_PORT = getenv("REDIS_PORT")
+REDIS_DB = getenv("REDIS_DB")
+
+# Logging
+PERSIST_USER_DATA = getenv("PERSIST_USER_DATA")
+PERSIST_CHAT_DATA = getenv("PERSIST_CHAT_DATA")
 
 # Google Cloud
 GOOGLE_APPLICATION_CREDENTIALS = "gcloud.json"
@@ -86,8 +108,6 @@ COINMARKETCAP_API_KEY = getenv("COINMARKETCAP_API_KEY")
 # Plotly
 PLOTLY_API_KEY = getenv("PLOTLY_API_KEY")
 PLOTLY_USERNAME = getenv("PLOTLY_USERNAME")
-PLOTLY_ALT_API_KEY = getenv("PLOTLY_ALT_API_KEY")
-PLOTLY_ALT_USERNAME = getenv("PLOTLY_ALT_USERNAME")
 
 # Weather
 WEATHERSTACK_API_ENDPOINT = "http://api.weatherstack.com/current"
@@ -107,6 +127,7 @@ TWILIO_ACCOUNT_SID = getenv("TWILIO_ACCOUNT_SID")
 # Reddit
 REDDIT_CLIENT_ID = getenv("REDDIT_CLIENT_ID")
 REDDIT_CLIENT_SECRET = getenv("REDDIT_CLIENT_SECRET")
+REDDIT_USERNAME = getenv("REDDIT_USERNAME")
 REDDIT_PASSWORD = getenv("REDDIT_CLIENT_SECRET")
 
 # Rapid API
@@ -128,13 +149,12 @@ GENIUS_ACCESS_TOKEN = getenv("GENIUS_KEY_SECRET")
 # Youtube
 YOUTUBE_API_KEY = getenv("YOUTUBE_API_KEY")
 
-# Twitch API
+# Twitch
 TWITCH_CLIENT_ID = getenv("TWITCH_CLIENT_ID")
 TWITCH_CLIENT_SECRET = getenv("TWITCH_CLIENT_SECRET")
 TWITCH_TOKEN_ENDPOINT = "https://id.twitch.tv/oauth2/token"
 TWITCH_STREAMS_ENDPOINT = "https://api.twitch.tv/helix/streams"
 
-# Twitch users
 TWITCH_BRO_USERNAME = getenv("TWITCH_BRO_USERNAME")
 TWITCH_BRO_ID = getenv("TWITCH_BRO_ID")
 TWITCH_ATLAS_USERNAME = getenv("TWITCH_ATLAS_USERNAME")
@@ -182,14 +202,17 @@ EPL_LEAGUE_ID = 39
 UCL_LEAGUE_ID = 2
 FA_CUP_ID = 45
 EFL_CUP_ID = 46
+EFL_LEAGUE_ID = 40
 LEAGUE_ONE_ID = 41
 EUROPA_LEAGUE_ID = 2777
 UEFA_EUROPA_ID = 3
+UEFA_CONFERENCE_LEAGUE = 848
 BUND_LEAGUE_ID = 78
 LIGA_LEAGUE_ID = 140
 EUROS_LEAGUE_ID = 4
 COPA_LEAGUE_ID = 9
-LIGUE_ONE_LEAGUE_ID = 61
+COUPE_DE_FRANCE = 66
+LIGUE_ONE_ID = 61
 FRIENDLIES_LEAGUE_ID = 667
 WORLDCUP_LEAGUE_ID = 15
 MLS_LEAGUE_ID = 253
@@ -205,68 +228,46 @@ WC_QUALIFIERS_SOUTHAMERICA = 34
 SERIE_A_LEAGUE_ID = 135
 COMMUNITY_SHIELD_CUP = 528
 CARABOU_CUP_ID = 48
+AFRICA_CUP_ID = 6
 
 FOOTY_LEAGUES = {
-    # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
-    # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
     # ":trophy: WORLD": WORLDCUP_LEAGUE_ID,
     # ":world_map: WORLD CUP": WORLD_CUP_ID,
     ":lion: EPL": EPL_LEAGUE_ID,
     ":trophy: UCL": UCL_LEAGUE_ID,
     ":European_Union: EUROPA": UEFA_EUROPA_ID,
-    ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF,
-    ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE,
-    ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA,
-    # ":European_Union: EUROS": EUROS_LEAGUE_ID,
-    # ":cow_face: Carabao": CARABOU_CUP_ID,
-    ":European_Union: EUROPA": UEFA_EUROPA_ID,
+    ":green_circle: UEFA Conference": UEFA_CONFERENCE_LEAGUE,
+    ":trophy: :England: FA Cup": FA_CUP_ID,
+    # ":globe_showing_Europe-Africa: AFRICA CUP OF NATIONS:": AFRICA_CUP_ID,
+    # ":trophy: :France: Coupe De France": COUPE_DE_FRANCE,
+    # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF,
+    # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE,
+    # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA,
+    # ":cow: Carabou Cup": CARABOU_CUP_ID,
+    ":England: EFL": EFL_LEAGUE_ID,
     ":Spain: LIGA": LIGA_LEAGUE_ID,
-    ":England: EFL": EFL_CUP_ID,
-    ":England: FA": FA_CUP_ID,
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":Italy: Serie A": SERIE_A_LEAGUE_ID,
-    ":France: Ligue 1": LIGUE_ONE_LEAGUE_ID,
+    ":France: Ligue 1": LIGUE_ONE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":England: LEAGUE ONE": LEAGUE_ONE_ID,
     # ":trophy: COMMUNITY": COMMUNITY_SHIELD_CUP,
-    ":smiley: FRIENDLIES": FRIENDLIES_LEAGUE_ID,
-    ":globe_showing_Americas: COPA": COPA_LEAGUE_ID,
+    # ":smiley: FRIENDLIES": FRIENDLIES_LEAGUE_ID,
+    # ":globe_showing_Americas: COPA": COPA_LEAGUE_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
-    ":globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
+    # ":globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":globe_showing_Americas: CONCACAF CHAMPIONS": CONCACAF_CHAMPIONS_LEAGUE,
-}
-
-FOOTY_LEAGUES_BY_PRIORITY = {
-    "1": {
-        ":lion: EPL": EPL_LEAGUE_ID,
-        ":trophy: UCL": UCL_LEAGUE_ID,
-        ":European_Union: EUROPA": UEFA_EUROPA_ID,
-        # ":trophy: WORLD": WORLDCUP_LEAGUE_ID,
-        ":Spain: LIGA": LIGA_LEAGUE_ID,
-        ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF,
-        ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE,
-        ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA,
-        # ":cow_face: Carabao": CARABOU_CUP_ID,
-    },
-    "2": {
-        ":England: FA": FA_CUP_ID,
-        ":Germany: BUND": BUND_LEAGUE_ID,
-        ":Italy: Serie A": SERIE_A_LEAGUE_ID,
-        ":France: Ligue 1": LIGUE_ONE_LEAGUE_ID,
-        ":England: EFL": EFL_CUP_ID,
-    },
-    "3": {
-        ":United_States: MLS": MLS_LEAGUE_ID,
-        ":trophy: COMMUNITY": COMMUNITY_SHIELD_CUP,
-        ":smiley: FRIENDLIES": FRIENDLIES_LEAGUE_ID,
-        ":globe_showing_Americas: COPA": COPA_LEAGUE_ID,
-        ":globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
-    },
+    # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
+    # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
 }
 
 FOOTY_LEAGUES_LINEUPS = {
     ":lion: EPL": EPL_LEAGUE_ID,
     ":trophy: UCL": UCL_LEAGUE_ID,
+    ":European_Union: EUROPA": UEFA_EUROPA_ID,
+    ":green_circle: UEFA Conference": UEFA_CONFERENCE_LEAGUE,
+    # ":trophy: :England: FA Cup": FA_CUP_ID,
+    ":Spain: LIGA": LIGA_LEAGUE_ID,
 }
 
 GOLDEN_SHOE_LEAGUES = {
@@ -274,7 +275,7 @@ GOLDEN_SHOE_LEAGUES = {
     ":Spain: LIGA": LIGA_LEAGUE_ID,
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":Italy: Serie A": SERIE_A_LEAGUE_ID,
-    ":France: Ligue 1": LIGUE_ONE_LEAGUE_ID,
+    ":France: Ligue 1": LIGUE_ONE_ID,
 }
 
 # Footy team IDs
@@ -282,6 +283,50 @@ LIVERPOOL_TEAM_ID = 40
 MANU_TEAM_ID = 33
 FOXES_TEAM_ID = 46
 ENGLAND_INT_TEAM_ID = 10
-# USA_INT_TEAM_ID
+# USA_INT_TEAM_ID = 0
 
-FOOTY_TEAMS_PRIORITY = {"manu": MANU_TEAM_ID, "england": ENGLAND_INT_TEAM_ID}
+# Specify team IDs to be prioritized whe fetching starting XIs
+FOOTY_TEAMS_PRIORITY = {
+    "Pool": LIVERPOOL_TEAM_ID,
+    "ManU": MANU_TEAM_ID,
+    "England": ENGLAND_INT_TEAM_ID,
+    "Foxes": FOXES_TEAM_ID,
+    # "USMNT": USA_INT_TEAM_ID
+}
+
+# MLB
+MLB_LEAGUE_ID = "1"
+MLB_BASE_ENDPOINT = "https://api-baseball.p.rapidapi.com"
+MLB_PHILLIES_ID = "27"
+
+# Remote tuner control
+CHANNEL_LIST_FILEPATH = f"{BASE_DIR}/channels.json"
+CHANNEL_HOST = getenv("CHANNEL_HOST")
+CHANNEL_AUTH = getenv("CHANNEL_AUTH")
+CHANNEL_TUNER_HEADERS = {
+    "Connection": "keep-alive",
+    "Authorization": CHANNEL_AUTH,
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "DNT": "1",
+    "X-Requested-With": "XMLHttpRequest",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
+    "Content-Type": "application/json",
+    "Origin": CHANNEL_HOST,
+    "Referer": CHANNEL_HOST,
+    "Accept-Language": "en-US,en;q=0.9",
+    "sec-gpc": "1",
+}
+
+# Olympics
+OLYMPICS_LEADERBOARD_ENDPOINT = (
+    "https://www.espn.com/olympics/summer/2020/medals/_/view/overall/sort/gold"
+)
+WINTER_OLYMPICS_LEADERBOARD_ENDPOINT = (
+    "https://www.espn.com/olympics/winter/2022/medals/_/view/overall/sort/gold"
+)
+
+# NBA
+NBA_BASE_URL = "https://api-basketball.p.rapidapi.com"
+NBA_API_KEY = getenv("NBA_API_KEY")
+NBA_CONFERENCE_NAMES = ["Eastern Conference", "Western Conference"]
+NBA_SEASON_YEAR = "2021-2022"

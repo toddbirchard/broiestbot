@@ -1,19 +1,21 @@
 """Custom logger and error notifications."""
+import json
 import re
 from sys import stdout
 
-import simplejson as json
 from loguru import logger
 
 from clients import sms
-from config import ENVIRONMENT, TWILIO_RECIPIENT_PHONE, TWILIO_SENDER_PHONE
+from config import BASE_DIR, ENVIRONMENT, TWILIO_RECIPIENT_PHONE, TWILIO_SENDER_PHONE
 
 
-def json_formatter(record: dict):
+def json_formatter(record: dict) -> str:
     """
     Format info message logs.
 
     :param dict record: Log object containing log metadata & message.
+
+    :returns: str
     """
 
     def serialize_as_admin(log: dict) -> str:
@@ -25,22 +27,23 @@ def json_formatter(record: dict):
         :returns: str
         """
         try:
-            chat_data = re.findall(r"\[(\S+)\]", log["message"])
-            if bool(chat_data):
-                room = chat_data[0]
-                user = chat_data[1]
-                ip = chat_data[2]
+            chat_data = re.search(
+                r"(?P<room>\[\S+]) (?P<user>\[\S+]) (?P<ip>\[\S+])", log["message"]
+            )
+            if chat_data and log.get("message") is not None:
+                chat_dict = chat_data.groupdict()
                 subset = {
                     "time": log["time"].strftime("%m/%d/%Y, %H:%M:%S"),
                     "message": log["message"].split(": ", 1)[1],
                     "level": log["level"].name,
-                    "room": room,
-                    "user": user,
-                    "ip": ip,
+                    "room": chat_dict["room"],
+                    "user": chat_dict["user"],
+                    "ip": chat_dict["ip"],
                 }
                 return json.dumps(subset)
-        except Exception:
-            serialize_event(log)
+        except Exception as e:
+            log["error"] = f"Logging error occurred: {e}"
+            return serialize_error(log)
 
     def serialize_event(log: dict) -> str:
         """
@@ -50,18 +53,25 @@ def json_formatter(record: dict):
 
         :returns: str
         """
-        chat_data = re.findall(r"\[(\S+)\]", log["message"])
-        if bool(chat_data):
-            room = chat_data[0]
-            user = chat_data[1]
-            subset = {
-                "time": log["time"].strftime("%m/%d/%Y, %H:%M:%S"),
-                "message": log["message"].split(": ", 1)[1],
-                "level": log["level"].name,
-                "room": room,
-                "user": user,
-            }
-            return json.dumps(subset)
+        try:
+            chat_data = re.search(r"(?P<room>\[\S+]) (?P<user>\[\S+])", log["message"])
+            chat_dict = chat_data.groupdict()
+            if (
+                bool(chat_data)
+                and len(chat_data.groupdict().values()) == 2
+                and log.get("message") is not None
+            ):
+                subset = {
+                    "time": log["time"].strftime("%m/%d/%Y, %H:%M:%S"),
+                    "message": log["message"].split(": ", 1)[1],
+                    "level": log["level"].name,
+                    "room": chat_dict["room"],
+                    "user": chat_dict["user"],
+                }
+                return json.dumps(subset)
+        except Exception as e:
+            log["error"] = f"Logging error occurred: {e}"
+            return serialize_error(log)
 
     def serialize_error(log: dict) -> str:
         """
@@ -71,12 +81,13 @@ def json_formatter(record: dict):
 
         :returns: str
         """
-        subset = {
-            "time": log["time"].strftime("%m/%d/%Y, %H:%M:%S"),
-            "level": log["level"].name,
-            "message": log["message"],
-        }
-        return json.dumps(subset)
+        if log is not None and log.get("message") is not None:
+            subset = {
+                "time": log["time"].strftime("%m/%d/%Y, %H:%M:%S"),
+                "level": log["level"].name,
+                "message": log["message"],
+            }
+            return json.dumps(subset)
 
     if record["level"].name in ("WARNING", "SUCCESS", "TRACE", "MESSAGE"):
         record["extra"]["serialized"] = serialize_event(record)
@@ -86,7 +97,8 @@ def json_formatter(record: dict):
         record["extra"]["serialized"] = serialize_error(record)
         sms_error_handler(record)
 
-    return "{extra[serialized]},\n"
+    if record["extra"]["serialized"] is not None:
+        return "{extra[serialized]},\n"
 
 
 def sms_error_handler(log: dict) -> None:
@@ -106,8 +118,7 @@ def log_formatter(record: dict) -> str:
     """
     Formatter for .log records
 
-    :param record: Log object containing log metadata & message.
-    :type record: dict
+    :param dict record: Log object containing log metadata & message.
 
     :returns: str
     """
@@ -154,6 +165,24 @@ def create_logger() -> logger:
             format="<fg #70acde>{time:MM-DD-YYYY HH:mm:ss}</fg #70acde> | "
             + "<red>{level}</red>: "
             + "<light-white>{message}</light-white>",
+            rotation="300 MB",
+            compression="zip",
+        )
+    elif ENVIRONMENT == "development":
+        logger.add(
+            f"{BASE_DIR}/logs/error.log",
+            colorize=True,
+            level="ERROR",
+            format="<fg #70acde>{time:MM-DD-YYYY HH:mm:ss}</fg #70acde> | "
+            + "<red>{level}</red>: "
+            + "<light-white>{message}</light-white>",
+            rotation="300 MB",
+            compression="zip",
+        )
+        logger.add(
+            f"{BASE_DIR}/logs/error.json",
+            level="ERROR",
+            format=json_formatter,
             rotation="300 MB",
             compression="zip",
         )

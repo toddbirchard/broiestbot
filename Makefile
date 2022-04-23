@@ -10,14 +10,15 @@ make restart    - Restart systemd service (if exists).
 make install    - Build environment & install dependencies.
 make update     - Update depenencies with Poetry & outout new requirements.txt.
 make format     - Format source code and sort imports.
+make test       - Run test suite.
 make lint       - Check code formatting with flake8.
-make clean      - Remove cached files, lockfiles, and other unnessecary junk.
+make clean      - Remove cached files, lockfiles, and other unnecessary junk.
 
 endef
 export HELP
 
 
-.PHONY: run restart install update format clean lint help
+.PHONY: run restart install update format test clean lint help
 
 
 all help:
@@ -41,7 +42,7 @@ restart: env
 .PHONY: install
 install:
 	if [ ! -d "./.venv" ]; then python3 -m venv $(VIRTUAL_ENVIRONMENT); fi
-	. .venv/bin/activate
+	$(shell . .venv/bin/activate)
 	$(LOCAL_PYTHON) -m pip install --upgrade pip setuptools wheel
 	$(LOCAL_PYTHON) -m pip install -r requirements.txt
 
@@ -57,6 +58,11 @@ update: env
 format: env
 	isort --multi-line=3 .
 	black .
+
+
+.PHONY: test
+test: env
+	pytest
 
 
 .PHONY: lint

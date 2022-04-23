@@ -1,18 +1,17 @@
-"""External clients."""
+"""Clients & SDKs for interacting with third-party services."""
 import lyricsgenius
 import praw
+import redis
 import wikipediaapi
 
 # from googleapiclient.discovery import build
 from imdb import IMDb
 from twilio.rest import Client
 
-from config import (
+from config import (  # YOUTUBE_API_KEY,
     ALPHA_VANTAGE_API_KEY,
     ALPHA_VANTAGE_CHART_BASE_URL,
     ALPHA_VANTAGE_PRICE_BASE_URL,
-    DATABASE_ARGS,
-    DATABASE_USERS_TABLE,
     GOOGLE_BUCKET_NAME,
     GOOGLE_BUCKET_URL,
     IEX_API_BASE_URL,
@@ -21,20 +20,19 @@ from config import (
     REDDIT_CLIENT_ID,
     REDDIT_CLIENT_SECRET,
     REDDIT_PASSWORD,
-    SQLALCHEMY_DATABASE_URI,
+    REDDIT_USERNAME,
+    REDIS_DB,
+    REDIS_HOST,
+    REDIS_PASSWORD,
+    REDIS_PORT,
     TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN,
-    YOUTUBE_API_KEY,
 )
 
 from .crypto import CryptoChartHandler
-from .database import Database
 from .gcs import GCS
 from .geo import GeoIP
 from .stock import StockChartHandler
-
-# Bot Database
-db = Database(SQLALCHEMY_DATABASE_URI, DATABASE_ARGS, DATABASE_USERS_TABLE)
 
 # Google Cloud Storage
 gcs = GCS(GOOGLE_BUCKET_NAME, GOOGLE_BUCKET_URL)
@@ -62,7 +60,7 @@ ia = IMDb()
 reddit = praw.Reddit(
     client_id=REDDIT_CLIENT_ID,
     client_secret=REDDIT_CLIENT_SECRET,
-    username="broiestbro",
+    username=REDDIT_USERNAME,
     password=REDDIT_PASSWORD,
     user_agent="bot",
 )
@@ -73,6 +71,11 @@ geo = GeoIP(IP_DATA_KEY)
 # Rap Genius
 genius = lyricsgenius.Genius()
 genius.remove_section_headers = True
+
+# Redis
+r = redis.Redis(
+    host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, db=REDIS_DB, decode_responses=True
+)
 
 # Youtube
 # yt = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)

@@ -18,26 +18,20 @@ from logger import LOGGER
 
 def is_after_dark() -> bool:
     """
-    Determine if current time is in threshold for `After Dark` mode.
+    Determine if current time is within threshold for `After Dark` mode.
 
     :return: Boolean
     """
     tz = pytz.timezone("America/New_York")
     now = datetime.now(tz=tz)
-    start_time = datetime(
-        year=now.year, month=now.month, day=now.day, hour=22, tzinfo=now.tzinfo
-    )
-    end_time = datetime(
-        year=now.year, month=now.month, day=now.day, hour=5, tzinfo=now.tzinfo
-    )
-    if start_time > now or end_time < now:
+    start_time = datetime(year=now.year, month=now.month, day=now.day, hour=0, tzinfo=now.tzinfo)
+    end_time = datetime(year=now.year, month=now.month, day=now.day, hour=5, tzinfo=now.tzinfo)
+    if start_time > now and now < end_time:
         return True
     return False
 
 
-def get_redgifs_gif(
-    query: str, username: str, after_dark_only: bool = False
-) -> Optional[str]:
+def get_redgifs_gif(query: str, username: str, after_dark_only: bool = False) -> Optional[str]:
     """
     Fetch a special kind of gif, if you know what I mean ;).
 
@@ -52,19 +46,16 @@ def get_redgifs_gif(
         if (after_dark_only and night_mode) or after_dark_only is False:
             token = redgifs_auth_token()
             endpoint = REDGIFS_IMAGE_SEARCH_ENDPOINT
-            params = {"search_text": query.title(), "order": "trending", "count": 25}
+            params = {"search_text": query.title(), "order": "trending", "count": 80}
             headers = {"Authorization": f"Bearer {token}"}
             resp = requests.get(endpoint, params=params, headers=headers)
-            if resp.status_code == 200 and resp.json().get("gifs", None) is not None:
-                results = resp.json().get("gifs")
-                if results:
-                    results = [
-                        result for result in results if "TikTok" not in result["tags"]
-                    ]
+            results = resp.json().get("gifs", None)
+            if resp.status_code == 200 and results is not None:
+                results = [result for result in results if result["urls"].get("sd") is not None]
+                if bool(results):
                     rand = randint(0, len(results) - 1)
                     image_json = results[rand]
-                    image_id = image_json["id"]
-                    return get_full_gif_metadata(image_id, token)
+                    return get_full_gif_metadata(image_json)
                 elif username == "thegreatpizza":
                     return emojize(
                         f":pizza: *h* wow pizza ur taste in lesbians is so dank that I coughldnt find nething sry :( *h* :pizza:",
@@ -76,23 +67,19 @@ def get_redgifs_gif(
                         use_aliases=True,
                     )
                 else:
-                    LOGGER.error(
-                        f"Error {resp.status_code} fetching NSFW gif: {resp.content}"
-                    )
                     return emojize(
                         f":warning: wow @{username} u must b a freak tf r u even searching foughr jfc :warning:",
                         use_aliases=True,
                     )
-            elif resp.json().get("gifs", None) is None:
+            else:
+                LOGGER.error(f"Error {resp.status_code} fetching NSFW gif: {resp.content}")
                 return emojize(
-                    f":warning: wow @{username} u must b a freak tf r u even searching foughr jfc :warning:",
+                    f":warning: omfg @{username} u broke bot with ur kinky ass bs smfh :warning:",
                     use_aliases=True,
                 )
         return "https://i.imgur.com/oGMHkqT.jpg"
     except HTTPError as e:
-        LOGGER.warning(
-            f"HTTPError while fetching nsfw image for `{query}`: {e.response.content}"
-        )
+        LOGGER.warning(f"HTTPError while fetching nsfw image for `{query}`: {e.response.content}")
         return emojize(
             f":warning: yea nah idk wtf ur searching for :warning:",
             use_aliases=True,
@@ -111,34 +98,25 @@ def get_redgifs_gif(
         )
 
 
-def get_full_gif_metadata(image_id: str, token: str) -> str:
+def get_full_gif_metadata(image: dict) -> str:
     """
-    Fetches additional metadata for a randomly selected gif.
+    Parses additional metadata for a randomly selected gif.
 
-    :param str image_id: Unique string serving as the image ID.
-    :param str token: Authorization token
+    :param dict image: Dictionary containing a single gif response.
 
     :returns: str
     """
     try:
-        endpoint = f"https://api.redgifs.com/v2/gifs/{image_id}"
-        headers = {"Authorization": f"Bearer {token}"}
-        resp = requests.get(endpoint, headers=headers)
-        if resp.status_code == 200:
-            image = resp.json().get("gif")
-            likes = image["likes"]
-            views = image["views"]
-            duration = image["duration"]
-            gif = image["urls"].get("gif")
-            tags = ", #".join(image["tags"])
-            return emojize(
-                f"\n\n\n{gif}\n:thumbsup: Likes {likes}\n:eyes: Views {views}\n:five_o’clock: Duration {duration}s\n#{tags}",
-                use_aliases=True,
-            )
-    except Exception as e:
-        LOGGER.warning(
-            f"Unexpected error while fetching nsfw image for id `{image_id}`: {e}"
+        image_url = image["urls"]["sd"].replace("-mobile", "").replace(".mp4", "-small.gif")
+        likes = image["likes"]
+        views = image["views"]
+        tags = ", #".join(image["tags"])
+        return emojize(
+            f"\n\n\n{image_url}\n:thumbsup: Likes {likes}\n:eyes: Views {views}\n#{tags}",
+            use_aliases=True,
         )
+    except Exception as e:
+        LOGGER.warning(f"Unexpected error while fetching nsfw image for id `{image['id']}`: {e}")
         return emojize(
             f":warning: dude u must b a freak cuz that just broke bot :warning:",
             use_aliases=True,
@@ -163,8 +141,6 @@ def redgifs_auth_token() -> Optional[str]:
                 f"Failed to get Redgifs token with status code {resp.status_code}: {resp.json()}"
             )
     except HTTPError as e:
-        LOGGER.error(
-            f"HTTPError when fetching Redgifs auth token: {e.response.content}"
-        )
+        LOGGER.error(f"HTTPError when fetching Redgifs auth token: {e.response.content}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching Redgifs auth token: {e}")

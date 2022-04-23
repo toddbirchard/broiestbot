@@ -1,8 +1,8 @@
 """Miscellaneous utility/novelty commands."""
+from calendar import day_name
 from datetime import datetime, timedelta
 from typing import Optional
 
-import pytz
 import requests
 from emoji import emojize
 
@@ -10,6 +10,7 @@ from clients import sms
 from config import (
     CHATANGO_SPECIAL_USERS,
     RAPID_API_KEY,
+    TIMEZONE_US_EASTERN,
     TWILIO_RECIPIENT_PHONE,
     TWILIO_SENDER_PHONE,
 )
@@ -22,10 +23,12 @@ def blaze_time_remaining() -> str:
 
     :returns: str
     """
-    now = datetime.now(tz=pytz.timezone("America/New_York"))
+    now = datetime.now(tz=TIMEZONE_US_EASTERN)
     am_time = now.replace(hour=4, minute=20, second=0)
     pm_time = now.replace(hour=16, minute=20, second=0)
-    if am_time == now or pm_time == now:
+    if am_time <= now < am_time + timedelta(seconds=59) or pm_time <= now < pm_time + timedelta(
+        seconds=59
+    ):
         return emojize(
             f":herb: :fire: HOLY FUCK IT'S EXACTLY 420!!! BLAZE IT BITCHHHHHHHCAWWHHHHHH :smoking: :kissing_closed_eyes: :dash:",
             use_aliases=True,
@@ -71,6 +74,54 @@ def send_text_message(message: str, user: str) -> Optional[str]:
         LOGGER.error(f"Unexpected error when sending SMS: {e}")
 
 
+def time_until_wayne(user_name: str) -> str:
+    """
+    Determine amount of time remaining until LMAD.
+    Only applicable to weekdays before 10am EST.
+
+    :param str user_name: Name of the user inquiring about Wayne.
+
+    :returns: str
+    """
+    try:
+        now = datetime.now(tz=TIMEZONE_US_EASTERN)
+        weekday = datetime.today().weekday()
+        if weekday < 5:
+            wayne_start_time = now.replace(hour=10, minute=0, second=0)
+            wayne_end_time = wayne_start_time + timedelta(hours=1)
+            if wayne_start_time <= now <= wayne_end_time:
+                return emojize(
+                    f":red_exclamation_mark: omfg Wayne is on NOW!!! CHANGE THE CHANNOL!!! :red_exclamation_mark:",
+                    use_aliases=True,
+                )
+            elif wayne_end_time < now:
+                return emojize(
+                    f":( sry @{user_name}, Wayne is oughver already today :(",
+                    use_aliases=True,
+                )
+            else:
+                time_remaining = wayne_start_time - now
+                minutes_remaining = round(time_remaining.total_seconds() / 60)
+                hours_remaining = minutes_remaining / 60
+                if hours_remaining >= 1:
+                    minutes_remaining = minutes_remaining % 60
+                    return emojize(
+                        f":raising_hands_dark_skin_tone: :money_bag: {hours_remaining}h {minutes_remaining}m left until WAYNE :money_bag: :raising_hands_dark_skin_tone:",
+                        use_aliases=True,
+                    )
+                return emojize(
+                    f":raising_hands_dark_skin_tone: :money_bag: {minutes_remaining} minutes left until WAYNE :money_bag: :raising_hands_dark_skin_tone:",
+                    use_aliases=True,
+                )
+        return emojize(
+            f":warning: bruh it's {day_name[weekday]} there's no wayne today :warning:",
+            use_aliases=True,
+        )
+    except Exception as e:
+        LOGGER.error(f"Unexpected error while determining time until wayne: {e}")
+        return ":warning: idk wtf you did but your lack of wayne knowledge broke bot :warning:"
+
+
 def covid_cases_usa() -> str:
     """
     Retrieve reported COVID-19 cases and deaths in the US.
@@ -90,7 +141,12 @@ def covid_cases_usa() -> str:
     deaths = res["deaths"]
     critical = res["critical"]
     cases = res["confirmed"]
-    covid_summary = f"\n\n\n:flag_for_United_States::eagle: USA! USA! USA! USA! :eagle::flag_for_United_States:\n:chart_increasing: {cases:,} cases\n:skull: {deaths:,} deaths\n:face_with_medical_mask: {critical:,} critical"
+    covid_summary = (
+        f"\n\n\n"
+        f":flag_for_United_States::eagle: USA! USA! USA! USA! :eagle::flag_for_United_States:\n"
+        f":chart_increasing: {cases:,} cases\n:skull: {deaths:,} deaths\n"
+        f":face_with_medical_mask: {critical:,} critical"
+    )
     return emojize(
         covid_summary,
         use_aliases=True,

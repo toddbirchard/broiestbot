@@ -46,9 +46,7 @@ def footy_predicts_today(room: str, username: str) -> Optional[str]:
                 )
         return todays_predicts
     except HTTPError as e:
-        LOGGER.error(
-            f"HTTPError while fetching today's footy predicts: {e.response.content}"
-        )
+        LOGGER.error(f"HTTPError while fetching today's footy predicts: {e.response.content}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching today's footy predicts: {e}")
     except Exception as e:
@@ -69,9 +67,7 @@ def footy_fixtures_today(room: str, username: str) -> Optional[List[int]]:
         display_date, tz = get_preferred_time_format(today, room, username)
         params = {"date": display_date}
         params.update(get_preferred_timezone(room, username))
-        res = requests.get(
-            FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params
-        )
+        res = requests.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params)
         fixtures = res.json().get("response")
         if bool(fixtures):
             return [
@@ -80,9 +76,7 @@ def footy_fixtures_today(room: str, username: str) -> Optional[List[int]]:
                 if fixture["league"]["id"] in FOOTY_LEAGUES.values()
             ]
     except HTTPError as e:
-        LOGGER.error(
-            f"HTTPError while fetching today's footy fixtures: {e.response.content}"
-        )
+        LOGGER.error(f"HTTPError while fetching today's footy fixtures: {e.response.content}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching today's footy fixtures: {e}")
     except Exception as e:

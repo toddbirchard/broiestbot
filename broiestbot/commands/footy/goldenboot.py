@@ -14,6 +14,8 @@ from config import (
 )
 from logger import LOGGER
 
+from .util import get_season_year
+
 
 def epl_golden_boot() -> str:
     """
@@ -70,7 +72,7 @@ def golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str]]:
     """
     try:
         top_scorers = []
-        season = datetime.now().year
+        season = get_season_year(EPL_LEAGUE_ID)
         params = {"season": season, "league": league}
         req = requests.get(
             FOOTY_TOPSCORERS_ENDPOINT,
@@ -98,9 +100,7 @@ def golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str]]:
                     break
         return top_scorers
     except HTTPError as e:
-        LOGGER.error(
-            f"HTTPError while fetching golden boot leaders: {e.response.content}"
-        )
+        LOGGER.error(f"HTTPError while fetching golden boot leaders: {e.response.content}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching golden boot leaders: {e}")
     except Exception as e:

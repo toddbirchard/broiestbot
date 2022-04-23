@@ -2,54 +2,76 @@
 import re
 from typing import Optional, Tuple
 
+from database import session
+from database.models import Command, Phrase
 from emoji import emojize
-from ipdata.ipdata import IncompatibleParameters
 
 from broiestbot.commands import (
     all_leagues_golden_boot,
     basic_message,
     blaze_time_remaining,
     bund_standings,
+    change_or_stay_vote,
     covid_cases_usa,
-    create_instagram_preview,
+    efl_standings,
     epl_golden_boot,
     epl_standings,
+    extract_url,
     fetch_fox_fixtures,
     fetch_image_from_gcs,
     find_imdb_movie,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
     footy_predicts_today,
-    footy_todays_upcoming_fixtures,
+    footy_team_lineups,
     footy_upcoming_fixtures,
+    gcs_count_images_in_bucket,
+    gcs_random_image_spam,
     get_all_live_twitch_streams,
-    get_crypto,
+    get_crypto_chart,
+    get_crypto_price,
+    get_current_show,
+    get_english_definition,
     get_english_translation,
     get_footy_odds,
     get_live_nfl_games,
-    get_olympic_medals_per_nation,
     get_redgifs_gif,
     get_song_lyrics,
     get_stock,
+    get_summer_olympic_medals,
     get_top_crypto,
     get_urban_definition,
+    get_winter_olympic_medals,
     giphy_image_search,
     liga_standings,
+    ligue_standings,
+    live_nba_games,
+    nba_standings,
     random_image,
     send_text_message,
+    time_until_wayne,
+    today_phillies_games,
+    today_upcoming_fixtures,
+    tovala_counter,
+    tuner,
+    upcoming_nba_games,
     weather_by_location,
     wiki_summary,
 )
 from chatango.ch import Message, Room, RoomManager, User
-from clients import geo
-from config import CHATANGO_BLACKLISTED_USERS
-from database import session
-from database.models import Chat, ChatangoUser, Command
+from config import CHATANGO_BOTS
 from logger import LOGGER
+
+from .data import persist_chat_logs, persist_user_data
+from .moderation import ban_word, check_blacklisted_users
 
 
 class Bot(RoomManager):
     """Chatango bot."""
+
+    def __init__(self, name=None, password=None):
+        super().__init__(name, password)
+        self.bot_username = name
 
     def on_init(self):
         """Initialize bot."""
@@ -74,7 +96,7 @@ class Bot(RoomManager):
         :param str content: Content to be used in response.
         :param Optional[str] command: Name of command triggered by user.
         :param Optional[str] args: Additional arguments passed with user command.
-        :param Optional[Room] room: Chatango room.
+        :param Optional[Room] room: Current Chatango room object.
         :param Optional[str] user_name: User who triggered command.
 
         :returns: Optional[str]
@@ -87,8 +109,12 @@ class Bot(RoomManager):
             return get_stock(args)
         elif cmd_type == "storage":
             return fetch_image_from_gcs(content)
+        elif cmd_type == "randomspam":
+            return gcs_random_image_spam(content)
         elif cmd_type == "crypto":
-            return get_crypto(content)
+            return get_crypto_price(command.lower(), content)
+        elif cmd_type == "cryptochart" and args:
+            return get_crypto_chart(args)
         elif cmd_type == "giphy":
             return giphy_image_search(content)
         elif cmd_type == "weather" and args:
@@ -108,11 +134,15 @@ class Bot(RoomManager):
         elif cmd_type == "sms" and args and user_name:
             return send_text_message(args, user_name)
         elif cmd_type == "epltable":
-            return epl_standings(content)
+            return epl_standings()
         elif cmd_type == "ligatable":
-            return liga_standings(content)
+            return liga_standings()
         elif cmd_type == "bundtable":
-            return bund_standings(content)
+            return bund_standings()
+        elif cmd_type == "efltable":
+            return efl_standings()
+        elif cmd_type == "liguetable":
+            return ligue_standings()
         elif cmd_type == "fixtures":
             return footy_upcoming_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "allfixtures":
@@ -122,7 +152,7 @@ class Bot(RoomManager):
         elif cmd_type == "livefixtureswithsubs":
             return footy_live_fixtures(room.room_name.lower(), user_name, subs=True)
         elif cmd_type == "todayfixtures":
-            return footy_todays_upcoming_fixtures(room.room_name.lower(), user_name)
+            return today_upcoming_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "goldenboot":
             return epl_golden_boot()
         elif cmd_type == "goldenshoe":
@@ -131,6 +161,8 @@ class Bot(RoomManager):
             return footy_predicts_today(room.room_name.lower(), user_name)
         elif cmd_type == "foxtures":
             return fetch_fox_fixtures(room.room_name.lower(), user_name)
+        elif cmd_type == "footyxi":
+            return footy_team_lineups(room.room_name.lower(), user_name)
         elif cmd_type == "covid":
             return covid_cases_usa()
         elif cmd_type == "lyrics" and args:
@@ -138,7 +170,9 @@ class Bot(RoomManager):
         elif cmd_type == "entranslation" and args:
             return get_english_translation(command, args)
         elif cmd_type == "olympics":
-            return get_olympic_medals_per_nation()
+            return get_summer_olympic_medals()
+        elif cmd_type in ("wolympics", "winterolympics"):
+            return get_winter_olympic_medals()
         elif cmd_type == "eplodds":
             return get_footy_odds()
         elif cmd_type == "twitch":
@@ -147,51 +181,120 @@ class Bot(RoomManager):
             return get_live_nfl_games()
         elif cmd_type == "topcrypto":
             return get_top_crypto()
+        elif cmd_type == "define" and args:
+            return get_english_definition(args)
+        elif cmd_type == "tune" and args:
+            return tuner(args, user_name, room.user.name.lower())
+        elif cmd_type == "wayne":
+            return time_until_wayne(user_name)
+        elif cmd_type == "np":
+            return get_current_show(True, room.user.name.lower())
+        elif cmd_type == "reserved":
+            return None
+        elif cmd_type == "nbastandings":
+            return nba_standings()
+        elif cmd_type == "nbagames":
+            return upcoming_nba_games()
+        elif cmd_type == "nbalive":
+            return live_nba_games()
+        elif cmd_type == "livenba":
+            return live_nba_games()
+        elif cmd_type == "tovala":
+            return tovala_counter(user_name)
+        elif cmd_type == "imagecount":
+            return gcs_count_images_in_bucket(content)
+        elif cmd_type == "changeorstay":
+            return change_or_stay_vote(user_name, content)
+        elif cmd_type == "philliesgames":
+            return today_phillies_games()
         # elif cmd_type == "youtube" and args:
         # return search_youtube_for_video(args)
         LOGGER.warning(f"No response for command `{command}` {args}")
-        return None
+        return emojize(f":warning: idk wtf u did but bot is ded now, thanks @{user_name} :warning:")
 
     def on_message(self, room: Room, user: User, message: Message) -> None:
         """
         Triggers upon every chat message to parse commands, validate users, and save chat logs.
 
-        :param Room room: Chatango room.
+        :param Room room: Current Chatango room object.
         :param User user: User responsible for triggering command.
         :param Message message: Raw chat message submitted by a user.
 
         :returns: None
         """
         chat_message = message.body.lower()
-        user_name = user.name.title().lower()
+        user_name = user.name.lower()
         room_name = room.room_name.lower()
-        self._check_blacklisted_users(room, user_name, message)
-        self._get_user_data(room_name, user, message)
-        self._process_command(chat_message, room, user_name, message)
-        session.add(Chat(username=user_name, room=room_name, message=chat_message))
+        bot_username = room.user.name.lower()
+        check_blacklisted_users(room, user_name, message)
+        self._log_message(room, user, message)
+        persist_user_data(room_name, user, message, bot_username)
+        persist_chat_logs(user_name, room_name, chat_message, bot_username)
+        if chat_message.startswith("!"):
+            self._process_command(chat_message, room, user_name)
+        # elif message.body.startswith("http"):
+        # self._create_link_preview(room, message.body)
+        # elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:
+        # ban_word(room, message, user_name, silent=False)
+        else:
+            self._process_phrase(chat_message, room, user_name, message, bot_username)
 
-    def _process_command(
-        self, chat_message: str, room: Room, user_name: str, message: Message
-    ) -> None:
-        """Determines if message is a bot command."""
-        if re.match(r"^!!.+", chat_message):
+    @staticmethod
+    def _log_message(room: Room, user: User, message: Message):
+        """
+        Log chat message.
+
+        :param Room room: Current Chatango room object.
+        :param User user: User responsible for triggering command.
+        :param Message message: Raw chat message submitted by a user.
+
+        :returns: None
+        """
+        if bool(message.ip) is True and message.body is not None:
+            LOGGER.info(f"[{room.room_name}] [{user.name}] [{message.ip}]: {message.body}")
+        else:
+            LOGGER.info(f"[{room.room_name}] [{user.name}] [no IP address]: {message.body}")
+
+    def _process_command(self, chat_message: str, room: Room, user_name: str) -> None:
+        """
+        Determines if message is a bot command.
+
+        :param str chat_message: Raw message sent by user.
+        :param Room room: Chatango room object.
+        :param str user_name: User responsible for triggering command.
+
+        :returns: None
+        """
+        if re.match(r"^!!.+$", chat_message):
             return self._giphy_fallback(chat_message[2::], room)
-        elif re.match(r"^!ein+", chat_message):
+        elif re.match(r"^!ein+$", chat_message):
             return self._get_response("!ein", room, user_name)
-        elif re.match(r"^!.+", chat_message):
+        elif re.match(r"^!\S+", chat_message):
             return self._get_response(chat_message, room, user_name)
-        elif chat_message == "bro?":
-            self._bot_status_check(room)
-        elif (
-            "@broiestbro" in chat_message.lower() and "*waves*" in chat_message.lower()
-        ):
-            self._wave_back(room, user_name)
-        elif chat_message.replace("!", "").strip() == "no u":
-            self._ban_word(room, message, user_name, silent=True)
+        # elif re.search(r"instagram.com/p/[a-zA-Z0-9_-]+", message.body):
+
+    def _process_phrase(
+        self, chat_message: str, room: Room, user_name: str, message: Message, bot_username: str
+    ) -> None:
+        """
+        Search database for non-command phrases which elicit a response.
+
+        :param str chat_message: A non-command chat which may prompt a response.
+        :param Room room: Current chatango room object.
+        :param str user_name: User responsible for triggering command.
+        :param Message message: Chatango message object to be parsed.
+        :param str bot_username: Username of the currently-running bot.
+
+        :returns: None
+        """
+        if f"@{bot_username}" in chat_message and "*waves*" in chat_message:
+            self._wave_back(room, user_name, bot_username)
+        elif chat_message == "no u":
+            ban_word(room, message, user_name, silent=True)
         elif (
             "petition" in chat_message
             and "competition" not in chat_message
-            and user_name != "broiestbro"
+            and user_name.upper() not in CHATANGO_BOTS
         ):
             room.message(
                 "SIGN THE PETITION: \
@@ -202,73 +305,12 @@ class Bot(RoomManager):
             room.message("™")
         elif chat_message.lower() == "tm":
             self._trademark(room, message)
-
-        # elif re.search(r"instagram.com/p/[a-zA-Z0-9_-]+", message.body):
-        # self._create_link_preview(room, message.body)
-        LOGGER.info(f"[{room.room_name}] [{user_name}] [{message.ip}]: {message.body}")
-
-    @staticmethod
-    def _get_user_data(room_name: str, user: User, message: Message) -> None:
-        """
-        Persist metadata regarding message history.
-
-        :param str room_name: Chatango room.
-        :param User user: User responsible for triggering command.
-        :param Message message: User submitted message.
-
-        :returns: None
-        """
-        try:
-            if message.ip:
-                existing_user = (
-                    session.query(ChatangoUser)
-                    .filter(
-                        ChatangoUser.username == user.name.lower(),
-                        ChatangoUser.chatango_room == room_name,
-                        ChatangoUser.ip == message.ip,
-                    )
-                    .first()
-                )
-                if existing_user is None:
-                    user_metadata = geo.lookup_user(message.ip)
-                    # fmt: off
-                    session.add(
-                        ChatangoUser(
-                            username=user.name.lower().replace("!anon", "anon"),
-                            chatango_room=room_name,
-                            city=user_metadata.get("city"),
-                            region=user_metadata.get("region"),
-                            country_name=user_metadata.get("country_name"),
-                            latitude=user_metadata.get("latitude"),
-                            longitude=user_metadata.get("longitude"),
-                            postal=user_metadata.get("postal"),
-                            emoji_flag=user_metadata.get("emoji_flag"),
-                            status=user_metadata.get("status"),
-                            time_zone_name=user_metadata.get("time_zone").get("name") if user_metadata.get("time_zone") else None,
-                            time_zone_abbr=user_metadata.get("time_zone").get("abbr") if user_metadata.get("time_zone") else None,
-                            time_zone_offset=user_metadata.get("time_zone").get("offset") if user_metadata.get("time_zone") else None,
-                            time_zone_is_dst=user_metadata.get("time_zone").get("is_dst") if user_metadata.get("time_zone") else None,
-                            carrier_name=user_metadata.get("carrier").get("name") if user_metadata.get("carrier") else None,
-                            carrier_mnc=user_metadata.get("carrier").get("mnc") if user_metadata.get("carrier") else None,
-                            carrier_mcc=user_metadata.get("carrier").get("mcc") if user_metadata.get("carrier") else None,
-                            asn_asn=user_metadata.get("asn").get("asn") if user_metadata.get("asn") else None,
-                            asn_name=user_metadata.get("asn").get("name") if user_metadata.get("asn") else None,
-                            asn_domain=user_metadata.get("asn").get("domain") if user_metadata.get("asn") else None,
-                            asn_route=user_metadata.get("asn").get("route") if user_metadata.get("asn") else None,
-                            asn_type=user_metadata.get("asn").get("type") if user_metadata.get("asn") else None,
-                            time_zone_current_time=user_metadata.get("time_zone").get("current_time") if user_metadata.get("time_zone") else None,
-                            ip=message.ip
-                        )
-                    )
-                    # fmt: on
-        except IncompatibleParameters as e:
-            LOGGER.warning(
-                f"Failed to save data for {user.name} due to IncompatibleParameters: {e}"
+        else:
+            fetched_phrase = (
+                session.query(Phrase).filter(Phrase.phrase == chat_message).one_or_none()
             )
-        except Exception as e:
-            LOGGER.warning(
-                f"Unexpected error while attempting to save data for {user.name}: {e}"
-            )
+            if fetched_phrase is not None:
+                room.message(fetched_phrase.response)
 
     @staticmethod
     def _parse_command(user_msg: str) -> Tuple[str, Optional[str]]:
@@ -286,23 +328,17 @@ class Bot(RoomManager):
             return cmd, args
         return user_msg, None
 
-    def _get_response(
-        self, chat_message: str, room: Room, user_name: str
-    ) -> Optional[str]:
+    def _get_response(self, chat_message: str, room: Room, user_name: str):
         """
         Fetch response from database to send to chat.
 
         :param str chat_message: Raw message sent by user.
-        :param Room room: Chatango room.
+        :param Room room: Current Chatango room object.
         :param str user_name: User responsible for triggering command.
-
-        :returns: Optional[str]
         """
-        cmd, args = self._parse_command(chat_message[1::])
-        if cmd == "tune":  # Avoid clashes with Acleebot
-            return None
+        cmd, args = self._parse_command(chat_message[1::].strip())
         command = session.query(Command).filter(Command.command == cmd).first()
-        if command is not None:
+        if command is not None and command.type not in ("reserved", "reddit"):
             response = self.create_message(
                 command.type,
                 command.response,
@@ -316,42 +352,46 @@ class Bot(RoomManager):
             self._giphy_fallback(chat_message, room)
 
     @staticmethod
-    def _create_link_preview(room: Room, url: str) -> None:
+    def _create_link_preview(room: Room, chat_message: str) -> None:
         """
-        Generate link preview for Instagram post URL.
+        Generate link preview for URL.
 
-        :param Room room: Chatango room.
-        :param str url: URL of an Instagram post.
+        :param Room room: Current Chatango room object.
+        :param str chat_message: URL of an Instagram post.
 
         :returns: None
         """
-        preview = create_instagram_preview(url)
-        room.message(preview)
+        if (
+            ".jpg" not in chat_message
+            and ".png" not in chat_message
+            and ".gif" not in chat_message
+            and ".jpeg" not in chat_message
+            and ".mp4" not in chat_message
+            and ".JPG" not in chat_message
+            and ".PNG" not in chat_message
+            and ".GIF" not in chat_message
+            and ".JPEG" not in chat_message
+            and ".MP4" not in chat_message
+            and "twitter" not in chat_message
+            and "youtube" not in chat_message
+        ):
+            link_preview = extract_url(chat_message)
+            if link_preview:
+                room.message(link_preview, html=True)
 
     @staticmethod
-    def _bot_status_check(room: Room) -> None:
-        """
-        Check bot status.
-
-        :param Room room: Chatango room.
-
-        :returns: None
-        """
-        room.message("hellouughhgughhg?")
-
-    @staticmethod
-    def _wave_back(room: Room, user_name: str) -> None:
+    def _wave_back(room: Room, user_name: str, bot_username) -> None:
         """
         Wave back at user.
 
-        :param Room room: Chatango room.
-        :param str user_name: User name of Chatango user who waved.
+        :param Room room: Current Chatango room object.
+        :param str user_name: Username of Chatango user who waved.
 
         :returns: None
         """
-        if user_name == "broiestbro":
+        if user_name == bot_username:
             room.message(
-                f"stop talking to urself and get some friends u fuckin loser jfc kys @broiestbro"
+                f"stop talking to urself and get some friends u fuckin loser jfc kys @{bot_username}"
             )
         else:
             room.message(f"@{user_name} *waves*")
@@ -362,7 +402,7 @@ class Bot(RoomManager):
         Default to Giphy for non-existent commands.
 
         :param str message: Command triggered by a user.
-        :param Room room: Chatango room.
+        :param Room room: Current Chatango room object.
 
         :returns: None
         """
@@ -372,49 +412,14 @@ class Bot(RoomManager):
             room.message(response)
 
     @staticmethod
-    def _ban_word(room: Room, message: Message, user_name: str, silent=False) -> None:
-        """
-        Remove banned word and warn offending user.
-
-        :param Room room: Chatango room.
-        :param Message message: Message sent by user.
-        :param str user_name: User responsible for triggering command.
-        :param bool silent: Whether or not offending user should be warned.
-
-        :returns: None
-        """
-        message.delete()
-        if silent is False:
-            room.message(f"DO NOT SAY THAT WORD @{user_name.upper()} :@")
-
-    @staticmethod
     def _trademark(room: Room, message: Message) -> None:
         """
-        Trademark symbol helper.
+        Replace "TM" chats with a trademark symbol.
 
-        :param Room room: Chatango room.
+        :param Room room: Current Chatango room object.
         :param Message message: User submitted `tm` to be replaced.
 
         :returns: None
         """
         message.delete()
         room.message("™")
-
-    @staticmethod
-    def _check_blacklisted_users(room: Room, user_name: str, message: Message) -> None:
-        """
-        Ban and delete chat history of blacklisted user.
-
-        :param Room room: Chatango room name.
-        :param str user_name: Chatango username to validate against blacklist.
-        :param Message message: User submitted message.
-
-        :returns: None
-        """
-        if user_name in CHATANGO_BLACKLISTED_USERS:
-            room.ban(message)
-            reply = emojize(
-                f":wave: @{user_name} lmao pz fgt have fun being banned forever :wave:",
-                use_aliases=True,
-            )
-            room.message(reply)

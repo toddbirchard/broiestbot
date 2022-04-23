@@ -11,14 +11,12 @@ PONG = 10
 
 GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
-FrameInfo = collections.namedtuple(
-    "FrameInfo", ["fin", "opcode", "masked", "payload_length"]
-)
+FrameInfo = collections.namedtuple("FrameInfo", ["fin", "opcode", "masked", "payload_length"])
 
 
 def check_frame(buff):
     """
-    returns False if the buffer doesn't starts with a valid frame
+    returns False if the buffer doesn't start with a valid frame
     returns the size of the frame in success
     """
     buff = bytearray(buff)
@@ -66,9 +64,7 @@ def frame_info(buff):
     elif (buff[1] & 127) == 127:
         payload_length += struct.unpack_from(">Q", buff, 2)[0]
 
-    return FrameInfo(
-        bool(buff[0] & 128), buff[0] & 15, bool(buff[1] & 128), payload_length
-    )
+    return FrameInfo(bool(buff[0] & 128), buff[0] & 15, bool(buff[1] & 128), payload_length)
 
 
 def get_frames(buff):
@@ -86,9 +82,7 @@ def get_frames(buff):
 
 def check_msg(buff):
     """
-    returns True  if the buffer starts with a full fragmented message, or a
-    unfragmented frame
-    returns where the last frame ends
+    :returns: True if buffer starts with fragmented message, or an unfragmented frame where the last frame ends.
     """
     r = check_frame(buff)
     s = 0
@@ -102,7 +96,7 @@ def check_msg(buff):
 def mask_buff(buff):
     """
     masks buff with a random mask
-    returns mask + masked buff
+    :returns: mask + masked buff
     """
     buff = bytearray(buff)
     mask = bytearray(os.urandom(4))
@@ -110,9 +104,7 @@ def mask_buff(buff):
 
 
 def unmask_buff(buff):
-    """
-    unmask buff, using the firsts 4 bytes as the mask
-    """
+    """Unmask buffer using the firsts 4 bytes as the mask."""
     buff = bytearray(buff)
     mask = buff[:4]
     return bytes(bytearray(x ^ mask[i % 4] for i, x in enumerate(buff[4:])))
@@ -184,9 +176,7 @@ def get_payload(buff):
         start_payload = 10
 
     if info.masked:
-        payload = unmask_buff(
-            buff[start_payload : info.payload_length + start_payload + 4]
-        )
+        payload = unmask_buff(buff[start_payload : info.payload_length + start_payload + 4])
     else:
         payload = buff[start_payload : info.payload_length + start_payload]
 
@@ -203,8 +193,7 @@ def get_payload(buff):
 
 def check_headers(headers):
     """
-    returns False if the headers are invalid for a websocket handshake
-    returns the key
+    :returns: False if headers are invalid; otherwise returns the key.
     """
     version = None
 

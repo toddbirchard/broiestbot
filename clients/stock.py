@@ -18,7 +18,7 @@ class StockChartHandler:
 
     def get_chart(self, symbol: str) -> str:
         """Create chart of a company's 30-day stock performance."""
-        message = self._get_price(symbol)
+        message = self.get_price(symbol)
         if message:
             return message
         return emojize("⚠️ dats nought a stock symbol u RETART :@ ⚠️")
@@ -33,7 +33,7 @@ class StockChartHandler:
             return message
         return emojize("⚠️ dats nought a stock symbol u RETART :@ ⚠️")'''
 
-    def _get_price(self, symbol: str) -> Optional[str]:
+    def get_price(self, symbol: str) -> Optional[str]:
         """Get daily price summary."""
         params = {"token": self.token}
         try:
@@ -48,13 +48,9 @@ class StockChartHandler:
                         message = f"{company_name}: Current price of ${price:.2f} (24-hour change of {change:.2f}%)"
                     return message
         except HTTPError as e:
-            raise HTTPError(
-                f"Failed to fetch stock price for `{symbol}`: {e.response.content}"
-            )
+            raise HTTPError(f"Failed to fetch stock price for `{symbol}`: {e.response.content}")
         except Exception as e:
-            raise Exception(
-                f"Unexpected error while fetching stock price for `{symbol}`: {e}"
-            )
+            raise Exception(f"Unexpected error while fetching stock price for `{symbol}`: {e}")
         return None
 
     def _get_chart_data(self, symbol: str) -> Optional[bytes]:
