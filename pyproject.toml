@@ -38,6 +38,7 @@ redis = "*"
 praw = "*"
 ddtrace = "*"
 uWSGI = "*"
+gunicorn = "*"
 python-dotenv = "*"
 twilio = "*"
 datadog = "*"
@@ -49,8 +50,6 @@ google-api-python-client = "*"
 PyMultiDictionary = "*"
 metadata-parser = "*"
 PSNAWP = "*"
-
-[tool.poetry.dev-dependencies]
 pytest = "*"
 black = "*"
 isort = "*"
@@ -58,7 +57,7 @@ flake8 = "*"
 pylint = "*"
 
 [tool.poetry.scripts]
-run = "wsgi:init_bot"
+run = "main:init_bot"
 
 [tool.poetry.urls]
 issues = "https://github.com/toddbirchard/broiestbot/issues"

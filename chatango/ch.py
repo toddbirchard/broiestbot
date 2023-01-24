@@ -493,10 +493,8 @@ class PM:
         """
         Request an auid using name and password.
 
-        :type name: str
-        :param name: name
-        :type password: str
-        :param password: password
+        :param str name: name
+        :param str password: password
 
         @rtype: str
         @return: auid
@@ -1266,7 +1264,7 @@ class Room:
             user.remove_session_id(self, args[1])
             self._userlist.remove(user)
             if user not in self._userlist or not self.mgr._userlist_event_unique:
-                self._call_event("on_leave", user, puid)
+                self._call_event("on_leave", user)
         else:  # join
             user.add_session_id(self, args[1])
             if user not in self._userlist:
@@ -1275,7 +1273,7 @@ class Room:
                 doEvent = False
             self._userlist.append(user)
             if doEvent or not self.mgr._userlist_event_unique:
-                self._call_event("on_join", user, puid)
+                self._call_event("on_join", user)
 
     def _rcmd_show_fw(self, args):
         self._call_event("on_flood_warning")
@@ -2001,26 +1999,24 @@ class RoomManager:
         pass
 
     @staticmethod
-    def on_join(room, user, puid):
+    def on_join(room, user):
         """
         Called when a user joins. Anonymous users get ignored here.
 
         :param Room room: Chatango room where a user joined.
         :param User user: Recently joined user.
-        :param str puid: Personal unique id for a user.
         """
         LOGGER.info(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} joined {room.room_name}.",
         )
 
     @staticmethod
-    def on_leave(room: Room, user, puid):
+    def on_leave(room: Room, user):
         """
         Called when a user leaves. Anonymous users get ignored here.
 
         :param Room room: Chatango room where a user left.
         :param User user: Recently departed user.
-        :param str puid: Personal unique id for a user.
         """
         LOGGER.info(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} left {room.room_name}.",

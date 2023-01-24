@@ -34,11 +34,11 @@ $(VIRTUAL_ENVIRONMENT):
 
 .PHONY: dev
 dev: env
-	$(LOCAL_PYTHON) -m wsgi
+	$(LOCAL_PYTHON) -m gunicorn --workers=1 --daemon=False main:init_bot
 
 .PHONY: run
 run: env
-	$(LOCAL_PYTHON) -m wsgi
+	$(LOCAL_PYTHON) -m gunicorn --workers=1 --daemon=False main:init_bot
 
 .PHONY: install
 install: env
