@@ -85,10 +85,11 @@ lint: env
 clean:
 	find . -name 'poetry.lock' -delete && \
 	find . -name '.coverage' -delete && \
+	find . -name './logs/*.json' -exec rm -rf {} + && \
+	find . -name './logs/*.log' -exec rm -rf {} + && \
 	find . -wholename '**/*.pyc' -delete && \
 	find . -type d -wholename '__pycache__' -exec rm -rf {} + && \
 	find . -type d -wholename '.venv' -exec rm -rf {} + && \
 	find . -type d -wholename '.pytest_cache' -exec rm -rf {} + && \
 	find . -type d -wholename '**/.pytest_cache' -exec rm -rf {} + && \
-	find . -type d -wholename './logs/*' -exec rm -rf {} + && \
 	find . -type d -wholename './.reports/*' -exec rm -rf {} +

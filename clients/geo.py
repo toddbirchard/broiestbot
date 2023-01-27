@@ -35,7 +35,7 @@ class GeoIP:
         """
         try:
             return self.client.lookup(
-                ip=ip_address,
+                ip_address,
                 fields=[
                     "city",
                     "region",

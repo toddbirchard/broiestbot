@@ -15,7 +15,6 @@ def json_formatter(record: dict) -> str:
     :param dict record: Log object containing log metadata & message.
     :returns: str
     """
-    record["time"] = record["time"].strftime("%m/%d/%Y, %H:%M:%S")
 
     def serialize_as_admin(log: dict) -> str:
         """
@@ -28,12 +27,12 @@ def json_formatter(record: dict) -> str:
             if chat_data and log.get("message") is not None:
                 chat_dict = chat_data.groupdict()
                 subset = {
-                    "time": log["time"],
-                    "message": log.get("message").split(": ", 1)[1],
-                    "level": log.get("level").name,
-                    "room": chat_dict.get("room"),
-                    "user": chat_dict.get("user"),
-                    "ip": chat_dict.get("ip"),
+                    "time": log["elapsed"]["time"]["repr"].strftime("%m/%d/%Y, %H:%M:%S"),
+                    "message": log["message"].split(": ", 1)[1],
+                    "level": log["level"].name,
+                    "room": chat_dict["room"],
+                    "user": chat_dict["user"],
+                    "ip": chat_dict["ip"],
                 }
                 return json.dumps(subset)
         except Exception as e:
@@ -49,9 +48,9 @@ def json_formatter(record: dict) -> str:
         try:
             chat_data = re.search(r"(?P<room>\[\S+]) (?P<user>\[\S+])", log["message"])
             chat_dict = chat_data.groupdict()
-            if bool(chat_data) and log.get("message") is not None:
+            if bool(chat_data) and len(chat_data.groupdict().values()) == 2 and log.get("message") is not None:
                 subset = {
-                    "time": log["time"],
+                    "time": log["elapsed"]["time"]["repr"].strftime("%m/%d/%Y, %H:%M:%S"),
                     "message": log["message"].split(": ", 1)[1],
                     "level": log["level"].name,
                     "room": chat_dict["room"],
@@ -70,7 +69,7 @@ def json_formatter(record: dict) -> str:
         """
         if log is not None and log.get("message") is not None:
             subset = {
-                "time": log["time"],
+                "time": log["elapsed"]["time"]["repr"].strftime("%m/%d/%Y, %H:%M:%S"),
                 "level": log["level"].name,
                 "message": log["message"],
             }
@@ -79,11 +78,11 @@ def json_formatter(record: dict) -> str:
     serialized_log = record["extra"].get("serialized")
     if serialized_log:
         log_level = record["level"].name
-        if log_level in ("INFO", "TRACE"):
-            serialized_log = serialize_as_admin(record)
-        elif log_level in ("WARNING", "SUCCESS"):
+        if log_level in ("WARNING", "SUCCESS"):
             serialized_log = serialize_event(record)
-        else:
+        elif log_level == "INFO":
+            serialized_log = serialize_as_admin(record)
+        elif log_level in ("ERROR", "CRITICAL"):
             serialized_log = serialize_error(record)
             sms_error_handler(record)
 
@@ -94,7 +93,7 @@ def sms_error_handler(log: dict) -> None:
     :param dict log: Log object containing log metadata & message.
     """
     sms.messages.create(
-        body=f'BROBOT ERROR: {log["time"].strftime("%m/%d/%Y, %H:%M:%S")} | {log["message"]}',
+        body=f'BROBOT ERROR: {log["elapsed"]["time"]["repr"].strftime("%m/%d/%Y, %H:%M:%S")} | {log["message"]}',
         from_=TWILIO_SENDER_PHONE,
         to=TWILIO_RECIPIENT_PHONE,
     )
@@ -103,9 +102,7 @@ def sms_error_handler(log: dict) -> None:
 def log_formatter(record: dict) -> str:
     """
     Format `.log` records.
-
     :param dict record: Log object containing log metadata & message.
-
     :returns: str
     """
     if record["level"].name == "TRACE":
@@ -144,16 +141,10 @@ def create_logger() -> logger:
             colorize=True,
             catch=True,
             level="ERROR",
-            format=log_formatter,
+            format="<fg #70acde>{time:MM-DD-YYYY HH:mm:ss}</fg #70acde> | "
+            + "<red>{level}</red>: "
+            + "<light-white>{message}</light-white>",
             rotation="300 MB",
-            compression="zip",
-        )
-        logger.add(
-            "/var/log/broiestbot/ddog.json",
-            serialize=True,
-            catch=True,
-            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
-            rotation="500 MB",
             compression="zip",
         )
     elif ENVIRONMENT == "development":
@@ -166,11 +157,11 @@ def create_logger() -> logger:
             compression="zip",
         )
         logger.add(
-            f"{BASE_DIR}/logs/ddog.json",
-            serialize=True,
+            f"{BASE_DIR}/logs/ddog.log",
+            colorize=True,
             catch=True,
-            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
-            rotation="500 MB",
+            format=json_formatter,
+            rotation="300 MB",
             compression="zip",
         )
     return logger

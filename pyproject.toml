@@ -49,13 +49,12 @@ google-api-python-client = "*"
 PyMultiDictionary = "*"
 metadata-parser = "*"
 PSNAWP = "*"
-
-[tool.poetry.dev-dependencies]
 pytest = "*"
 black = "*"
 isort = "*"
 flake8 = "*"
 pylint = "*"
+json-log-formatter = "^0.5.1"
 
 [tool.poetry.scripts]
 run = "wsgi:init_bot"
