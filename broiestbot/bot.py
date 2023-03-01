@@ -32,7 +32,6 @@ from broiestbot.commands import (
     get_english_translation,
     get_footy_odds,
     get_live_nfl_games,
-    get_redgifs_gif,
     get_song_lyrics,
     get_stock,
     get_summer_olympic_medals,
@@ -293,6 +292,8 @@ class Bot(RoomManager):
         # ignored_user_message = check_ignored_users(user_name, message.ip)
         # if ignored_user_message:
         #     room.message(ignored_user_message, html=True)
+        if chat_message == "!!":
+            pass
         if re.match(r"^!!.+$", chat_message):
             return self._giphy_fallback(chat_message[2::], room)
         if re.match(r"^!ein+$", chat_message):
