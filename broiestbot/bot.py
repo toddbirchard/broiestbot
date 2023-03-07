@@ -46,6 +46,7 @@ from broiestbot.commands import (
     send_text_message,
     time_until_wayne,
     today_phillies_games,
+    create_youtube_video_preview,
     today_upcoming_fixtures,
     tovala_counter,
     tuner,
@@ -299,6 +300,10 @@ class Bot(RoomManager):
             return self._get_response("!ein", room, user_name)
         if re.match(r"^!\S+", chat_message):
             return self._get_response(chat_message, room, user_name)
+        if re.match(r"^https?:\\/\\/(?:www\\.)?youtube.com).+", chat_message):
+            LOGGER.warning(f"youtube link detected: {chat_message}")
+            video_preview = create_youtube_video_preview(chat_message)
+            room.message(video_preview, html=True)
         # elif re.search(r"instagram.com/p/[a-zA-Z0-9_-]+", message.body):
 
     def _process_phrase(

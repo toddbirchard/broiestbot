@@ -4,8 +4,8 @@ from typing import Optional
 import requests
 from emoji import emojize
 
-# from clients import yt
-# from googleapiclient.errors import HttpError
+from youtube_search import YoutubeSearch
+
 from requests.exceptions import HTTPError
 
 from config import (
@@ -110,7 +110,7 @@ def get_twitch_auth_token() -> Optional[str]:
         LOGGER.error(f"Unexpected error when fetching Twitch auth token: {e}")
 
 
-'''def search_youtube_for_video(query: str) -> str:
+def create_youtube_video_preview(query: str) -> str:
     """
     Search for a Youtube video.
 
@@ -119,13 +119,16 @@ def get_twitch_auth_token() -> Optional[str]:
     :returns: str
     """
     try:
-        request = yt.search().list(
-            part="snippet", q=query, maxResults=1, safeSearch=None
-        )
-        response = request.execute()
-        LOGGER.info(response)
-        return response
-    except HttpError as e:
-        LOGGER.error(f"HttpError while fetching YouTube video: {e}")
+        video_preview = ""
+        LOGGER.warning(f"Entered function. {query}")
+        videos = YoutubeSearch(query, max_results=5).to_dict()
+        LOGGER.warning(f"videos = {videos}")
+        video = videos[0]
+        video_thumbnail = video.get("thumbnails")[0]
+        video_title = video.get("title")
+        video_views = video.get("views")
+        video_desc = video.get("long_desc")
+        LOGGER.success(f"videos = {videos}")
+        return f"{videos}"
     except Exception as e:
-        LOGGER.error(f"Error while fetching YouTube video: {e}")'''
+        LOGGER.error(f"Error while fetching YouTube video: {e}")
