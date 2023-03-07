@@ -119,16 +119,30 @@ def create_youtube_video_preview(query: str) -> str:
     :returns: str
     """
     try:
-        video_preview = ""
-        LOGGER.warning(f"Entered function. {query}")
-        videos = YoutubeSearch(query, max_results=5).to_dict()
-        LOGGER.warning(f"videos = {videos}")
+        video_preview = "\n\n\n\n"
+        videos = YoutubeSearch(query, max_results=1).to_dict()
         video = videos[0]
-        video_thumbnail = video.get("thumbnails")[0]
+        video_thumbnail = video.get("thumbnails")[0].split("?")[0]
         video_title = video.get("title")
         video_views = video.get("views")
         video_desc = video.get("long_desc")
-        LOGGER.success(f"videos = {videos}")
-        return f"{videos}"
+        video_channel = video.get("channel")
+        video_duration = video.get("duration")
+        video_publish_time = video.get("publish_time")
+        if video_title:
+            video_preview += f"<b>{video_title}</b>\n"
+        if video_desc:
+            video_preview += f"{video_desc}\n"
+        if video_views:
+            video_preview += emojize(f":eyes: {video_views.replace(' views', '')}\n", language="en")
+        if video_duration:
+            video_preview += emojize(f":stopwatch: {video_duration}\n", language="en")
+        if video_publish_time:
+            video_preview += emojize(f":calendar: {video_publish_time}\n", language="en")
+        if video_channel:
+            emojize(f":television: {video_channel}\n", language="en")
+        if video_thumbnail:
+            video_preview += f"{video_thumbnail}"
+        return video_preview
     except Exception as e:
         LOGGER.error(f"Error while fetching YouTube video: {e}")
