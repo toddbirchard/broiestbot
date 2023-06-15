@@ -331,6 +331,8 @@ CONMEBOL_SUDAMERICANA_ID = 11
 CONMEBOL_RECOUPA_ID = 541
 WOMENS_WORLD_CUP_ID = 8
 U20_WORLD_CUP_ID = 490
+USL_LEAGUE_1_ID = 255
+USL_LEAGUE_2_ID = 256
 
 # Footy Leagues, cups and tournaments
 FOOTY_LEAGUES = {
@@ -369,15 +371,17 @@ FOOTY_LEAGUES = {
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     ":slightly_smiling_face: FRIENDLIES": FRIENDLIES_LEAGUE_ID,
-    # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
     # ":globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
-    # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
+    ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     ":trophy: :globe_showing_Americas: CONCACAF CHAMPIONS": CONCACAF_CHAMPIONS_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONMEBOL RECOUPA": CONMEBOL_RECOUPA_ID,
     ":trophy: :globe_showing_Americas: CONMEBOL LIBERTADORES": CONMEBOL_LIBERTADORES_ID,
     ":trophy: :globe_showing_Americas: CONMEBOL SUDAMERICANA": CONMEBOL_SUDAMERICANA_ID,
+    ":keycap_1: :United_States: USL LEAGUE 1": USL_LEAGUE_1_ID,
+    ":keycap_2: :United_States: USL LEAGUE 2": USL_LEAGUE_2_ID,
 }
 
 # Footy leagues with "live scoring" enabled
@@ -405,7 +409,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":rainbow: :European_Union: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF CHAMPIONS": CONCACAF_CHAMPIONS_LEAGUE_ID,
-    # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
+    ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     ":trophy: :globe_showing_Americas: CONMEBOL RECOUPA": CONMEBOL_RECOUPA_ID,
     ":trophy: :globe_showing_Americas: CONMEBOL LIBERTADORES": CONMEBOL_LIBERTADORES_ID,
     ":trophy: :globe_showing_Americas: CONMEBOL SUDAMERICANA": CONMEBOL_SUDAMERICANA_ID,
@@ -425,6 +429,7 @@ FOOTY_LEAGUES_LINEUPS = {
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
+    ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
     ":globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,

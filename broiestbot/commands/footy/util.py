@@ -24,6 +24,9 @@ from config import (
     CONCACAF_NATIONS_LEAGUE_ID,
     U20_WORLD_CUP_ID,
     WOMENS_WORLD_CUP_ID,
+    INT_FRIENDLIES_LEAGUE_ID,
+    USL_LEAGUE_1_ID,
+    USL_LEAGUE_2_ID,
 )
 
 
@@ -166,6 +169,9 @@ def get_season_year(league_id: int) -> Optional[int]:
         EUROS_QUALIFIERS_ID,
         U20_WORLD_CUP_ID,
         WOMENS_WORLD_CUP_ID,
+        INT_FRIENDLIES_LEAGUE_ID,
+        USL_LEAGUE_1_ID,
+        USL_LEAGUE_2_ID,
     ):
         return current_year
     # Exception for leagues that have a nonsensical `season` year.
@@ -177,4 +183,3 @@ def get_season_year(league_id: int) -> Optional[int]:
     elif current_month <= 6:
         return current_year - 1
     return current_year
-
