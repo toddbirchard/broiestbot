@@ -177,3 +177,4 @@ def get_season_year(league_id: int) -> Optional[int]:
     elif current_month <= 6:
         return current_year - 1
     return current_year
+

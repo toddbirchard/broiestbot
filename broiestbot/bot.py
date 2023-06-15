@@ -441,26 +441,6 @@ class Bot(RoomManager):
         message.delete()
         room.message("™")
 
-    @staticmethod
-    def _petition(room: Room, user_name: str) -> None:
-        """
-        Urge chat to sign the petition.
-
-        :param Room room: Current Chatango room object.
-        :param Message message: User submitted `tm` to be replaced.
-
-        :returns: None
-        """
-        if user_name.upper() not in CHATANGO_BOTS:
-            room.message(
-                emojize(
-                    ":prohibited: :penguin: <b>SIGN THE PETITION:</b>\n \
-                    https://www.change.org/p/nhl-exclude-penguins-from-bird-team-classification\n \
-                    https://i.imgur.com/nYQy0GR.jpg",
-                    language="en",
-                )
-            )
-
     '''@staticmethod
     def create_link_preview(user_name: str, chat_message: str, room: Room, message: Message) -> None:
         """
