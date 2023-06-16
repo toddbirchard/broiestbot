@@ -23,9 +23,10 @@ def generate_twitter_preview(message: str) -> Optional[str]:
     :returns: Optional[str]
     """
     try:
-        twitter_match = re.search(r"^https://twitter.com/[a-zA-Z0-9_]+/status/([0-9]+)", message)
-        if twitter_match:
-            tweet_id = twitter_match.group(1)
+        twitter_url_match = re.search(r"^https://twitter.com/[a-zA-Z0-9_]+/status/(\S+)", message)
+        if twitter_url_match:
+            tweet_sub_url = twitter_url_match.group(1)
+            tweet_id = tweet_sub_url.split(tweet_sub_url, "?")[0]
             tweet_response = fetch_tweet_by_id(tweet_id)
             if tweet_response:
                 LOGGER.success(f"Created Twitter link preview for Tweet: ({message})")
@@ -79,7 +80,6 @@ def parse_tweet_preview(response: Response, tweet_id: str) -> Optional[str]:
         tweet_users = response.json()["includes"]["users"]
         tweet_author_name = tweet_users[0]["name"]
         tweet_author_username = tweet_users[0]["username"]
-        # tweet_author_url = tweet_users[0]["url"]
         tweet_url = f"https://twitter.com/{tweet_author_username}/status/{tweet_id}"
         tweet_attachments = response.json()["includes"].get("media")
         if tweet_attachments:
