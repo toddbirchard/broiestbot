@@ -4,13 +4,13 @@ import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
-from config import RAPID_API_KEY, HTTP_REQUEST_TIMEOUT
+from config import RAPID_API_KEY, HTTP_REQUEST_TIMEOUT, FOOTY_ODDS_ENDPOINT
 from logger import LOGGER
 
 
 def get_footy_odds():
     try:
-        url = "https://odds.p.rapidapi.com/v1/odds"
+        url = FOOTY_ODDS_ENDPOINT
         querystring = {
             "sport": "soccer_epl",
             "region": "uk",

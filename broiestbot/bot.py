@@ -31,7 +31,6 @@ from broiestbot.commands import (
     get_current_show,
     get_english_definition,
     get_english_translation,
-    get_footy_odds,
     get_live_nfl_games,
     # get_redgifs_gif,
     get_song_lyrics,
@@ -58,6 +57,7 @@ from broiestbot.commands import (
     footy_live_fixture_stats,
     generate_twitter_preview,
     mls_standings,
+    get_odds,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
@@ -200,8 +200,8 @@ class Bot(RoomManager):
             return get_summer_olympic_medals()
         elif cmd_type in ("wolympics", "winterolympics"):
             return get_winter_olympic_medals()
-        elif cmd_type == "eplodds":
-            return get_footy_odds()
+        # elif cmd_type == "eplodds":
+        # return get_odds(content)
         elif cmd_type == "twitch":
             return get_all_live_twitch_streams()
         elif cmd_type == "livenfl":
@@ -234,6 +234,8 @@ class Bot(RoomManager):
             return change_or_stay_vote(user_name, content)
         elif cmd_type == "changeorstay":
             return get_live_poll_results(user_name)
+        elif cmd_type == "odds":
+            return get_odds(content)
         # elif cmd_type == "psn":
         # return get_psn_online_friends()
         # elif cmd_type == "philliesgames":

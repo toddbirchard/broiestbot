@@ -53,6 +53,7 @@ from .tuner import tuner
 from .video import get_all_live_twitch_streams
 from .weather import weather_by_location
 from .playstation import get_psn_online_friends
+from .odds import get_odds
 
 
 def basic_message(message):

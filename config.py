@@ -265,6 +265,32 @@ NFL_HTTP_HEADERS = {
     "x-rapidapi-host": "sportspage-feeds.p.rapidapi.com",
 }
 
+
+# Sports Odds
+# -------------------------------------------------
+
+# API
+ODDS_API_ENDPOINT = "https://pinnacle-odds.p.rapidapi.com/kit/v1/markets"
+
+# Sport IDs
+FOOTY_ODDS_SPORT_ID = 1
+TENNIS_ODDS_SPORT_ID = 2
+NBA_ODDS_SPORT_ID = 3
+HOCKEY_ODDS_SPORT_ID = 4
+HANDEGG_ODDS_SPORT_ID = 7
+MLB_ODDS_SPORT_ID = 9
+
+# League IDs
+## Footy
+FA_CUP_ODDS_ID = 1979
+EPL_LEAGUE_ODDS_ID = 1980
+UCL_CUP_ODDS_ID = 2627
+EUROS_QUALIFIERS_ODDS_ID = 2635
+MLS_LEAGUE_ODDS_ID = 2663
+LIGA_LEAGUE_ODDS_ID = 2196
+LIGUE_1_LEAGUE_ID = 2036
+
+
 # Footy
 # -------------------------------------------------
 
@@ -276,6 +302,8 @@ FOOTY_LIVE_FIXTURE_STATS_ENDPOINT = f"{FOOTY_BASE_URL}/fixtures/statistics"
 FOOTY_PREDICTS_ENDPOINT = f"{FOOTY_BASE_URL}/predictions"
 FOOTY_TOPSCORERS_ENDPOINT = f"{FOOTY_BASE_URL}/players/topscorers"
 FOOTY_STANDINGS_ENDPOINT = f"{FOOTY_BASE_URL}/standings"
+FOOTY_FIXTURE_STATS_ENDPOINT = f"{FOOTY_BASE_URL}/fixtures/statistics"
+FOOTY_ODDS_ENDPOINT = "https://odds.p.rapidapi.com/v1/odds"
 FOOTY_XI_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/fixtures/lineups"
 FOOTY_HTTP_HEADERS = {
     "content-type": "application/json",
