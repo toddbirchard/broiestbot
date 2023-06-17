@@ -43,11 +43,13 @@ def weather_by_location(location: str, room: str, user: str) -> str:
                 f":warning:️️ idk wtf you did but `{location}` fucked me up b :warning:",
                 language="en",
             )
+        measurement_units = params["units"]
         weather_code = resp["current"]["weather_code"]
+        weather_summary = resp["current"]["weather_descriptions"][0]
         is_day = resp["current"]["is_day"]
         temperature = resp["current"]["temperature"]
         feels_like = resp["current"]["feelslike"]
-        precipitation = resp["current"]["precip"] * 1000
+        precipitation = resp["current"]["precip"] * 100
         cloud_cover = resp["current"]["cloudcover"]
         humidity = resp["current"]["humidity"]
         wind_speed = resp["current"]["wind_speed"]
@@ -58,23 +60,23 @@ def weather_by_location(location: str, room: str, user: str) -> str:
         cloud_cover_emoji = get_cloud_cover_emoji(cloud_cover)
         response = emojize(
             f'\n\n<b>{resp["request"]["query"]}</b>\n \
-                        {weather_emoji} {resp["current"]["weather_descriptions"][0]}\n \
-                        :thermometer: Temp: {temperature}°{"c" if params["units"] == "m" else "f"} (feels like: {feels_like}{"c" if params["units"] == "m" else "f"}°)\n \
+                        {weather_emoji} {weather_summary}\n \
+                        :thermometer: Temp: {temperature}°{"c" if measurement_units == "m" else "f"} (feels like: {feels_like}{"c" if measurement_units == "m" else "f"}°)\n \
                         {precipitation_emoji} Precipitation: {precipitation:.0f}%\n \
                         {humidity_emoji} Humidity: {humidity}%\n \
                         {cloud_cover_emoji} Cloud cover: {cloud_cover}%\n \
-                        :wind_face: Wind speed: {wind_speed}{"km/h" if params["units"] == "m" else "mph"}\n \
+                        :wind_face: Wind speed: {wind_speed}{"km/h" if measurement_units == "m" else "mph"}\n \
                         :six-thirty: {local_time}',
             language="en",
         )
         return response
     except HTTPError as e:
         LOGGER.error(f"Failed to get weather for `{location}`: {e.response.content}")
-        return emojize(f":warning:️️ fk me the weather API is down :warning:", language="en")
-    except KeyError as e:
+        return emojize(f":warning:️️ ughhh fgma me the weather API is down or something :warning:", language="en")
+    except LookupError as e:
         LOGGER.error(f"KeyError while fetching weather for `{location}`: {e}", language="en")
         return emojize(
-            f":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
+            f":warning:️️ sry but BROUGH coded this bert like a MORAN and it DIED! :warning:",
             language="en",
         )
     except Exception as e:
@@ -144,9 +146,9 @@ def get_humidity_emoji(humidity: int) -> str:
 
     :returns: str
     """
-    if humidity > 85:
+    if humidity > 75:
         return ":downcast_face_with_sweat:"
-    if humidity > 60:
+    if humidity > 50:
         return ":grinning_face_with_sweat:"
     return ":slightly_smiling_face:"
 
@@ -159,8 +161,8 @@ def get_cloud_cover_emoji(cloud_cover: int) -> str:
 
     :returns: str
     """
-    if cloud_cover > 80:
-        return ":cloud:"
     if cloud_cover > 60:
+        return ":cloud:"
+    if cloud_cover > 40:
         return ":sun_behind_cloud:"
     return ":thumbs_up_light_skin_tone:"
