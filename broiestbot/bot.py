@@ -50,7 +50,7 @@ from broiestbot.commands import (
     tovala_counter,
     tuner,
     upcoming_nba_games,
-    weather_by_location,
+    get_current_weather,
     wiki_summary,
     # get_psn_online_friends,
     league_table_standings,
@@ -133,7 +133,7 @@ class Bot(RoomManager):
         elif cmd_type == "giphy":
             return giphy_image_search(content)
         elif cmd_type == "weather" and args:
-            return weather_by_location(args, room.room_name, user_name)
+            return get_current_weather(args, room.room_name, user_name)
         elif cmd_type == "wiki" and args:
             return wiki_summary(args)
         elif cmd_type == "imdb" and args:
