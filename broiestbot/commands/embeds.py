@@ -23,10 +23,9 @@ def generate_twitter_preview(message: str) -> Optional[str]:
     :returns: Optional[str]
     """
     try:
-        twitter_url_match = re.search(r"^https://twitter.com/[a-zA-Z0-9_]+/status/(\S+)", message)
+        twitter_url_match = re.search(r"^https://twitter.com/[a-zA-Z0-9_]+/status/([0-9]+)", message)
         if twitter_url_match:
-            tweet_sub_url = twitter_url_match.group(1)
-            tweet_id = tweet_sub_url.split(tweet_sub_url, "?")[0]
+            tweet_id = twitter_url_match.group(1)
             tweet_response = fetch_tweet_by_id(tweet_id)
             if tweet_response:
                 LOGGER.success(f"Created Twitter link preview for Tweet: ({message})")
