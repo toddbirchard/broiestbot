@@ -23,12 +23,11 @@ def generate_twitter_preview(message: str) -> Optional[str]:
     :returns: Optional[str]
     """
     try:
-        twitter_url_match = re.search(r"^https://twitter.com/[a-zA-Z0-9_]+/status/([0-9]+)", message)
+        twitter_url_match = re.search(r"^https://twitter\.com/[a-zA-Z0-9_]+/status/([0-9]+)", message)
         if twitter_url_match:
             tweet_id = twitter_url_match.group(1)
             tweet_response = fetch_tweet_by_id(tweet_id)
             if tweet_response:
-                LOGGER.success(f"Created Twitter link preview for Tweet: ({message})")
                 return parse_tweet_preview(tweet_response, tweet_id)
         return None
     except Exception as e:
@@ -54,6 +53,9 @@ def fetch_tweet_by_id(tweet_id: str) -> Optional[dict]:
         resp = requests.get(endpoint, auth=twitter_bearer_oauth, params=params)
         if resp.status_code == 200:
             return resp
+        LOGGER.warning(
+            f"Got unexpected status code while fetching Tweet by ID ({tweet_id}): {resp.status_code}, {resp.content}"
+        )
     except HTTPError as e:
         LOGGER.error(f"HTTPError error while fetching Tweet by ID ({tweet_id}): {e}")
     except Exception as e:
@@ -100,6 +102,10 @@ def parse_tweet_preview(response: Response, tweet_id: str) -> Optional[str]:
 def twitter_bearer_oauth(req: Request) -> Request:
     """
     Method required by bearer token authentication.
+
+    :param Request req: Prepared API request to fetch Tweet from Twitter API.
+
+    :returns: Request
     """
     req.headers["Authorization"] = f"Bearer {TWITTER_BEARER_TOKEN}"
     req.headers["User-Agent"] = "v2TweetLookupPython"

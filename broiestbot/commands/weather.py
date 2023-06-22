@@ -1,5 +1,7 @@
 """Fetch weather for a given location."""
 from typing import Optional
+from datetime import datetime
+
 import requests
 from database import session
 from database.models import Weather
@@ -85,31 +87,31 @@ def parse_weather_response(weather: dict, measurement_units: str) -> str:
     :returns: str
     """
     try:
+        response = "\n\n"
         weather_code = weather["current"]["weather_code"]
         weather_summary = weather["current"]["weather_descriptions"][0]
         is_day = weather["current"]["is_day"]
         temperature = weather["current"]["temperature"]
         feels_like = weather["current"]["feelslike"]
-        precipitation = f"{weather['current']['precip']:.0f}mm"
+        precipitation = weather["current"]["precip"]
         cloud_cover = weather["current"]["cloudcover"]
         humidity = weather["current"]["humidity"]
         wind_speed = weather["current"]["wind_speed"]
-        local_time = weather["location"]["localtime"].split(" ")[1]
+        local_time = datetime.utcfromtimestamp(weather['location']['localtime_epoch']).strftime("%I:%M")
         weather_emoji = get_weather_emoji(weather_code, is_day)
         precipitation_emoji = get_precipitation_emoji(weather["current"]["precip"])
         humidity_emoji = get_humidity_emoji(humidity)
         cloud_cover_emoji = get_cloud_cover_emoji(cloud_cover)
-        response = emojize(
-            f'\n\n<b>{weather["request"]["query"]}</b>\n \
-                        {weather_emoji} {weather_summary}\n \
-                        :thermometer: Temp: {temperature}°{"c" if measurement_units == "m" else "f"} (feels like: {feels_like}{"c" if measurement_units == "m" else "f"}°)\n \
-                        {precipitation_emoji} Precipitation: {precipitation}\n \
-                        {humidity_emoji} Humidity: {humidity}%\n \
-                        {cloud_cover_emoji} Cloud cover: {cloud_cover}%\n \
-                        :wind_face: Wind speed: {wind_speed}{"km/h" if measurement_units == "m" else "mph"}\n \
-                        :six-thirty: {local_time}',
-            language="en",
-        )
+        response += f"<b>{weather['request']['query']}</b>\n \
+                    {weather_emoji} {weather_summary}\n \
+                    :thermometer: Temp: {temperature}°{'c' if measurement_units == 'm' else 'f'} <i>(feels like {feels_like}{'c' if measurement_units == 'm' else 'f'}°)</i>\n"
+        if precipitation:
+            response += f"{precipitation_emoji} {precipitation}{'mm' if measurement_units == 'm' else 'in'}"
+        response += f"{humidity_emoji} Humidity: {humidity}%\n \
+                    {cloud_cover_emoji} Cloud cover: {cloud_cover}%\n \
+                    :wind_face: Wind speed: {wind_speed}{'km/h' if measurement_units == 'm' else 'mph'}\n \
+                    :six-thirty: {local_time}"
+        response = emojize(response, language="en")
         return response
     except Exception as e:
         LOGGER.error(f"Failed to parse weather response: {e}")
