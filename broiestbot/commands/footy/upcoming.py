@@ -189,6 +189,7 @@ def fetch_fox_fixtures(room: str, username: str) -> str:
                 away_team = fixture["teams"]["away"]["name"]
                 date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
                 display_date, tz = get_preferred_time_format(date, room, username)
+                display_date = check_fixture_start_date(date, tz, display_date)
                 if room == CHATANGO_OBI_ROOM:
                     display_date, tz = get_preferred_time_format(date, room, username)
                     matchup = f"{away_team} @ {home_team}"

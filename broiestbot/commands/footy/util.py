@@ -27,6 +27,8 @@ from config import (
     INT_FRIENDLIES_LEAGUE_ID,
     USL_LEAGUE_1_ID,
     USL_LEAGUE_2_ID,
+    UEFA_U19_QUALIFIERS_ID,
+    UEFA_U21_QUALIFIERS_ID,
 )
 
 
@@ -170,6 +172,8 @@ def get_season_year(league_id: int) -> Optional[int]:
         U20_WORLD_CUP_ID,
         WOMENS_WORLD_CUP_ID,
         INT_FRIENDLIES_LEAGUE_ID,
+        UEFA_U19_QUALIFIERS_ID,
+        UEFA_U21_QUALIFIERS_ID,
         USL_LEAGUE_1_ID,
         USL_LEAGUE_2_ID,
     ):

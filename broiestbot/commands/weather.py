@@ -97,7 +97,7 @@ def parse_weather_response(weather: dict, measurement_units: str) -> str:
         cloud_cover = weather["current"]["cloudcover"]
         humidity = weather["current"]["humidity"]
         wind_speed = weather["current"]["wind_speed"]
-        local_time = datetime.utcfromtimestamp(weather['location']['localtime_epoch']).strftime("%I:%M")
+        local_time = datetime.utcfromtimestamp(weather["location"]["localtime_epoch"]).strftime("%I:%M")
         weather_emoji = get_weather_emoji(weather_code, is_day)
         precipitation_emoji = get_precipitation_emoji(weather["current"]["precip"])
         humidity_emoji = get_humidity_emoji(humidity)
