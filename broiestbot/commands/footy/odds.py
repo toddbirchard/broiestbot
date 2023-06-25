@@ -8,7 +8,14 @@ from config import RAPID_API_KEY, HTTP_REQUEST_TIMEOUT, FOOTY_ODDS_ENDPOINT
 from logger import LOGGER
 
 
-def get_footy_odds():
+def get_today_footy_odds_for_league(league_id: int):
+    """
+    Get odds for today's fixtures for a given league.
+
+    :param int league_id: ID of league for which to fetch odds.
+
+    :returns: str
+    """
     try:
         url = FOOTY_ODDS_ENDPOINT
         querystring = {

@@ -16,7 +16,7 @@ from .footy import (
     footy_predicts_today,
     footy_team_lineups,
     footy_upcoming_fixtures,
-    get_footy_odds,
+    get_today_footy_odds_for_league,
     today_upcoming_fixtures,
     league_table_standings,
     mls_standings,

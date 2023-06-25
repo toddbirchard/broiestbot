@@ -58,6 +58,7 @@ from broiestbot.commands import (
     generate_twitter_preview,
     mls_standings,
     get_odds,
+    get_today_footy_odds_for_league
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
@@ -200,8 +201,8 @@ class Bot(RoomManager):
             return get_summer_olympic_medals()
         elif cmd_type in ("wolympics", "winterolympics"):
             return get_winter_olympic_medals()
-        # elif cmd_type == "eplodds":
-        # return get_odds(content)
+        elif cmd_type == "footyodds":
+            return get_today_footy_odds_for_league(content)
         elif cmd_type == "twitch":
             return get_all_live_twitch_streams()
         elif cmd_type == "livenfl":
