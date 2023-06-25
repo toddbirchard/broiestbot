@@ -58,7 +58,7 @@ from broiestbot.commands import (
     generate_twitter_preview,
     mls_standings,
     get_odds,
-    get_today_footy_odds_for_league
+    get_today_footy_odds_for_league,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
