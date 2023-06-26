@@ -185,7 +185,7 @@ class Bot(RoomManager):
             return epl_golden_boot()
         elif cmd_type == "goldenshoe":
             return all_leagues_golden_boot()
-        elif cmd_type == "eplpredicts":
+        elif cmd_type == "footypredicts":
             return footy_predicts_today(room.room_name.lower(), user_name)
         elif cmd_type == "foxtures":
             return fetch_fox_fixtures(room.room_name.lower(), user_name)
