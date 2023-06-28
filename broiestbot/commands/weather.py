@@ -106,7 +106,7 @@ def parse_weather_response(weather: dict, measurement_units: str) -> str:
                     {weather_emoji} {weather_summary}\n \
                     :thermometer: Temp: {temperature}°{'c' if measurement_units == 'm' else 'f'} <i>(feels like {feels_like}{'c' if measurement_units == 'm' else 'f'}°)</i>\n"
         if precipitation:
-            response += f"{precipitation_emoji} {precipitation}{'mm' if measurement_units == 'm' else 'in'}"
+            response += f"{precipitation_emoji} {precipitation}{'mm' if measurement_units == 'm' else 'in'}\n"
         response += f"{humidity_emoji} Humidity: {humidity}%\n \
                     {cloud_cover_emoji} Cloud cover: {cloud_cover}%\n \
                     :wind_face: Wind speed: {wind_speed}{'km/h' if measurement_units == 'm' else 'mph'}\n \

@@ -59,6 +59,7 @@ from broiestbot.commands import (
     mls_standings,
     get_odds,
     get_today_footy_odds_for_league,
+    bach_gang_counter,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
@@ -237,6 +238,8 @@ class Bot(RoomManager):
             return get_live_poll_results(user_name)
         elif cmd_type == "odds":
             return get_odds(content)
+        elif cmd_type == "bachcount" and args:
+            return bach_gang_counter(user_name, args)
         # elif cmd_type == "psn":
         # return get_psn_online_friends()
         # elif cmd_type == "philliesgames":

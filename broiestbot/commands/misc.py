@@ -1,11 +1,13 @@
 """Miscellaneous utility commands."""
 from calendar import day_name
 from datetime import datetime, timedelta
+from time import sleep
 from typing import Optional
 from math import floor
 
 import requests
 from emoji import emojize
+import pytz
 
 from clients import sms
 from config import (
@@ -64,14 +66,20 @@ def send_text_message(message: str, user: str, recipient: str) -> Optional[str]:
         if user.lower() in CHATANGO_SPECIAL_USERS:
             phone_number = TWILIO_PHONE_NUMBERS.get(recipient)
             if phone_number:
-                sms.messages.create(
+                msg = sms.messages.create(
                     body=f"{user.upper()}: {message}",
                     from_=TWILIO_SENDER_PHONE,
                     to=phone_number,
                 )
-                LOGGER.success(f"Sent SMS to {recipient} from {user}: {message}")
+                msg_status_emoji = f"{':green_circle:' if msg.status != 'failed' else ':red_circle:'}"
+                msg_status_text = f"{msg.status.upper()}"
+                msg_date_sent = datetime.now(pytz.timezone("America/New_York")).strftime("%r").lower().replace(" ", "")
+                LOGGER.success(f"Sent SMS to {recipient} ({msg.to}) from {user}: {msg.body}")
                 return emojize(
-                    f":check_mark_button: :mobile_phone: cheers @{user} I just texted ur message to {recipient} :mobile_phone: :check_mark_button:",
+                    f"\n\n:mobile_phone: {msg_status_emoji} <b>MESSAGE {msg_status_text}</b>\n \
+                        :speech_balloon: Cheers @{user}, I texted ur message to @{recipient}.\n \
+                        :spiral_notepad: `<i>{message}</i>` \n \
+                        :four-thirty: {msg_date_sent}",
                     language="en",
                 )
             return emojize(f":warning: ya uhhh idk who tf that is @{user} :warning:", language="en")

@@ -4,7 +4,7 @@ from typing import Tuple, Optional, List
 from emoji import emojize
 from redis.exceptions import RedisError
 
-from clients import r, scheduler
+from clients import r
 from logger import LOGGER
 
 from config import CHATANGO_SPECIAL_USERS
