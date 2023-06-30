@@ -10,7 +10,7 @@ from requests import Response
 from requests.exceptions import HTTPError
 from emoji import emojize
 
-from config import INSTAGRAM_APP_ID, HTTP_REQUEST_TIMEOUT, TWITTER_BEARER_TOKEN
+from config import INSTAGRAM_APP_ID, HTTP_REQUEST_TIMEOUT, TWITTER_BEARER_TOKEN, TWITTER_API_V1_ENDPOINT
 from logger import LOGGER
 
 
@@ -26,9 +26,10 @@ def generate_twitter_preview(message: str) -> Optional[str]:
         twitter_url_match = re.search(r"^https://twitter\.com/[a-zA-Z0-9_]+/status/([0-9]+)", message)
         if twitter_url_match:
             tweet_id = twitter_url_match.group(1)
-            tweet_response = fetch_tweet_by_id(tweet_id)
-            if tweet_response:
-                return parse_tweet_preview(tweet_response, tweet_id)
+            if tweet_id is not None:
+                tweet_data = fetch_tweet_by_id(tweet_id)
+                if tweet_data:
+                    return parse_tweet_preview(tweet_data)
         return None
     except Exception as e:
         LOGGER.error(f"Unexpected error while creating Twitter embed: {e}")
@@ -43,56 +44,66 @@ def fetch_tweet_by_id(tweet_id: str) -> Optional[dict]:
     :returns: Optional[dict]
     """
     try:
+        LOGGER.warning(f"Fetching Tweet by ID: {tweet_id}")
+        endpoint = TWITTER_API_V1_ENDPOINT
         params = {
-            "tweet.fields": "created_at,attachments",
-            "expansions": "author_id,attachments.media_keys",
-            "media.fields": "url,alt_text",
-            "user.fields": "url",
+            "id": tweet_id,
+            "include_entities": "true",
         }
-        endpoint = f"https://api.twitter.com/2/tweets/{tweet_id}"
-        resp = requests.get(endpoint, auth=twitter_bearer_oauth, params=params)
+        headers = {"Authorization": f"Bearer {TWITTER_BEARER_TOKEN}"}
+        resp = requests.get(endpoint, headers=headers, params=params)
         if resp.status_code == 200:
-            return resp
+            return resp.json()[0]
         LOGGER.warning(
-            f"Got unexpected status code while fetching Tweet by ID ({tweet_id}): {resp.status_code}, {resp.content}"
+            f"Got unexpected status code while fetching Tweet by ID `{tweet_id}`: {resp.status_code}, {resp.content}"
         )
     except HTTPError as e:
-        LOGGER.error(f"HTTPError error while fetching Tweet by ID ({tweet_id}): {e}")
+        LOGGER.error(f"HTTPError error while fetching Tweet by ID `{tweet_id}`: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while fetching Tweet by ID ({tweet_id}): {e}")
+        LOGGER.error(f"Unexpected error while fetching Tweet by ID `{tweet_id}`: {e}")
 
 
-def parse_tweet_preview(response: Response, tweet_id: str) -> Optional[str]:
+def parse_tweet_preview(tweet: dict) -> Optional[str]:
     """
     Create formatted Tweet preview chat message from JSON response.
 
-    :param Response response: Prepared API request to fetch Tweet from Twitter API.
-    :param str tweet_id: Tweet ID to fetch.
+    :param dict tweet_data: JSON object representing Tweet.
 
     :returns: Optional[str]
     """
     try:
-        tweet_data = response.json()["data"]
-        tweet_body = tweet_data["text"]
-        tweet_date = tweet_data["created_at"].replace(".000Z", "")
-        tweet_date_formatted = emojize(
-            f":calendar: {datetime.strptime(tweet_date, '%Y-%m-%dT%H:%M:%S')}", language="en"
-        )
-        tweet_users = response.json()["includes"]["users"]
-        tweet_author_name = tweet_users[0]["name"]
-        tweet_author_username = tweet_users[0]["username"]
-        tweet_url = f"https://twitter.com/{tweet_author_username}/status/{tweet_id}"
-        tweet_attachments = response.json()["includes"].get("media")
+        tweet_response = "\n\n"
+        # Tweet User Info
+        tweet_author_name = tweet["user"]["name"]
+        tweet_author_username = tweet["user"]["screen_name"]
+        tweet_author_location = tweet["user"]["location"]
+        # Tweet Data
+        tweet_body = tweet["text"]
+        tweet_hashtags = tweet["entities"]["hashtags"]
+        tweet_retweets = tweet["retweet_count"]
+        tweet_likes = tweet["favorite_count"]
+        tweet_date = tweet["created_at"].split(" +")[0]
+        # tweet_date_formatted = f":calendar: {datetime.strptime(tweet_date, '%Y-%m-%dT%H:%M:%S')}"
+        tweet_response += f":bust_in_silhouette: <b>{tweet_author_name}</b> <i>@{tweet_author_username}</i>\n \
+            :calendar: {tweet_date}\n\n \
+            :speech_balloon: {tweet_body}\n\n"
+        # Tweet Photos
+        tweet_attachments = tweet["extended_entities"].get("media")
         if tweet_attachments:
-            tweet_images = [attachment["url"] for attachment in tweet_attachments if attachment["type"] == "photo"]
+            tweet_image_urls = [
+                attachment["media_url_https"] for attachment in tweet_attachments if attachment["type"] == "photo"
+            ]
+            tweet_response += f"{' '.join(tweet_image_urls)}\n\n"
+        # Tweet Metadata
+        tweet_response += f":shuffle_tracks_button: <b>{tweet_retweets} retweets</b>\n \
+            :red_heart: <b>{tweet_likes} faves</b>\n"
+        if tweet_hashtags:
+            tweet_response += f":keycap_#: {' '.join(tweet_hashtags)}"
+        if tweet_response != "\n\n":
             return emojize(
-                f"\n\n:bust_in_silhouette: <b>{tweet_author_name}</b> <i>@{tweet_author_username}</i>\n{tweet_date_formatted}\n\n{tweet_body}\n\n{' '.join(tweet_images)}\n\n{tweet_url}",
+                tweet_response,
                 language="en",
             )
-        return emojize(
-            f"\n\n:bust_in_silhouette: <b>{tweet_author_name}</b> <i>@{tweet_author_username}</i>\n{tweet_date_formatted}\n\n{tweet_body}\n\n{tweet_url}",
-            language="en",
-        )
     except KeyError as e:
         LOGGER.error(f"KeyError while parsing Tweet: {e}")
     except Exception as e:

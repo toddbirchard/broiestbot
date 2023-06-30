@@ -1,7 +1,6 @@
 """Miscellaneous utility commands."""
 from calendar import day_name
 from datetime import datetime, timedelta
-from time import sleep
 from typing import Optional
 from math import floor
 
