@@ -1,6 +1,5 @@
 """Generate link previews from URLs."""
 from typing import Optional
-from datetime import datetime
 
 import requests
 from requests.models import Request
@@ -82,21 +81,19 @@ def parse_tweet_preview(tweet: dict) -> Optional[str]:
         tweet_hashtags = tweet["entities"]["hashtags"]
         tweet_retweets = tweet["retweet_count"]
         tweet_likes = tweet["favorite_count"]
-        tweet_date = tweet["created_at"].split(" +")[0]
-        # tweet_date_formatted = f":calendar: {datetime.strptime(tweet_date, '%Y-%m-%dT%H:%M:%S')}"
+        tweet_date = " ".join(tweet["created_at"].split(" ", 3)[:3])
+        tweet_time = " ".join(tweet["created_at"].split(" ", 4)[3:4])
         tweet_response += f":bust_in_silhouette: <b>{tweet_author_name}</b> <i>@{tweet_author_username}</i>\n \
-            :calendar: {tweet_date}\n\n \
+            :calendar: {tweet_date}\n \
+            :eight-thirty: {tweet_time}\n\n \
             :speech_balloon: {tweet_body}\n\n"
         # Tweet Photos
-        tweet_attachments = tweet["extended_entities"].get("media")
-        if tweet_attachments:
-            tweet_image_urls = [
-                attachment["media_url_https"] for attachment in tweet_attachments if attachment["type"] == "photo"
-            ]
-            tweet_response += f"{' '.join(tweet_image_urls)}\n\n"
+        tweet_thumbnails = parse_tweet_thumbnails(tweet)
+        if tweet_thumbnails:
+            tweet_response += tweet_thumbnails
         # Tweet Metadata
-        tweet_response += f":shuffle_tracks_button: <b>{tweet_retweets} retweets</b>\n \
-            :red_heart: <b>{tweet_likes} faves</b>\n"
+        tweet_response += f":shuffle_tracks_button: {tweet_retweets} retweets\n \
+            :red_heart: {tweet_likes} faves\n"
         if tweet_hashtags:
             tweet_response += f":keycap_#: {' '.join(tweet_hashtags)}"
         if tweet_response != "\n\n":
@@ -108,6 +105,25 @@ def parse_tweet_preview(tweet: dict) -> Optional[str]:
         LOGGER.error(f"KeyError while parsing Tweet: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error while parsing Tweet: {e}")
+
+
+def parse_tweet_thumbnails(tweet: dict) -> Optional[str]:
+    """
+    Parse HTTPS URLs of Tweet thumbnails (if exist) for a given Tweet.
+
+    :param dict tweet: JSON object representing Tweet.
+
+    :returns: Optional[str]
+    """
+    tweet_attachments = tweet.get("extended_entities")
+    if tweet_attachments:
+        tweet_media_attachments = [attachment for attachment in tweet_attachments["media"]]
+        tweet_image_urls = [
+            attachment.get("media_url_https")
+            for attachment in tweet_media_attachments
+            if attachment.get("type") == "photo"
+        ]
+        return f"\n{' '.join(tweet_image_urls)}\n\n"
 
 
 def twitter_bearer_oauth(req: Request) -> Request:

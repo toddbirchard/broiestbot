@@ -49,7 +49,9 @@ cch = CryptoChartHandler(
 )
 
 # Wikipedia API Python SDK
-wiki = wikipediaapi.Wikipedia("en")
+wiki = wikipediaapi.Wikipedia(
+    "BroiestBot/1.0 (https://github.com/toddbirchard/broiestbot; broiestbot@eample.com)", "en"
+)
 
 # Twilio SMS Client
 sms = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
