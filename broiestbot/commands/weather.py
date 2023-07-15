@@ -14,6 +14,8 @@ from config import (
     WEATHERSTACK_API_ENDPOINT,
     WEATHERSTACK_API_KEY,
     HTTP_REQUEST_TIMEOUT,
+    WEATHER_API_TOKEN,
+    WEATHER_API_BASE_URL,
 )
 from logger import LOGGER
 
@@ -147,7 +149,7 @@ def get_weather_emoji(weather_code: int, is_day: str) -> str:
     weather_emoji = session.query(Weather).filter(Weather.code == weather_code).one_or_none()
     if weather_emoji is not None:
         return weather_emoji.icon
-    elif is_day == "no" and weather_emoji.group in [
+    elif is_day and weather_emoji.group in [
         "sun",
         None,
     ]:
@@ -200,3 +202,105 @@ def get_cloud_cover_emoji(cloud_cover: int) -> str:
     if cloud_cover > 40:
         return ":sun_behind_cloud:"
     return ":thumbs_up_light_skin_tone:"
+
+
+def get_current_weather_by_location(location: str, room: str, user: str) -> str:
+    """
+    Return temperature and weather per city/state/zip.
+
+    :param str location: Location to fetch weather for.
+    :param room: Chatango room from which request originated.
+    :param str user: User who made the request.
+
+    :returns: str
+    """
+    try:
+        measurement_units = get_user_preferred_units(room, user)
+        weather_response = fetch_current_weather_by_location_v2(location)
+        if weather_response:
+            return parse_weather_response_v2(weather_response, measurement_units)
+    except Exception as e:
+        LOGGER.error(f"Failed to fetch & parse weather for `{location}`: {e}")
+        return emojize(
+            f":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
+            language="en",
+        )
+    
+def fetch_current_weather_by_location_v2(location: str) -> Optional[dict]:
+    """
+    Return temperature and weather per city/state/zip.
+
+    :param str location: Location to fetch weather for.
+
+    :returns: str
+    """
+    try:
+        params = {
+            "access_key": WEATHER_API_TOKEN,
+            "query": location,
+        }
+        resp = requests.get(f"{WEATHER_API_BASE_URL}/current.json", params=params, timeout=HTTP_REQUEST_TIMEOUT)
+        return resp.json()
+    except HTTPError as e:
+        LOGGER.error(f"Failed to get weather for `{location}`: {e.response.content}")
+        return emojize(f":warning:️️ ughhh fgma me the weather API is down or something :warning:", language="en")
+    except LookupError as e:
+        LOGGER.error(f"KeyError while fetching weather for `{location}`: {e}", language="en")
+        return emojize(
+            f":warning:️️ sry but BROUGH coded this bert like a MORAN and it DIED! :warning:",
+            language="en",
+        )
+    except Exception as e:
+        LOGGER.error(f"Failed to get weather for `{location}`: {e}")
+        return emojize(
+            f":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
+            language="en",
+        )
+
+
+def parse_weather_response_v2(weather: dict, measurement_units: str) -> str:
+    """
+    Parse weather response returned by API.
+
+    :param dict resp: Weather response returned by API.
+    :param str measurement_units: `Metric` or `Imperial` units.
+
+    :returns: str
+    """
+    try:
+        response = "\n\n"
+        location_name = weather["location"]["name"]
+        location_country = weather["location"]["country"]
+        location_localtime = weather["location"]["localtime"]
+        weather_code = weather["current"]["condition"]["code"]
+        weather_summary = weather["current"]["condition"]["text"]
+        is_day = weather["current"]["is_day"]
+        temperature_fahrenheit = weather["current"]["temp_f"]
+        temperature_celsius = weather["current"]["temp_c"]
+        feels_like = weather["current"]["feelslike"]
+        precipitation = weather["current"]["precip"]
+        cloud_cover = weather["current"]["cloudcover"]
+        humidity = weather["current"]["humidity"]
+        wind_speed = weather["current"]["wind_speed"]
+        local_time = datetime.utcfromtimestamp(weather["location"]["localtime_epoch"]).strftime("%I:%M")
+        weather_emoji = get_weather_emoji(weather_code, is_day)
+        precipitation_emoji = get_precipitation_emoji(weather["current"]["precip"])
+        humidity_emoji = get_humidity_emoji(humidity)
+        cloud_cover_emoji = get_cloud_cover_emoji(cloud_cover)
+        response += f"<b>{weather['request']['query']}</b>\n \
+                    {weather_emoji} {weather_summary}\n \
+                    :thermometer: Temp: {temperature}°{'c' if measurement_units == 'm' else 'f'} <i>(feels like {feels_like}{'c' if measurement_units == 'm' else 'f'}°)</i>\n"
+        if precipitation:
+            response += f"{precipitation_emoji} {precipitation}{'mm' if measurement_units == 'm' else 'in'}\n"
+        response += f"{humidity_emoji} Humidity: {humidity}%\n \
+                    {cloud_cover_emoji} Cloud cover: {cloud_cover}%\n \
+                    :wind_face: Wind speed: {wind_speed}{'km/h' if measurement_units == 'm' else 'mph'}\n \
+                    :six-thirty: {local_time}"
+        response = emojize(response, language="en")
+        return response
+    except Exception as e:
+        LOGGER.error(f"Failed to parse weather response: {e}")
+        return emojize(
+            f":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
+            language="en",
+        )

@@ -155,6 +155,9 @@ WEATHERSTACK_API_ENDPOINT = "http://api.weatherstack.com/current"
 WEATHERSTACK_API_KEY = getenv("WEATHERSTACK_API_KEY")
 METRIC_SYSTEM_USERS = getenv("METRIC_SYSTEM_USERS")
 
+WEATHER_API_TOKEN = getenv("WEATHER_API_TOKEN")
+WEATHER_API_BASE_URL = "https://api.weatherapi.com/v1"
+
 # Email
 # -------------------------------------------------
 GMAIL_EMAIL = getenv("GMAIL_EMAIL")
