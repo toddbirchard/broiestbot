@@ -53,7 +53,7 @@ def blaze_time_remaining() -> str:
 
 def send_text_message(message: str, user: str, recipient: str) -> Optional[str]:
     """
-    Send SMS to Bro via Twilio.
+    Send SMS to moderator via Twilio.
 
     :param str message: Text message body to send via SMS.
     :param str user: Username of user attempting to send SMS.
@@ -71,16 +71,18 @@ def send_text_message(message: str, user: str, recipient: str) -> Optional[str]:
                     to=phone_number,
                 )
                 msg_status_emoji = f"{':green_circle:' if msg.status != 'failed' else ':red_circle:'}"
-                msg_status_text = f"{msg.status.upper()}"
-                msg_date_sent = datetime.now(pytz.timezone("America/New_York")).strftime("%r").lower().replace(" ", "")
+                msg_status_simplified = f"{'MESSAGE SENT' if msg.status != 'failed' else f'FAILED TO SEND TEXT!'}"
+                msg_status = f"{'sent' if msg_status_emoji == ':green_circle:' else msg.status}"
+                msg_date_sent = datetime.now(pytz.timezone("America/New_York")).strftime("%I:%M %p")
                 LOGGER.success(f"Sent SMS to {recipient} ({msg.to}) from {user}: {msg.body}")
                 return emojize(
-                    f"\n\n:mobile_phone: {msg_status_emoji} <b>MESSAGE {msg_status_text}</b>\n \
-                        :speech_balloon: Cheers @{user}, I texted ur message to @{recipient}.\n \
-                        :spiral_notepad: `<i>{message}</i>` \n \
-                        :four-thirty: {msg_date_sent}",
+                    f'\n\n{msg_status_emoji} <b>{msg_status_simplified}</b>\n \
+                        :four-thirty: {msg_date_sent}\n \
+                        :mobile_phone: SMS {msg_status} from @{user} to @{recipient}:\n \
+                        :speech_balloon: "<i>{message}</i>"',
                     language="en",
                 )
+
             return emojize(f":warning: ya uhhh idk who tf that is @{user} :warning:", language="en")
         return emojize(f":warning: @{user} pls, only pizzaough can text brough :warning:", language="en")
     except Exception as e:
