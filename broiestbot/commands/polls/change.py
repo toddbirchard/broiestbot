@@ -1,22 +1,25 @@
 """Conduct a chat poll whether to 'change or stay'."""
 from typing import Tuple, Optional, List
+from datetime import timedelta
 
 from emoji import emojize
 from redis.exceptions import RedisError
+from chatango.ch import Room
 
-from clients import r
+from clients import r, redis_queue
 from logger import LOGGER
 
 from config import CHATANGO_SPECIAL_USERS
 
 
-def change_or_stay_vote(user_name: str, vote: str) -> str:
+def change_or_stay_vote(user_name: str, vote: str, room: Room) -> str:
     """
     Conduct chat-wide vote whether to 'change or stay'.
     Each user may cast a single vote, with the results revealed after a fixed time period.
 
     :param str user_name: Name of user submitting a vote.
     :param str vote: User's submitted vote (either 'change' or 'stay').
+    :param Room room: Chatango chat room.
 
     :returns: str
     """
@@ -30,7 +33,7 @@ def change_or_stay_vote(user_name: str, vote: str) -> str:
                 language="en",
             )
         submit_user_vote(user_name, vote)
-        # scheduler.enqueue_at(datetime.now() + timedelta(seconds=60), completed_poll_results)
+        redis_queue.enqueue_in(timedelta(seconds=60), completed_poll_results, room)
         return poll_announcement(user_name, vote)
     except RedisError as e:
         LOGGER.error(f"RedisError while saving 'change or stay' vote from @{user_name}: {e}")
@@ -58,17 +61,11 @@ def get_live_poll_results(user_name: str) -> str:
     response = f"\n\n:television: <b>CHANGE OR STAY</b>\n \
                 :hourglass_not_done: Voting ends in <i>{time_remaining} seconds</i>.\n\n"
     change_votes, stay_votes = live_poll_results()
-    if bool(change_votes) is False and bool(stay_votes) is False:
-        return emojize(f":warning: sry @{user_name}, no change-or-stay poll currently live :warning:", language="en")
-    if change_votes:
-        response += f":shuffle_tracks_button: !CHANGE: <b>{len(change_votes)} votes</b> ({', '.join(change_votes)})\n"
-    else:
-        response += ":shuffle_tracks_button: !CHANGE: <b>0 votes</b>\n"
-    if stay_votes:
-        response += f":stop_button: !STAY <b>{len(stay_votes)} votes</b> ({', '.join(stay_votes)})\n"
-    else:
-        response += ":stop_button: !STAY <b>0 votes</b>"
-    return emojize(response, language="en")
+    if change_votes or stay_votes:
+        response += f":shuffle_tracks_button: !CHANGE: <b>{len(change_votes) if not None else 0} votes</b> ({', '.join(change_votes) if not None else 0})\n \
+                      :stop_button: !STAY <b>{len(stay_votes)} votes</b> ({', '.join(stay_votes)})\n"
+        return emojize(response, language="en")
+    return emojize(f":warning: sry @{user_name}, no change-or-stay poll currently live :warning:", language="en")
 
 
 def live_poll_results() -> Tuple[Optional[List[str]], Optional[List[str]]]:
@@ -78,8 +75,8 @@ def live_poll_results() -> Tuple[Optional[List[str]], Optional[List[str]]]:
     :returns: Tuple[Optional[List[str]], Optional[List[str]]]
     """
     poll_results = r.hgetall("changeorstay")
-    change_votes = poll_results.get("change")
-    stay_votes = poll_results.get("stay")
+    change_votes = poll_results.get("change", [])
+    stay_votes = poll_results.get("stay", [])
     if change_votes:
         change_votes = change_votes.split(",")
     else:
@@ -134,31 +131,33 @@ def poll_announcement(user_name: str, vote: str) -> str:
         :hourglass_not_done: Voting ends in <b>{time_remaining} seconds</b>\n \
         --------------\n"
     if change_votes:
-        response += f":shuffle_tracks_button: !CHANGE: <b>{len(change_votes)} votes</b> ({', '.join(change_votes)})\n"
-    else:
-        response += ":shuffle_tracks_button: !CHANGE: <b>0 votes</b>\n"
+        response += f":shuffle_tracks_button: !CHANGE: <b>{len(change_votes)} votes</b> ({', '.join(change_votes) if change_votes else ''})\n"
     if stay_votes:
-        response += f":stop_button: !STAY <b>{len(stay_votes)} votes</b> ({', '.join(stay_votes)})"
+        response += f":stop_button: !STAY <b>{len(stay_votes)} votes</b> ({', '.join(stay_votes) if stay_votes else ''})"
     else:
         response += ":stop_button: !STAY <b>0 votes</b>"
     return emojize(response, language="en")
 
 
-def completed_poll_results():
+def completed_poll_results(room: Room):
     """
     Post `change or stay` poll results.
 
+    :param Room room: Chatango chat room.
+
     :returns: str
     """
-    response = f"<b>:television: <b>CHANGE OR STAY RESULTS</b>\n"
+    response = f"\n\n<b>:television: <b>CHANGE OR STAY RESULTS!!!</b>\n"
     change_votes, stay_votes = live_poll_results()
+    num_change_votes = len(change_votes) if change_votes else 0
+    num_stay_votes = len(num_stay_votes) if stay_votes else 0
     if len(change_votes) > len(stay_votes):
         response += f"Chat has voted to <b>CHANGE!</b> {'@ '.join(CHATANGO_SPECIAL_USERS)}\n"
     elif len(change_votes) < len(stay_votes):
         response += f"Chat has voted to <b>STAY!</b> Don't touch that dial!\n"
-    else:
-        response += f"Chat is in a stalemate! AAAAAA IDK HOW TO HANDOL THIS!!!!!"
-    response += f":shuffle_tracks_button: !CHANGE: <b>0 votes</b>\n \
-                :shuffle_tracks_button: !CHANGE: <b>{len(change_votes)} votes</b> ({', '.join(change_votes)})\n \
-                :stop_button: !STAY <b>{len(stay_votes)} votes</b> ({', '.join(stay_votes)})"
-    return emojize(response, language="en")
+    elif len(change_votes) == len(stay_votes):
+        response += f"Poll ended in a <i>STALEMATE!</i>\n \
+                    AAAAAA IDK HOW TO HANDOL THIS!!\n"
+    response += f":shuffle_tracks_button: !CHANGE: <b>{num_change_votes} votes</b>: ({', '.join(change_votes)})\n \
+                  :stop_button: !STAY <b>{num_stay_votes} votes</b>: ({', '.join(stay_votes)})"
+    room.message(emojize(response, language="en"))

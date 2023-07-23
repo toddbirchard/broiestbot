@@ -233,7 +233,7 @@ class Bot(RoomManager):
         elif cmd_type == "imagecount":
             return gcs_count_images_in_bucket(content)
         elif cmd_type == "changeorstayvote":
-            return change_or_stay_vote(user_name, content)
+            return change_or_stay_vote(user_name, content, room)
         elif cmd_type == "changeorstay":
             return get_live_poll_results(user_name)
         elif cmd_type == "odds":

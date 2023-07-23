@@ -1,9 +1,9 @@
 """Clients & SDKs for interacting with third-party services."""
 import lyricsgenius
 import praw
-import redis
+from redis import Redis
 import wikipediaapi
-from rq_scheduler import Scheduler
+from rq import Queue
 
 from imdb import Cinemagoer
 from twilio.rest import Client
@@ -76,8 +76,8 @@ genius = lyricsgenius.Genius()
 genius.remove_section_headers = True
 
 # Redis
-r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, db=REDIS_DB, decode_responses=True)
-scheduler = Scheduler(connection=r)
+r = Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, db=REDIS_DB, decode_responses=True)
+redis_queue = Queue(connection=r)
 
 # Playstation
 # psn = PlaystationClient(token=PLAYSTATION_SSO_TOKEN)

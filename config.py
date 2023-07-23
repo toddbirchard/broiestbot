@@ -365,6 +365,7 @@ U20_WORLD_CUP_ID = 490
 USL_LEAGUE_1_ID = 255
 USL_LEAGUE_2_ID = 256
 MLS_ALL_STAR_ID = 866
+MLS_LEAGUES_CUP_ID = 772
 
 # Footy Leagues, cups and tournaments
 FOOTY_LEAGUES = {
@@ -378,6 +379,7 @@ FOOTY_LEAGUES = {
     # ":England: EFL LEAGUE 5": ENGLISH_LEAGUE_FIVE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
+    ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :England: FA CUP": FA_CUP_ID,
     # ":trophy: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
@@ -395,7 +397,7 @@ FOOTY_LEAGUES = {
     ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
-    ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
+    #":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA,
@@ -434,10 +436,12 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
-    ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
+    ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
+    # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
+    ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
@@ -462,9 +466,10 @@ FOOTY_LEAGUES_LINEUPS = {
     # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":Spain: LIGA": LIGA_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
-    ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
+    # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
+    ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
     ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,

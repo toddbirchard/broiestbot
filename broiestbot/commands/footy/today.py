@@ -28,13 +28,13 @@ def today_upcoming_fixtures(room: str, username: str) -> str:
 
     :returns: str
     """
+    i = 0
     upcoming_fixtures = "\n\n\n\n"
     for league_name, league_id in FOOTY_LEAGUES.items():
         league_fixtures = today_upcoming_fixtures_per_league(league_name, league_id, room, username)
-        # TODO: Optimize speed or priority of fixtures without capping number of leagues via (and i < 8)
-        # if league_fixtures is not None and i < 8:
-        if league_fixtures is not None:
-            upcoming_fixtures += league_fixtures + "\n"
+        if league_fixtures is not None and i < 7:
+            i += 1
+            upcoming_fixtures += f"{league_fixtures}\n"
     if upcoming_fixtures != "\n\n\n\n":
         return upcoming_fixtures
     return emojize(
@@ -60,9 +60,10 @@ def today_upcoming_fixtures_per_league(league_name: str, league_id: int, room: s
         if fixtures:
             for i, fixture in enumerate(fixtures):
                 fixture_start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
-                if i == 0 and len(fixture) > 1:
+                if i == 0:
                     league_upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
-                league_upcoming_fixtures += parse_upcoming_fixture(fixture, fixture_start_time, room, username)
+                if i <= 5:
+                    league_upcoming_fixtures += parse_upcoming_fixture(fixture, fixture_start_time, room, username)
             return league_upcoming_fixtures
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
