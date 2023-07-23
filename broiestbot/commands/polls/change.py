@@ -1,12 +1,12 @@
 """Conduct a chat poll whether to 'change or stay'."""
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Union
 from datetime import timedelta
 
 from emoji import emojize
 from redis.exceptions import RedisError
 from chatango.ch import Room
 
-from clients import r, redis_queue
+from clients import r, redis_scheduler
 from logger import LOGGER
 
 from config import CHATANGO_SPECIAL_USERS
@@ -33,7 +33,7 @@ def change_or_stay_vote(user_name: str, vote: str, room: Room) -> str:
                 language="en",
             )
         submit_user_vote(user_name, vote)
-        redis_queue.enqueue_in(timedelta(seconds=60), completed_poll_results, room)
+        # redis_scheduler.enqueue_in(timedelta(minutes=1), completed_poll_results, room)
         return poll_announcement(user_name, vote)
     except RedisError as e:
         LOGGER.error(f"RedisError while saving 'change or stay' vote from @{user_name}: {e}")
@@ -133,7 +133,9 @@ def poll_announcement(user_name: str, vote: str) -> str:
     if change_votes:
         response += f":shuffle_tracks_button: !CHANGE: <b>{len(change_votes)} votes</b> ({', '.join(change_votes) if change_votes else ''})\n"
     if stay_votes:
-        response += f":stop_button: !STAY <b>{len(stay_votes)} votes</b> ({', '.join(stay_votes) if stay_votes else ''})"
+        response += (
+            f":stop_button: !STAY <b>{len(stay_votes)} votes</b> ({', '.join(stay_votes) if stay_votes else ''})"
+        )
     else:
         response += ":stop_button: !STAY <b>0 votes</b>"
     return emojize(response, language="en")
@@ -151,11 +153,11 @@ def completed_poll_results(room: Room):
     change_votes, stay_votes = live_poll_results()
     num_change_votes = len(change_votes) if change_votes else 0
     num_stay_votes = len(num_stay_votes) if stay_votes else 0
-    if len(change_votes) > len(stay_votes):
+    if num_change_votes > num_stay_votes:
         response += f"Chat has voted to <b>CHANGE!</b> {'@ '.join(CHATANGO_SPECIAL_USERS)}\n"
-    elif len(change_votes) < len(stay_votes):
+    elif num_change_votes < num_stay_votes:
         response += f"Chat has voted to <b>STAY!</b> Don't touch that dial!\n"
-    elif len(change_votes) == len(stay_votes):
+    elif num_change_votes == num_stay_votes:
         response += f"Poll ended in a <i>STALEMATE!</i>\n \
                     AAAAAA IDK HOW TO HANDOL THIS!!\n"
     response += f":shuffle_tracks_button: !CHANGE: <b>{num_change_votes} votes</b>: ({', '.join(change_votes)})\n \

@@ -3,7 +3,7 @@ import lyricsgenius
 import praw
 from redis import Redis
 import wikipediaapi
-from rq import Queue
+from rq_scheduler import Scheduler
 
 from imdb import Cinemagoer
 from twilio.rest import Client
@@ -77,7 +77,7 @@ genius.remove_section_headers = True
 
 # Redis
 r = Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, db=REDIS_DB, decode_responses=True)
-redis_queue = Queue(connection=r)
+redis_scheduler = Scheduler(connection=r)
 
 # Playstation
 # psn = PlaystationClient(token=PLAYSTATION_SSO_TOKEN)

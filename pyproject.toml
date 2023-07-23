@@ -55,6 +55,7 @@ isort = "*"
 flake8 = "*"
 pylint = "*"
 rq = "*"
+rq-scheduler = "^0.13.1"
 
 [tool.poetry.scripts]
 run = "wsgi:init_bot"
