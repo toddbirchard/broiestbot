@@ -66,11 +66,11 @@ def footy_live_fixtures_per_league(
                 away_score = fixture["goals"]["away"]
                 elapsed = fixture["fixture"]["status"]["elapsed"]
                 venue = fixture["fixture"]["venue"]["name"]
-                live_fixture = f'<b>{home_team} {home_score} - {away_team} {away_score}</b>\n{venue}, {elapsed}"'
+                live_fixture = f'<b>{away_team} {away_score} @ {home_team} {home_score}</b>\n{venue}, {elapsed}"'
                 live_fixtures += live_fixture
-                events = get_events_per_live_fixture(fixture["fixture"]["id"], subs=subs)
-                if events:
-                    live_fixtures += events
+                fixture_events_response = fetch_events_per_live_fixture(fixture["fixture"]["id"])
+                if fixture_events_response:
+                    live_fixtures += parse_events_per_live_fixture(fixture_events_response, subs=subs)
                 if i < len(fixtures):
                     live_fixtures += "\n\n\n"
             if live_fixtures != "\n\n\n\n":
@@ -113,17 +113,15 @@ def fetch_live_fixtures(league_id: int, room: str, username: str) -> Optional[di
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def get_events_per_live_fixture(fixture_id: int, subs=False) -> Optional[str]:
+def fetch_events_per_live_fixture(fixture_id: int) -> Optional[str]:
     """
     Construct timeline of events for a single live fixture.
 
     :param int fixture_id: ID of a single live fixture.
-    :param bool subs: Whether to include substitutions in match summaries.
 
     :returns: Optional[str]
     """
     try:
-        event_log = "\n"
         params = {"fixture": fixture_id}
         req = requests.get(
             FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT,
@@ -131,18 +129,40 @@ def get_events_per_live_fixture(fixture_id: int, subs=False) -> Optional[str]:
             params=params,
             timeout=HTTP_REQUEST_TIMEOUT,
         )
-        events = req.json().get("response")
-        if events:
-            for event in events:
-                time_elapsed = f'{event["time"]["elapsed"]}"'
-                player_name = event["player"].get("name")
-                event_comments = event.get("comments")
-                event_type = event["type"]
-                event_detail = event.get("detail", "")
-                if event_comments:
-                    event_comments = f"<i>({event_comments})</i>"
-                else:
-                    event_comments = ""
+        return req.json().get("response")
+    except HTTPError as e:
+        LOGGER.error(f"HTTPError while compiling events in live fixture: {e.response.content}")
+    except KeyError as e:
+        LOGGER.error(f"KeyError while compiling events in live fixture: {e}")
+    except Exception as e:
+        LOGGER.error(f"Unexpected error while compiling events in live fixture: {e}")
+
+
+def parse_events_per_live_fixture(events: dict, subs=False) -> str:
+    """
+    Construct a human-readable timeline of events for a single live fixture.
+
+    :param dict events: Notable events for a single live fixture.
+    :param bool subs: Whether to include substitutions in match summaries.
+
+    :returns: str
+    """
+    try:
+        event_log = "\n"
+        for event in events:
+            time_elapsed = event["time"].get("elapsed")
+            player_name = event["player"].get("name")
+            assisting_player = event.get("assist")
+            event_comments = event.get("comments")
+            event_type = event.get("type")
+            event_detail = event.get("detail", "")
+            if time_elapsed:
+                time_elapsed = f'{time_elapsed}"'
+            if event_comments:
+                event_comments = f"<i>({event_comments})</i>"
+            if assisting_player is not None:
+                assisting_player = assisting_player.get("name")
+            if player_name and time_elapsed:
                 if "Goal" in event_detail and event_type == "Var":
                     event_log += emojize(
                         f":cross_mark: :soccer_ball: {player_name} <i>({event_detail})</i>, {time_elapsed}\n",
@@ -155,7 +175,7 @@ def get_events_per_live_fixture(fixture_id: int, subs=False) -> Optional[str]:
                     )
                 elif event_detail == "Second Yellow card":
                     event_log += emojize(
-                        f':yellow_square::yellow_square: {player_name} {event_comments if not None else ""}, {time_elapsed}\n',
+                        f':yellow_square::red_square: {player_name} {event_comments if not None else ""}, {time_elapsed}\n',
                         language="en",
                     )
                 elif event_detail == "Red Card" and player_name:
@@ -175,19 +195,17 @@ def get_events_per_live_fixture(fixture_id: int, subs=False) -> Optional[str]:
                     )
                 elif event_detail == "Own Goal":
                     event_log += emojize(
-                        f':skull: :soccer_ball: {player_name} {"(via" + event["assist"].get("name") if not None else ""}), {time_elapsed}\n',
+                        f':skull: :soccer_ball: {player_name} {"(via" + assisting_player if not None else ""}), {time_elapsed}\n',
                         language="en",
                     )
-                elif event_type == "subst" and subs is True:
+                elif event_type == "subst" and assisting_player and subs is True:
                     event_log += emojize(
-                        f':red_triangle_pointed_down: {event["assist"]["name"]} :evergreen_tree: {player_name}, {time_elapsed}\n',
+                        f":red_triangle_pointed_down: {assisting_player} :evergreen_tree: {player_name}, {time_elapsed}\n",
                         language="en",
                     )
-            return event_log
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while compiling events in live fixture: {e.response.content}")
-    except KeyError as e:
-        LOGGER.error(f"KeyError while compiling events in live fixture: {e}")
+        return event_log
+    except LookupError as e:
+        LOGGER.error(f"LookupError while compiling events in live fixture: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error while compiling events in live fixture: {e}")
 

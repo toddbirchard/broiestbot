@@ -333,7 +333,7 @@ LIGA_LEAGUE_ID = 140
 EUROS_LEAGUE_ID = 4
 EUROS_QUALIFIERS_ID = 960
 COPA_AMERICA_LEAGUE_ID = 9
-COUPE_DE_FRANCE = 66
+COUPE_DE_FRANCE_ID = 66
 COPA_DEL_REY = 143
 SPAIN_EL_CLASICO = 556
 LIGUE_ONE_ID = 61
@@ -348,11 +348,11 @@ CONCACAF_CHAMPIONS_LEAGUE_ID = 16
 OLYMPICS_MEN_LEAGUE_ID = 480
 OLYMPICS_WOMEN_LEAGUE_ID = 524
 WORLD_CUP_ID = 1
-WC_QUALIFIERS_CONCACAF = 31
-WC_QUALIFIERS_EUROPE = 32
-WC_QUALIFIERS_SOUTHAMERICA = 34
+WC_QUALIFIERS_CONCACAF_ID = 31
+WC_QUALIFIERS_EUROPE_ID = 32
+WC_QUALIFIERS_SOUTHAMERICA_ID = 34
 SERIE_A_LEAGUE_ID = 135
-COMMUNITY_SHIELD_CUP = 528
+COMMUNITY_SHIELD_CUP_ID = 528
 CARABOU_CUP_ID = 48
 AFCON_CUP_ID = 6
 AFCON_QUALIFIERS_ID = 36
@@ -391,9 +391,8 @@ FOOTY_LEAGUES = {
     ":France: LIGUE 1": LIGUE_ONE_ID,
     ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
     ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
-    # ":trophy: :England: FA TROPHY": FA_TROPHY_ID,
     # ":trophy: :France: COUPE DE FRANCE": COUPE_DE_FRANCE,
-    # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP,
+    # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
@@ -408,7 +407,7 @@ FOOTY_LEAGUES = {
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
@@ -446,9 +445,9 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
-    # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP,
+    # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
@@ -467,15 +466,15 @@ FOOTY_LEAGUES_LINEUPS = {
     # ":blue_circle: UCL": UCL_LEAGUE_ID,
     # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     # ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    ":trophy: :England: FA CUP": FA_CUP_ID,
-    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":Italy: Serie A": SERIE_A_LEAGUE_ID,
+    ":Germany: BUND": BUND_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
-    ":Italy: Serie A": SERIE_A_LEAGUE_ID,
-    ":Germany: BUND": BUND_LEAGUE_ID,
+    ":trophy: :England: FA CUP": FA_CUP_ID,
+    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,

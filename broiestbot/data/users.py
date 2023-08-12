@@ -28,7 +28,6 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
             existing_user = fetch_existing_user(room_name, user, message)
             if existing_user is None:
                 user_metadata = geo.lookup_user(message.ip)
-                LOGGER.info(f"New user metadata: {user_metadata}")
                 # fmt: off
                 session.add(
                     ChatangoUser(
@@ -58,9 +57,13 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
                         created_at=datetime.now()
                     )
                 )
+                session.commit()
+                LOGGER.success(f"Persisted new user: {user_metadata}")
                 # fmt: on
     except IntegrityError as e:
         LOGGER.error(f"Failed to save duplicate entry for {user.name}: {e}")
+    except SQLAlchemyError as e:
+        LOGGER.warning(f"SQLAlchemyError while persisting data for user {user.name}: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error while attempting to save data for {user.name}: {e}")
 
