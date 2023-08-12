@@ -57,7 +57,6 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
                         created_at=datetime.now()
                     )
                 )
-                session.commit()
                 LOGGER.success(f"Persisted new user: {user_metadata}")
                 # fmt: on
     except IntegrityError as e:
