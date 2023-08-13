@@ -1,5 +1,6 @@
 """Fetch randomly selected meme image(s) from storage bucket."""
 from random import randint
+from datetime import datetime
 
 from emoji import emojize
 from google.cloud.exceptions import GoogleCloudError, NotFound
@@ -9,7 +10,7 @@ from config import GOOGLE_BUCKET_NAME, GOOGLE_BUCKET_URL
 from logger import LOGGER
 
 
-def fetch_image_from_gcs(subdirectory: str) -> str:
+def fetch_random_image_from_gcs_bucket(subdirectory: str) -> str:
     """
     Get image from Google Cloud Storage bucket.
 
@@ -29,15 +30,12 @@ def fetch_image_from_gcs(subdirectory: str) -> str:
     except GoogleCloudError as e:
         LOGGER.warning(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
-    except ValueError as e:
-        LOGGER.warning(f"ValueError when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except Exception as e:
         LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
         return emojize(f":warning: o shit i broke im a trash bot :warning:", language="en")
 
 
-def gcs_random_image_spam(subdirectory: str) -> str:
+def spam_random_images_from_gcs_bucket(subdirectory: str) -> str:
     """
     Get randomized image from Google Cloud Storage bucket; post 3 times.
 
@@ -54,9 +52,6 @@ def gcs_random_image_spam(subdirectory: str) -> str:
         return " ".join(response)
     except GoogleCloudError as e:
         LOGGER.warning(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
-    except ValueError as e:
-        LOGGER.warning(f"ValueError when fetching random GCS image for `{subdirectory}`: {e}")
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except Exception as e:
         LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
@@ -88,6 +83,30 @@ def gcs_count_images_in_bucket(subdirectory: str) -> str:
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except ValueError as e:
         LOGGER.warning(f"ValueError when fetching random GCS image for `{subdirectory}`: {e}")
+        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
+    except Exception as e:
+        LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
+        return emojize(f":warning: o shit i broke im a trash bot :warning:", language="en")
+
+
+def fetch_latest_image_from_gcs_bucket(subdirectory: str) -> str:
+    """
+    Get most recent image added to Google Cloud Storage bucket.
+
+    :param str subdirectory: Bucket directory to fetch random image from.
+
+    :returns: str
+    """
+    try:
+        most_recent_image = sorted(
+            [(blob, blob.updated) for blob in gcs.bucket.list_blobs(prefix=subdirectory)], key=lambda tup: tup[1]
+        )[-1]
+        return f"\n\n \
+            {GOOGLE_BUCKET_URL}{GOOGLE_BUCKET_NAME}/{most_recent_image[0].name}\n \
+            <b>{most_recent_image[0].name.split('/')[1].split('.')[0]}</b>\n \
+            <i>(Added on {datetime.date(most_recent_image[1])})</i>"
+    except GoogleCloudError as e:
+        LOGGER.warning(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except Exception as e:
         LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")

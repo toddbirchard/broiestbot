@@ -2,7 +2,8 @@ from .giphy import giphy_image_search
 from .random import random_image
 from .reddit import subreddit_image
 from .storage import (
-    fetch_image_from_gcs,
+    fetch_random_image_from_gcs_bucket,
     gcs_count_images_in_bucket,
-    gcs_random_image_spam,
+    spam_random_images_from_gcs_bucket,
+    fetch_latest_image_from_gcs_bucket,
 )

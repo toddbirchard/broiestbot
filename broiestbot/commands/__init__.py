@@ -23,9 +23,10 @@ from .footy import (
     footy_live_fixture_stats,
 )
 from .images import (
-    fetch_image_from_gcs,
+    fetch_random_image_from_gcs_bucket,
     gcs_count_images_in_bucket,
-    gcs_random_image_spam,
+    spam_random_images_from_gcs_bucket,
+    fetch_latest_image_from_gcs_bucket,
     giphy_image_search,
     random_image,
     subreddit_image,

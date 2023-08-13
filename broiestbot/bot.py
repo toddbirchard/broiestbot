@@ -16,7 +16,7 @@ from broiestbot.commands import (
     epl_golden_boot,
     # extract_url,
     fetch_fox_fixtures,
-    fetch_image_from_gcs,
+    fetch_random_image_from_gcs_bucket,
     find_imdb_movie,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
@@ -24,7 +24,8 @@ from broiestbot.commands import (
     footy_team_lineups,
     footy_upcoming_fixtures,
     gcs_count_images_in_bucket,
-    gcs_random_image_spam,
+    spam_random_images_from_gcs_bucket,
+    fetch_latest_image_from_gcs_bucket,
     get_all_live_twitch_streams,
     get_crypto_chart,
     get_crypto_price,
@@ -125,9 +126,9 @@ class Bot(RoomManager):
         elif cmd_type == "stock" and args:
             return get_stock(args)
         elif cmd_type == "randomimage":
-            return fetch_image_from_gcs(content)
+            return fetch_random_image_from_gcs_bucket(content)
         elif cmd_type == "imagespam":
-            return gcs_random_image_spam(content)
+            return spam_random_images_from_gcs_bucket(content)
         elif cmd_type == "crypto":
             return get_crypto_price(command.lower(), content)
         elif cmd_type == "cryptochart" and args:
@@ -240,6 +241,8 @@ class Bot(RoomManager):
             return get_odds(content)
         elif cmd_type == "bachcount" and args:
             return bach_gang_counter(user_name, args)
+        elif cmd_type == "latestimage":
+            return fetch_latest_image_from_gcs_bucket(content)
         # elif cmd_type == "psn":
         # return get_psn_online_friends()
         # elif cmd_type == "philliesgames":
