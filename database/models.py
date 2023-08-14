@@ -1,6 +1,6 @@
 """Define data models for chat commands, phrases, user logs, etc."""
 from database import engine
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text, BigInteger
+from sqlalchemy import Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 
@@ -12,14 +12,14 @@ class Chat(Base):
 
     __tablename__ = "chat"
 
-    id = Column(BigInteger, primary_key=True, index=True)
-    username = Column(String(255), nullable=False)
+    id = Column(Integer, primary_key=True)
+    username = Column(String(255), nullable=False, index=True)
     room = Column(String(255), nullable=False, index=True)
     message = Column(Text, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
     def __repr__(self):
-        return f"username={self.username}, room={self.room}, chat={self.message}, time={self.created_at}"
+        return f"id={self.id}, username={self.username}, room={self.room}, chat={self.message}, time={self.created_at}"
 
 
 class Command(Base):
