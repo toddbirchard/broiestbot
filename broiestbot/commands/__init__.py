@@ -13,7 +13,7 @@ from .footy import (
     fetch_fox_fixtures,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
-    footy_predicts_today,
+    footy_today_fixtures_odds,
     footy_team_lineups,
     footy_upcoming_fixtures,
     get_today_footy_odds_for_league,

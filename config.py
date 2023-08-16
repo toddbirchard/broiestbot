@@ -304,7 +304,9 @@ FOOTY_TOPSCORERS_ENDPOINT = f"{FOOTY_BASE_URL}/players/topscorers"
 FOOTY_STANDINGS_ENDPOINT = f"{FOOTY_BASE_URL}/standings"
 FOOTY_FIXTURE_STATS_ENDPOINT = f"{FOOTY_BASE_URL}/fixtures/statistics"
 FOOTY_ODDS_ENDPOINT = "https://odds.p.rapidapi.com/v1/odds"
+FOOTY_ODDS_ENDPOINT_2 = "https://api-football-v1.p.rapidapi.com/v3/odds"
 FOOTY_XI_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/fixtures/lineups"
+FOOTY_PREDICTS_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/predictions"
 FOOTY_HTTP_HEADERS = {
     "content-type": "application/json",
     "x-rapidapi-key": RAPID_API_KEY,
@@ -328,6 +330,7 @@ UEFA_NATIONS_LEAGUE_ID = 5
 UEFA_U17_QUALIFIERS_ID = 886
 UEFA_U19_QUALIFIERS_ID = 960
 UEFA_U21_QUALIFIERS_ID = 38
+UEFA_SUPER_CUP_ID = 531
 BUND_LEAGUE_ID = 78
 LIGA_LEAGUE_ID = 140
 EUROS_LEAGUE_ID = 4
@@ -378,6 +381,7 @@ FOOTY_LEAGUES = {
     ":England: EFL LEAGUE 3": ENGLISH_LEAGUE_THREE_ID,
     ":England: EFL LEAGUE 4": ENGLISH_LEAGUE_FOUR_ID,
     # ":England: EFL LEAGUE 5": ENGLISH_LEAGUE_FIVE_ID,
+    ":trophy: UEFA SUPER CUP": UEFA_SUPER_CUP_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
@@ -430,6 +434,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    ":trophy: UEFA SUPER CUP": UEFA_SUPER_CUP_ID,
     ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ":England: EFL LEAGUE 3": ENGLISH_LEAGUE_THREE_ID,
     ":England: EFL LEAGUE 4": ENGLISH_LEAGUE_FOUR_ID,
@@ -475,6 +480,7 @@ FOOTY_LEAGUES_LINEUPS = {
     ":United_States: MLS": MLS_LEAGUE_ID,
     ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
+    ":trophy: UEFA SUPER CUP": UEFA_SUPER_CUP_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
@@ -489,9 +495,7 @@ FOOTY_LEAGUES_LINEUPS = {
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
 }
 
-FOOTY_LIVE_LEAGUES_ODDS_IDS = [
-    UEFA_U21_QUALIFIERS_ID,
-]
+FOOTY_LIVE_LEAGUES_ODDS_IDS = {":lion: EPL": EPL_LEAGUE_ID, ":trophy: UEFA SUPER CUP": UEFA_SUPER_CUP_ID}
 
 # Footy leagues to be considered for "golden shoe" award
 GOLDEN_SHOE_LEAGUES = {

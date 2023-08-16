@@ -31,6 +31,7 @@ from config import (
     UEFA_U21_QUALIFIERS_ID,
     CLUB_FRIENDLIES_LEAGUE_ID,
     EPL_SUMMER_SERIES_LEAGUE_ID,
+    UEFA_SUPER_CUP_ID,
 )
 
 
@@ -180,6 +181,7 @@ def get_season_year(league_id: int) -> Optional[int]:
         USL_LEAGUE_1_ID,
         USL_LEAGUE_2_ID,
         EPL_SUMMER_SERIES_LEAGUE_ID,
+        UEFA_SUPER_CUP_ID,
     ):
         return current_year
     # Exception for leagues that have a nonsensical `season` year.

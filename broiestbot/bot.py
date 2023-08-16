@@ -20,7 +20,7 @@ from broiestbot.commands import (
     find_imdb_movie,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
-    footy_predicts_today,
+    footy_today_fixtures_odds,
     footy_team_lineups,
     footy_upcoming_fixtures,
     gcs_count_images_in_bucket,
@@ -188,7 +188,7 @@ class Bot(RoomManager):
         elif cmd_type == "goldenshoe":
             return all_leagues_golden_boot()
         elif cmd_type == "footypredicts":
-            return footy_predicts_today(room.room_name.lower(), user_name)
+            return footy_today_fixtures_odds(room.room_name.lower(), user_name)
         elif cmd_type == "foxtures":
             return fetch_fox_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "footyxi":
@@ -204,7 +204,7 @@ class Bot(RoomManager):
         elif cmd_type in ("wolympics", "winterolympics"):
             return get_winter_olympic_medals()
         elif cmd_type == "footyodds":
-            return get_today_footy_odds_for_league(content)
+            return footy_today_fixtures_odds(room.room_name.lower(), user_name)
         elif cmd_type == "twitch":
             return get_all_live_twitch_streams()
         elif cmd_type == "livenfl":

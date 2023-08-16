@@ -17,6 +17,26 @@ def get_today_footy_odds_for_league(league_id: int):
     :returns: str
     """
     try:
+        response = "\n\n"
+        odds_response = fetch_today_footy_odds_for_league(league_id)
+        fixtures_odds = odds_response.get("data")[::5]
+        if odds_response.get("success"):
+            return None
+    except Exception as e:
+        LOGGER.error(f"Unexpected error when fetching footy odds: {e}")
+        return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
+
+
+@DeprecationWarning
+def fetch_today_footy_odds_for_league(league_id: int):
+    """
+    Get odds for today's fixtures for a given league.
+
+    :param int league_id: ID of league for which to fetch odds.
+
+    :returns: str
+    """
+    try:
         url = FOOTY_ODDS_ENDPOINT
         querystring = {
             "sport": "soccer_epl",
@@ -29,12 +49,8 @@ def get_today_footy_odds_for_league(league_id: int):
             "x-rapidapi-host": "odds.p.rapidapi.com",
             "x-rapidapi-key": RAPID_API_KEY,
         }
-        response = []
         resp = requests.get(url, headers=headers, params=querystring, timeout=HTTP_REQUEST_TIMEOUT)
-        fixtures = resp.json().get("data")[::5]
-        if resp.json().get("success"):
-            response += get_fixture_odds(fixtures)
-        return "\n\n".join(response)
+        return resp.json()
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching footy odds: {e.response.content}")
     except Exception as e:
@@ -42,19 +58,21 @@ def get_today_footy_odds_for_league(league_id: int):
         return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
 
 
-def get_fixture_odds(fixtures: List[dict]) -> Optional[str]:
+def format_fixture_odds(fixtures: List[dict]) -> Optional[str]:
     """
-    :param List[dict] fixtures: Next 5 EPL fixtures
+    :param List[dict] fixtures: Raw fixtures' data to be parsed.
     """
-    fixture_odds = ""
-    for i, fixture in enumerate(fixtures):
-        teams = fixture["teams"]
-        home_team = f"{teams[0]} (home)"
-        away_team = teams[1]
-        odds = fixture["sites"][1]["odds"]["h2h"]
-        fixture_odds += f"{home_team}: {odds[0]}\n \
-                                        Draw: {odds[1]}\n \
-                                        {away_team}: {odds[2]}"
-        if fixture_odds:
-            return emojize(f"\n\n\n\n:soccer: :moneybag: EPL ODDS\n\n{fixture_odds}", language="en")
-    return None
+    try:
+        fixture_odds = "\n\n\n :soccer: :moneybag: FOOTY ODDS"
+        for fixture in fixtures:
+            teams = fixture["teams"]
+            home_team = f"{teams[0]} (home)"
+            away_team = teams[1]
+            odds = fixture["sites"][1]["odds"]["h2h"]
+            fixture_odds += f"{home_team}: {odds[0]}\n \
+                                            Draw: {odds[1]}\n \
+                                            {away_team}: {odds[2]}"
+        return emojize(f"{fixture_odds}\n\n{fixture_odds}", language="en")
+    except Exception as e:
+        LOGGER.error(f"Unexpected error while formatting footy odds: {e}")
+        return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
