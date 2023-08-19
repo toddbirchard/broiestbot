@@ -6,9 +6,14 @@ import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
-from config import FOOTY_FIXTURES_ENDPOINT, FOOTY_HTTP_HEADERS, FOOTY_LEAGUES_LINEUPS, HTTP_REQUEST_TIMEOUT
 from logger import LOGGER
-
+from config import (
+    FOOTY_FIXTURES_ENDPOINT,
+    FOOTY_HTTP_HEADERS,
+    FOOTY_LEAGUES_LINEUPS,
+    FOOTY_XI_ENDPOINT,
+    HTTP_REQUEST_TIMEOUT,
+)
 from .util import (
     get_current_day,
     get_preferred_timezone,
@@ -16,18 +21,6 @@ from .util import (
     check_fixture_start_date,
     get_preferred_time_format,
 )
-
-import requests
-from emoji import emojize
-from requests.exceptions import HTTPError
-
-from config import (
-    FOOTY_HTTP_HEADERS,
-    FOOTY_LEAGUES_LINEUPS,
-    FOOTY_XI_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
-)
-from logger import LOGGER
 
 
 def footy_team_lineups(room: str, username: str) -> str:
@@ -40,24 +33,25 @@ def footy_team_lineups(room: str, username: str) -> str:
     :returns: str
     """
     try:
-        i = 0
-        today_fixture_lineups = "\n\n\n\n"
+        today_fixture_lineups = "\n\n\n"
         for league_name, league_id in FOOTY_LEAGUES_LINEUPS.items():
+            i = 0
             league_fixtures = get_today_live_or_upcoming_fixtures(league_id, room, username)
-            if league_fixtures and i < 3:
-                i += 1
-                today_fixture_lineups += emojize(f"<b>{league_name}</b>\n", language="en")
+            if league_fixtures and i <= 3:
+                if bool(league_fixtures) and i == 0:
+                    LOGGER.info(f"league_fixtures = {league_fixtures}")
+                    today_fixture_lineups += emojize(f"<b>{league_name}</b>\n", language="en")
                 for fixture in league_fixtures:
-                    if fixture is not None:
-                        fixture_id = fixture["fixture"]["id"]
-                        fixture_summary = build_fixture_summary(fixture, room, username)
-                        lineups = fetch_lineups_per_fixture(fixture_id)
-                        if lineups:
-                            today_fixture_lineups += fixture_summary
-                            today_fixture_lineups += get_fixture_xis(lineups)
-                            today_fixture_lineups += "\n\n----------------------\n\n"
-                        else:
-                            today_fixture_lineups += "<i>Lineups not available yet<i>\n\n"
+                    fixture_id = fixture["fixture"]["id"]
+                    fixture_summary = build_fixture_summary(fixture, room, username)
+                    lineups = fetch_lineups_per_fixture(fixture_id)
+                    i += 1
+                    if lineups:
+                        today_fixture_lineups += fixture_summary
+                        today_fixture_lineups += get_fixture_xis(lineups)
+                        today_fixture_lineups += "\n\n----------------------\n\n"
+                    else:
+                        continue
         return today_fixture_lineups.rstrip("\n\n----------------------\n\n")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy XIs: {e}")
@@ -123,7 +117,7 @@ def get_fixture_xis(teams: dict) -> str:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str) -> List[dict]:
+def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str) -> Optional[List[dict]]:
     """
     Get fixtures for a league for the current day (live or upcoming).
 
@@ -131,7 +125,7 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str
     :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
 
-    :returns: List[dict]
+    :returns: Optional[List[dict]]
     """
     try:
         today = get_current_day(room)
@@ -139,6 +133,7 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
             "season": get_season_year(league_id),
+            "status": "NS-1H-2H",
         }
         params.update(get_preferred_timezone(room, username))
         resp = requests.get(
@@ -147,7 +142,8 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str
             params=params,
             timeout=HTTP_REQUEST_TIMEOUT,
         )
-        return resp.json()["response"]
+        if resp.json().get("response"):
+            return resp.json()["response"]
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
     except KeyError as e:

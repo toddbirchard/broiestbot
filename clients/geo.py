@@ -2,12 +2,15 @@
 from typing import Union
 
 import pandas as pd
-from ipdata import ipdata
-from ipdata.ipdata import IPData, APIKeyNotSet, IncompatibleParameters
+import ipdata
+from ipdata import IPData
+from ipdata.ipdata import IPDataException
 from pandas import DataFrame
 
 
 class GeoIP:
+    """Client for fetching geo data."""
+
     def __init__(self, api_key: str):
         self.api_key = api_key
 
@@ -20,10 +23,8 @@ class GeoIP:
         """
         try:
             return ipdata.IPData(self.api_key)
-        except APIKeyNotSet as e:
-            raise APIKeyNotSet(f"IPData API key not set: {e}")
-        except IncompatibleParameters as e:
-            raise IncompatibleParameters(f"IncompatibleParameters when calling IPData: {e}")
+        except IPDataException as e:
+            raise IPDataException(f"IPData API threw an exception: {e}")
         except Exception as e:
             raise Exception(f"Unexpected exception while creating IPData client: {e}")
 
@@ -52,12 +53,10 @@ class GeoIP:
                     "carrier",
                 ],
             )
-        except APIKeyNotSet as e:
-            raise APIKeyNotSet(f"IPData API key not set: {e}")
-        except IncompatibleParameters as e:
-            raise IncompatibleParameters(f"IncompatibleParameters when calling IPData: {e}")
+        except IPDataException as e:
+            raise IPDataException(f"IPData API failed to lookup user with ip=ip_address: {e}")
         except Exception as e:
-            raise Exception(f"Unexpected failure for IPData user lookup, ip=`{ip_address}`: {e}")
+            raise Exception(f"Unexpected failure for IPData user lookup, ip={ip_address}: {e}")
 
     @staticmethod
     def save_metadata(room_name: str, user_name: str, ip_metadata: dict) -> Union[DataFrame, str]:
