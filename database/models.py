@@ -1,8 +1,9 @@
 """Define data models for chat commands, phrases, user logs, etc."""
-from database import engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text, Boolean
+from sqlalchemy.orm import declarative_base, mapped_column
+from sqlalchemy import Column, ForeignKey, DateTime, Float, Integer, String, Text, Boolean
 from sqlalchemy.sql import func
+from database import engine
+
 
 Base = declarative_base()
 
@@ -16,7 +17,7 @@ class Chat(Base):
     username = Column(String(255), nullable=False, index=True)
     room = Column(String(255), nullable=False, index=True)
     message = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
     def __repr__(self):
         return f"id={self.id}, username={self.username}, room={self.room}, chat={self.message}, time={self.created_at}"
@@ -31,7 +32,7 @@ class Command(Base):
     command = Column(String(255), nullable=False, unique=True, index=True)
     type = Column(String(255), nullable=False)
     response = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
     def __repr__(self):
         return f"command={self.command}, type={self.type}, response={self.response}"
@@ -45,7 +46,7 @@ class Phrase(Base):
     id = Column(Integer, primary_key=True, index=True)
     phrase = Column(String(255), nullable=False, unique=True, index=True)
     response = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
     def __repr__(self):
         return f"command={self.phrase}, type={self.response}"
@@ -80,8 +81,8 @@ class ChatangoUser(Base):
     asn_domain = Column(String(255))
     asn_route = Column(String(255))
     asn_type = Column(String(255))
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now)
 
     def __repr__(self):
         return f"username={self.username}, chatango_room={self.chatango_room}, city={self.city}, region={self.ip}"
@@ -110,10 +111,26 @@ class PollResult(Base):
     id = Column(Integer, primary_key=True, index=True)
     type = Column(String(255), nullable=False, index=True, unique=True)
     count = Column(Integer)
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now)
 
     def __repr__(self):
-        return f"type={self.type}, count={self.count}, updated_at={self.updated_at}"
+        return f"id={self.id}, type={self.type}, count={self.count}, updated_at={self.updated_at}"
+
+
+class Sport(Base):
+    """Professional Sport."""
+
+    __tablename__ = "sport"
+
+    id = mapped_column(Integer, primary_key=True)
+    name = Column(String(255))
+    abbr = Column(String(255))
+    emoji = Column(String(255))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now)
+
+    def __repr__(self):
+        return f"id={self.id}, name={self.name}, emoji={self.emoji}"
 
 
 class League(Base):
@@ -121,18 +138,20 @@ class League(Base):
 
     __tablename__ = "league"
 
-    id = Column(Integer, primary_key=True, index=True)
-    sport = Column(String(255), nullable=False, index=True)
-    league_name = Column(Text, nullable=False)
-    league_shortname = Column(String(20), nullable=False)
+    id = mapped_column(Integer, primary_key=True)
+    name = Column(String(255))
+    display_name = Column(Text)
+    abbr = Column(String(255))
+    country = Column(String(255))
+    sport_id = Column(Integer, ForeignKey("sport.id"), index=True)
     season_year = Column(Integer)
     season_start_date = Column(DateTime)
-    is_active = Column(Boolean)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    is_active = Column(Boolean, index=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now)
 
     def __repr__(self):
-        return f"type={self.type}, count={self.count}, updated_at={self.updated_at}"
+        return f"id={self.id}, name={self.name}, country={self.country}, is_active={self.is_active}"
 
 
 Base.metadata.create_all(engine)

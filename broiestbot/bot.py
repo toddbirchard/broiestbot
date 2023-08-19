@@ -27,7 +27,7 @@ from broiestbot.commands import (
     spam_random_images_from_gcs_bucket,
     fetch_latest_image_from_gcs_bucket,
     get_all_live_twitch_streams,
-    get_crypto_chart,
+    # get_crypto_chart,
     get_crypto_price,
     get_current_show,
     get_english_definition,
@@ -131,8 +131,6 @@ class Bot(RoomManager):
             return spam_random_images_from_gcs_bucket(content)
         elif cmd_type == "crypto":
             return get_crypto_price(command.lower(), content)
-        elif cmd_type == "cryptochart" and args:
-            return get_crypto_chart(args)
         elif cmd_type == "giphy":
             return giphy_image_search(content)
         elif cmd_type == "weather" and args:
@@ -141,10 +139,6 @@ class Bot(RoomManager):
             return wiki_summary(args)
         elif cmd_type == "imdb" and args:
             return find_imdb_movie(args)
-        # elif cmd_type == "lesbians":
-        #     return get_redgifs_gif("lesbians", user_name)
-        # elif cmd_type == "nsfw" and args:
-        #     return get_redgifs_gif(args, user_name, after_dark_only=True)
         elif cmd_type == "urban" and args:
             return get_urban_definition(args)
         elif cmd_type == "420" and args is None:
@@ -243,12 +237,18 @@ class Bot(RoomManager):
             return bach_gang_counter(user_name, args)
         elif cmd_type == "latestimage":
             return fetch_latest_image_from_gcs_bucket(content)
+        # elif cmd_type == "cryptochart" and args:
+        #     return get_crypto_chart(args)
+        # elif cmd_type == "lesbians":
+        #     return get_redgifs_gif("lesbians", user_name)
+        # elif cmd_type == "nsfw" and args:
+        #     return get_redgifs_gif(args, user_name, after_dark_only=True)
         # elif cmd_type == "psn":
-        # return get_psn_online_friends()
+        #     return get_psn_online_friends()
         # elif cmd_type == "philliesgames":
         #    return today_phillies_games(
         # elif cmd_type == "youtube" and args:
-        # return search_youtube_for_video(args)
+        #     return search_youtube_for_video(args)
         LOGGER.warning(f"No response for command `{command}` {args}")
         return emojize(
             f":warning: idk wtf u did but bot is ded now, thanks @{user_name} :warning:",

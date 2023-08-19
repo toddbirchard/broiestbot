@@ -152,7 +152,7 @@ def completed_poll_results(room: Room):
     response = f"\n\n<b>:television: <b>CHANGE OR STAY RESULTS!!!</b>\n"
     change_votes, stay_votes = live_poll_results()
     num_change_votes = len(change_votes) if change_votes else 0
-    num_stay_votes = len(num_stay_votes) if stay_votes else 0
+    num_stay_votes = len(stay_votes) if stay_votes else 0
     if num_change_votes > num_stay_votes:
         response += f"Chat has voted to <b>CHANGE!</b> {'@ '.join(CHATANGO_SPECIAL_USERS)}\n"
     elif num_change_votes < num_stay_votes:
