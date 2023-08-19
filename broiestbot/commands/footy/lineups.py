@@ -99,6 +99,9 @@ def get_fixture_xis(teams: dict) -> str:
     try:
         lineups_response = ""
         for i, team in enumerate(teams):
+            team_lineup = team.get("startXI")
+            if team_lineup is None:
+                continue
             team_name = team["team"]["name"]
             formation = team["formation"]
             coach = team["coach"]["name"]
@@ -106,7 +109,7 @@ def get_fixture_xis(teams: dict) -> str:
             players = "\n".join(
                 [
                     f"<b>{player['player']['pos']}</b> {player['player']['name']} (#{player['player']['number']})"
-                    for player in team["startXI"]
+                    for player in team_lineup
                 ]
             )
             if i != 0:
