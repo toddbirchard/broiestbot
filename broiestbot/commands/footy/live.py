@@ -153,13 +153,12 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
             time_elapsed = event["time"].get("elapsed")
             player_name = event["player"].get("name")
             assisting_player = event.get("assist")
-            event_comments = event.get("comments")
+            event_comments = f" <i>({event['comments']})</i>" if event.get("comments", "") else ""
+            LOGGER.info(f"Event comments: {event_comments}")
             event_type = event.get("type")
             event_detail = event.get("detail", "")
             if time_elapsed:
                 time_elapsed = f'{time_elapsed}"'
-            if event_comments:
-                event_comments = f"<i>({event_comments})</i>"
             if assisting_player is not None:
                 assisting_player = assisting_player.get("name")
             if player_name and time_elapsed:
@@ -170,17 +169,17 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
                     )
                 elif event_detail == "Yellow Card":
                     event_log += emojize(
-                        f':yellow_square: {player_name} {event_comments if not None else ""}, {time_elapsed}\n',
+                        f':yellow_square: {player_name}{event_comments if not None else ""}, {time_elapsed}\n',
                         language="en",
                     )
                 elif event_detail == "Second Yellow card":
                     event_log += emojize(
-                        f':yellow_square::red_square: {player_name} {event_comments if not None else ""}, {time_elapsed}\n',
+                        f':yellow_square::red_square: {player_name}{event_comments if not None else ""}, {time_elapsed}\n',
                         language="en",
                     )
                 elif event_detail == "Red Card" and player_name:
                     event_log += emojize(
-                        f':red_square: {player_name} {event_comments if not None else ""}, {time_elapsed} \n',
+                        f':red_square: {player_name}{event_comments if not None else ""}, {time_elapsed} \n',
                         language="en",
                     )
                 elif event_detail == "Normal Goal":

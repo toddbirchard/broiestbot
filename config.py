@@ -369,6 +369,7 @@ USL_LEAGUE_1_ID = 255
 USL_LEAGUE_2_ID = 256
 MLS_ALL_STAR_ID = 866
 MLS_LEAGUES_CUP_ID = 772
+US_OPEN_CUP_ID = 257
 EPL_SUMMER_SERIES_LEAGUE_ID = 1022
 
 # Footy Leagues, cups and tournaments
@@ -385,6 +386,7 @@ FOOTY_LEAGUES = {
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
+    ":trophy: United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":trophy: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
@@ -443,6 +445,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     ":France: LIGUE 1": LIGUE_ONE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
+    ":trophy: United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
