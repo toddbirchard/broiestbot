@@ -124,7 +124,7 @@ def check_fixture_start_date(fixture_start_date: datetime, tz: tzinfo, display_d
     """
     if fixture_start_date.date() == datetime.date(datetime.now(tz)):
         return f"<b>Today</b>, {display_date.split(', ')[1]}"
-    elif fixture_start_date.date() == datetime.date(datetime.now(tz)) + timedelta(days=1):
+    if fixture_start_date.date() == datetime.date(datetime.now(tz)) + timedelta(days=1):
         return f"Tomorrow, {display_date.split(', ')[1]}"
     return display_date
 

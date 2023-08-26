@@ -469,16 +469,16 @@ FOOTY_LIVE_SCORED_LEAGUES = {
 }
 
 # Footy leagues with "lineups" enabled
-FOOTY_LEAGUES_LINEUPS = {
+FOOTY_XI_LEAGUES = {
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
-    ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
+    # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
