@@ -122,6 +122,6 @@ def parse_upcoming_fixture(fixture: dict, fixture_start_time: datetime, room: st
     away_team = abbreviate_team_name(fixture["teams"]["away"]["name"])
     display_date, tz = get_preferred_time_format(fixture_start_time, room, username)
     display_date = check_fixture_start_date(fixture_start_time, tz, display_date)
-    display_date = display_date.replace("Today,", "")
+    display_date = display_date.replace("<b>Today</b>, ", "")
     matchup = f"{away_team} @ {home_team}"
-    return f"{matchup:<30} | <i>{display_date}</i>\n"
+    return f"{matchup:<30} | <i><b>{display_date}</b></i>\n"

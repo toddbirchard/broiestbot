@@ -1,6 +1,7 @@
 """Fetch lineups before kickoff or during the match."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
+import pytz
 
 import requests
 from emoji import emojize
@@ -146,8 +147,6 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str
             return resp.json()["response"]
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
-    except KeyError as e:
-        LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
@@ -170,12 +169,33 @@ def build_fixture_summary(fixture: dict, room: str, username: str) -> str:
         display_date, tz = get_preferred_time_format(date, room, username)
         display_date = check_fixture_start_date(date, tz, display_date)
         if status == "FT":
-            return f"<i>{away_team} @ {home_team} ({status})</i>\n"
-        elif status == "NS":
-            return f"<i>{away_team} @ {home_team} ({display_date})</i>\n"
-        elif elapsed != 90:
-            return f"<i>{away_team} @ {home_team} ({elapsed})</i>\n"
-        else:
-            return f"<i>{away_team} @ {home_team} ({status_detail})</i>\n"
+            return f"<b><i>{away_team} @ {home_team} ({status})</i></b>\n"
+        if status == "NS":
+            return f"<b><i>{away_team} @ {home_team} ({display_date})</i></b>\n"
+        if status in ("1H", "2H"):
+            return f'<b><i>{away_team} @ {home_team} ({elapsed}")</i></b>\n'
+        return f"<b><i>{away_team} @ {home_team} ({status_detail})</i></b>\n"
     except Exception as e:
-        LOGGER.error(f"Unexpected error when parsing footy fixtures: {e}")
+        LOGGER.error(f"Unexpected error when parsing footy fixture summaries for footyXI: {e}")
+
+
+def filter_fixtures_with_lineups(fixtures: List[dict], room, username):
+    """
+    Filter fixtures lacking lineup data.
+
+    :param List[dict] fixtures: List of fixtures for a given league.
+
+    :returns: List[Optional[dict]]
+    """
+    try:
+        fixtures_with_lineups = []
+        tz = pytz.timezone(get_preferred_timezone(room, username)["timezone"])
+        for fixture in fixtures:
+            start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z").now(tz)
+            now_time = datetime.now(tz)
+            footy_xi_time = start_time - timedelta(hours=1)
+            if now_time >= footy_xi_time:
+                fixtures_with_lineups.append(fixture)
+        return fixtures_with_lineups
+    except Exception as e:
+        LOGGER.error(f"Unexpected error when filtering fixtures with lineups: {e}")
