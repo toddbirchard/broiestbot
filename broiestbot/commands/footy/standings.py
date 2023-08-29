@@ -13,7 +13,7 @@ from config import (
 )
 from logger import LOGGER
 
-from .util import get_season_year, abbreviate_team_name
+from .util import abbreviate_team_name, get_season_year
 
 
 def league_table_standings(league_id: int) -> Optional[str]:

@@ -305,8 +305,7 @@ FOOTY_STANDINGS_ENDPOINT = f"{FOOTY_BASE_URL}/standings"
 FOOTY_FIXTURE_STATS_ENDPOINT = f"{FOOTY_BASE_URL}/fixtures/statistics"
 FOOTY_ODDS_ENDPOINT = "https://odds.p.rapidapi.com/v1/odds"
 FOOTY_ODDS_ENDPOINT_2 = "https://api-football-v1.p.rapidapi.com/v3/odds"
-FOOTY_XI_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/fixtures/lineups"
-FOOTY_PREDICTS_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/predictions"
+FOOTY_FIXTURES_XI_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/fixtures/lineups"
 FOOTY_HTTP_HEADERS = {
     "content-type": "application/json",
     "x-rapidapi-key": RAPID_API_KEY,
@@ -325,7 +324,7 @@ ENGLISH_LEAGUE_FOUR_ID = 42
 ENGLISH_LEAGUE_FIVE_ID = 43
 EUROPA_LEAGUE_ID = 2777
 UEFA_EUROPA_ID = 3
-UEFA_CONFERENCE_LEAGUE = 848
+UEFA_CONFERENCE_LEAGUE_ID = 848
 UEFA_NATIONS_LEAGUE_ID = 5
 UEFA_U17_QUALIFIERS_ID = 886
 UEFA_U19_QUALIFIERS_ID = 960
@@ -377,7 +376,7 @@ FOOTY_LEAGUES = {
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
-    ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
+    ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE_ID,
     ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ":England: EFL LEAGUE 3": ENGLISH_LEAGUE_THREE_ID,
     ":England: EFL LEAGUE 4": ENGLISH_LEAGUE_FOUR_ID,
@@ -385,7 +384,7 @@ FOOTY_LEAGUES = {
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
-    ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
+    # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":trophy: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
@@ -433,7 +432,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
-    ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
+    ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
@@ -444,8 +443,8 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     ":France: LIGUE 1": LIGUE_ONE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
-    ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
-    ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
+    # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
+    # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
@@ -473,8 +472,8 @@ FOOTY_XI_LEAGUES = {
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
-    ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE_ID,
+    ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,

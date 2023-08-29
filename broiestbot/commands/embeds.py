@@ -1,15 +1,20 @@
 """Generate link previews from URLs."""
+import re
 from typing import Optional
 
 import requests
-from requests.models import Request
-import re
 from bs4 import BeautifulSoup
+from emoji import emojize
 from requests import Response
 from requests.exceptions import HTTPError
-from emoji import emojize
+from requests.models import Request
 
-from config import INSTAGRAM_APP_ID, HTTP_REQUEST_TIMEOUT, TWITTER_BEARER_TOKEN, TWITTER_API_V1_ENDPOINT
+from config import (
+    HTTP_REQUEST_TIMEOUT,
+    INSTAGRAM_APP_ID,
+    TWITTER_API_V1_ENDPOINT,
+    TWITTER_BEARER_TOKEN,
+)
 from logger import LOGGER
 
 

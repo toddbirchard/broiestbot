@@ -1,10 +1,10 @@
 """PSN Commands"""
 from typing import List, Optional
 
-from clients import psn
-from psnawp_api.models.user import User
 from emoji import emojize
+from psnawp_api.models.user import User
 
+from clients import psn
 from logger import LOGGER
 
 

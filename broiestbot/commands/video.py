@@ -3,16 +3,15 @@ from typing import Optional
 
 import requests
 from emoji import emojize
-
 from requests.exceptions import HTTPError
 
 from config import (
+    HTTP_REQUEST_TIMEOUT,
     TWITCH_BROADCASTERS,
     TWITCH_CLIENT_ID,
     TWITCH_CLIENT_SECRET,
     TWITCH_STREAMS_ENDPOINT,
     TWITCH_TOKEN_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
 )
 from logger import LOGGER
 

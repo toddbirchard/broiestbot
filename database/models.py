@@ -1,9 +1,17 @@
 """Define data models for chat commands, phrases, user logs, etc."""
-from sqlalchemy.orm import declarative_base, mapped_column
-from sqlalchemy import Column, ForeignKey, DateTime, Float, Integer, String, Text, Boolean
-from sqlalchemy.sql import func
 from database import engine
-
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
+from sqlalchemy.orm import declarative_base, mapped_column
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 

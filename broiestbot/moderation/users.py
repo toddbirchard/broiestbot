@@ -4,12 +4,12 @@ from emoji import emojize
 
 from chatango.ch import Message, Room
 from config import (
-    CHATANGO_BLACKLISTED_USERS,
     CHATANGO_BANNED_IPS,
+    CHATANGO_BLACKLIST_ROOMS,
+    CHATANGO_BLACKLISTED_USERS,
     CHATANGO_EGGSER_USERNAME_WHITELIST,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
-    CHATANGO_BLACKLIST_ROOMS,
 )
 from logger import LOGGER
 

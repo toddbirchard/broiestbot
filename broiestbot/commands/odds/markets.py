@@ -1,6 +1,7 @@
 """Fetch sports betting markets."""
-from config import RAPID_API_KEY, ODDS_API_ENDPOINT
 import requests
+
+from config import ODDS_API_ENDPOINT, RAPID_API_KEY
 from logger import LOGGER
 
 

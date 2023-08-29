@@ -1,6 +1,6 @@
 """Persist user metadata."""
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 from database import session
 from database.models import ChatangoUser

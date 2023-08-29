@@ -1,15 +1,14 @@
 """Conduct a chat poll whether to 'change or stay'."""
-from typing import Tuple, Optional, List, Union
 from datetime import timedelta
+from typing import List, Optional, Tuple, Union
 
 from emoji import emojize
 from redis.exceptions import RedisError
+
 from chatango.ch import Room
-
 from clients import r, redis_scheduler
-from logger import LOGGER
-
 from config import CHATANGO_SPECIAL_USERS
+from logger import LOGGER
 
 
 def change_or_stay_vote(user_name: str, vote: str, room: Room) -> str:

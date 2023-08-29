@@ -5,10 +5,8 @@ from sys import stdout
 
 from loguru import logger
 
-
 from clients import sms
 from config import BASE_DIR, ENVIRONMENT, TWILIO_BRO_PHONE_NUMBER, TWILIO_SENDER_PHONE
-
 
 DD_APM_FORMAT = (
     "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] "
@@ -96,13 +94,12 @@ def json_formatter(record: dict) -> str:
     if record["level"].name == "INFO":
         record["extra"]["serialized"] = serialize_as_admin(record)
         return "{extra[serialized]},\n"
-    elif record["level"].name in ("WARNING", "SUCCESS"):
+    if record["level"].name in ("WARNING", "SUCCESS"):
         record["extra"]["serialized"] = serialize_event(record)
         return "{extra[serialized]},\n"
-    else:
-        record["extra"]["serialized"] = serialize_error(record)
-        sms_error_handler(record)
-        return "{extra[serialized]},\n"
+    record["extra"]["serialized"] = serialize_error(record)
+    sms_error_handler(record)
+    return "{extra[serialized]},\n"
 
 
 def sms_error_handler(log: dict) -> None:
@@ -169,30 +166,12 @@ def create_logger() -> logger:
             rotation="300 MB",
             compression="zip",
         )
-        # Datadog APM tracing
-        logger.add(
-            "/var/log/broiestbot/apm.json",
-            serialize=True,
-            catch=True,
-            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
-            rotation="300 MB",
-            compression="zip",
-        )
     elif ENVIRONMENT == "development":
         logger.add(
             f"{BASE_DIR}/logs/info.log",
             colorize=True,
             catch=True,
             format=log_formatter,
-            rotation="300 MB",
-            compression="zip",
-        )
-        # Datadog APM tracing
-        logger.add(
-            f"{BASE_DIR}/logs/apm.json",
-            serialize=True,
-            catch=True,
-            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
             rotation="300 MB",
             compression="zip",
         )

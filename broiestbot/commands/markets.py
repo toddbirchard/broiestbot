@@ -4,7 +4,11 @@ from emoji import emojize
 from requests.exceptions import HTTPError
 
 from clients import cch, sch
-from config import COINMARKETCAP_API_KEY, COINMARKETCAP_LATEST_ENDPOINT, HTTP_REQUEST_TIMEOUT
+from config import (
+    COINMARKETCAP_API_KEY,
+    COINMARKETCAP_LATEST_ENDPOINT,
+    HTTP_REQUEST_TIMEOUT,
+)
 from logger import LOGGER
 
 

@@ -1,6 +1,6 @@
 """Track number of cliche phrases uttered on The Bachelor."""
 from datetime import datetime, timedelta
-from config import TIMEZONE_US_EASTERN
+
 from database import session
 from database.models import PollResult
 from emoji import emojize
@@ -8,6 +8,7 @@ from redis.exceptions import RedisError
 from sqlalchemy.exc import SQLAlchemyError
 
 from clients import r
+from config import TIMEZONE_US_EASTERN
 from logger import LOGGER
 
 

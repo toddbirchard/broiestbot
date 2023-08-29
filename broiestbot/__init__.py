@@ -1,5 +1,6 @@
 """Initialize bot."""
 from typing import List
+
 from datadog import initialize
 
 from broiestbot.bot import Bot
@@ -7,9 +8,9 @@ from config import (
     CHATANGO_ROOMS,
     CHATANGO_TEST_ROOM,
     CHATANGO_USERS,
-    ENVIRONMENT,
     DDOG_API_KEY,
     DDOG_APP_KEY,
+    ENVIRONMENT,
 )
 
 

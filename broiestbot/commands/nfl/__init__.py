@@ -2,7 +2,7 @@ import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
-from config import NFL_GAMES_URL, NFL_HTTP_HEADERS, HTTP_REQUEST_TIMEOUT
+from config import HTTP_REQUEST_TIMEOUT, NFL_GAMES_URL, NFL_HTTP_HEADERS
 from logger import LOGGER
 
 

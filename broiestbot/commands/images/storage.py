@@ -1,6 +1,6 @@
 """Fetch randomly selected meme image(s) from storage bucket."""
-from random import randint
 from datetime import datetime
+from random import randint
 
 from emoji import emojize
 from google.cloud.exceptions import GoogleCloudError, NotFound

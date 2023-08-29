@@ -1,22 +1,26 @@
 """NMatch predictions for fixtures occurring today."""
 from datetime import datetime
 from typing import List, Optional
-from datetime import datetime
 
 import requests
-from requests.exceptions import HTTPError
 from emoji import emojize
+from requests.exceptions import HTTPError
 
 from config import (
     FOOTY_FIXTURES_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LEAGUES,
     FOOTY_ODDS_ENDPOINT_2,
+    HTTP_REQUEST_TIMEOUT,
 )
 from logger import LOGGER
 
-from .util import get_preferred_timezone, get_current_day, abbreviate_team_name, get_season_year
+from .util import (
+    abbreviate_team_name,
+    get_current_day,
+    get_preferred_timezone,
+    get_season_year,
+)
 
 
 def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
@@ -37,14 +41,12 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
             if not bool(league_fixture_odds):
                 continue
             if league_fixtures is not None and i < 7:
-                today_fixtures_odds += parse_fixture_odds(
-                    league_name, league_fixtures, league_fixture_odds, room, username
-                )
+                today_fixtures_odds += parse_fixture_odds(league_name, league_fixtures, league_fixture_odds)
             i += 1
         if today_fixtures_odds != "\n\n\n":
             return today_fixtures_odds
         return emojize(
-            f":soccer_ball: :cross_mark: sry no fixtures today :( :cross_mark: :soccer_ball:",
+            ":soccer_ball: :cross_mark: sry no fixtures today :( :cross_mark: :soccer_ball:",
             language="en",
         )
     except HTTPError as e:
@@ -108,7 +110,9 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, username: str)
             "bet": 1,
         }
         params.update(get_preferred_timezone(room, username))
-        resp = requests.get(FOOTY_ODDS_ENDPOINT_2, params=params, headers=FOOTY_HTTP_HEADERS)
+        resp = requests.get(
+            FOOTY_ODDS_ENDPOINT_2, params=params, headers=FOOTY_HTTP_HEADERS, timeout=HTTP_REQUEST_TIMEOUT
+        )
         return resp.json().get("response")
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching today's footy fixtures: {e.response.content}")
@@ -118,8 +122,7 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, username: str)
         LOGGER.error(f"Unexpected error when fetching today's footy fixtures: {e}")
 
 
-def parse_fixture_odds(league_name: str, fixtures: dict, fixtures_odds: dict, room: str, username: str) -> str:
-
+def parse_fixture_odds(league_name: str, fixtures: dict, fixtures_odds: dict) -> str:
     """
     Parse fixture details and odds.
 

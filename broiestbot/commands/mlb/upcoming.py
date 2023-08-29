@@ -6,7 +6,12 @@ import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
-from config import MLB_BASE_ENDPOINT, RAPID_API_KEY, TIMEZONE_US_EASTERN, HTTP_REQUEST_TIMEOUT
+from config import (
+    HTTP_REQUEST_TIMEOUT,
+    MLB_BASE_ENDPOINT,
+    RAPID_API_KEY,
+    TIMEZONE_US_EASTERN,
+)
 from logger import LOGGER
 
 

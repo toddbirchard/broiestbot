@@ -1,6 +1,6 @@
 """Fetch weather for a given location."""
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 import requests
 from database import session
@@ -10,10 +10,10 @@ from requests.exceptions import HTTPError
 
 from config import (
     CHATANGO_OBI_ROOM,
+    HTTP_REQUEST_TIMEOUT,
     METRIC_SYSTEM_USERS,
     WEATHERSTACK_API_ENDPOINT,
     WEATHERSTACK_API_KEY,
-    HTTP_REQUEST_TIMEOUT,
 )
 from logger import LOGGER
 

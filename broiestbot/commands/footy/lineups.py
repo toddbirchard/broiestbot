@@ -1,28 +1,27 @@
 """Fetch lineups before kickoff or during the match."""
 from datetime import datetime, timedelta
 from typing import List, Optional
-import pytz
 
+import pytz
 import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
 from config import (
+    FOOTY_FIXTURES_ENDPOINT,
+    FOOTY_FIXTURES_XI_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_XI_LEAGUES,
-    FOOTY_FIXTURES_ENDPOINT,
-    FOOTY_XI_ENDPOINT,
     HTTP_REQUEST_TIMEOUT,
 )
-
 from logger import LOGGER
 
 from .util import (
+    check_fixture_start_date,
     get_current_day,
+    get_preferred_time_format,
     get_preferred_timezone,
     get_season_year,
-    check_fixture_start_date,
-    get_preferred_time_format,
 )
 
 
@@ -36,28 +35,25 @@ def footy_team_lineups(room: str, username: str) -> str:
     :returns: str
     """
     try:
-        i = 0
         today_fixture_lineups = "\n\n\n"
         for league_name, league_id in FOOTY_XI_LEAGUES.items():
+            i = 0
             league_fixtures = get_today_live_or_upcoming_fixtures(league_id, room, username)
-            league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures, room, username)
-            if bool(league_fixtures_with_lineups) is False:
-                continue
-            if bool(league_fixtures_with_lineups) and i < 3:
-                i += 1
-                today_fixture_lineups += emojize(f"<b>{league_name}</b>\n", language="en")
-                for fixture in league_fixtures_with_lineups:
-                    if bool(fixture):
-                        LOGGER.warning(f"league_fixture for {league_name}: {fixture}")
-                        fixture_id = fixture["fixture"]["id"]
-                        fixture_summary = build_fixture_summary(fixture, room, username)
-                        lineups = fetch_lineups_per_fixture(fixture_id)
-                        if lineups:
-                            today_fixture_lineups += f"{fixture_summary} {get_fixture_xis(lineups)}"
-                        if i == len(league_fixtures_with_lineups):
-                            today_fixture_lineups += "\n\n----------------------\n\n"
-                        else:
-                            today_fixture_lineups += "\n\n"
+            if league_fixtures and i <= 3:
+                if bool(league_fixtures) and i == 0:
+                    LOGGER.info(f"league_fixtures = {league_fixtures}")
+                    today_fixture_lineups += emojize(f"<b>{league_name}</b>\n", language="en")
+                for fixture in league_fixtures:
+                    fixture_id = fixture["fixture"]["id"]
+                    fixture_summary = build_fixture_summary(fixture, room, username)
+                    lineups = fetch_lineups_per_fixture(fixture_id)
+                    i += 1
+                    if lineups:
+                        today_fixture_lineups += fixture_summary
+                        today_fixture_lineups += get_fixture_xis(lineups)
+                        today_fixture_lineups += "\n\n----------------------\n\n"
+                    else:
+                        continue
         return today_fixture_lineups.rstrip("\n\n----------------------\n\n")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy XIs: {e}")
@@ -74,7 +70,7 @@ def fetch_lineups_per_fixture(fixture_id: int) -> Optional[dict]:
     try:
         params = {"fixture": fixture_id}
         resp = requests.get(
-            FOOTY_XI_ENDPOINT,
+            FOOTY_FIXTURES_XI_ENDPOINT,
             headers=FOOTY_HTTP_HEADERS,
             params=params,
             timeout=HTTP_REQUEST_TIMEOUT,
@@ -148,11 +144,10 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str
             params=params,
             timeout=HTTP_REQUEST_TIMEOUT,
         )
-        return resp.json().get("response")
+        if resp.json().get("response"):
+            return resp.json()["response"]
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
-    except KeyError as e:
-        LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 

@@ -8,9 +8,9 @@ from requests.exceptions import HTTPError
 from config import (
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
-    FOOTY_LIVE_SCORED_LEAGUES,
     FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT,
     FOOTY_LIVE_FIXTURE_STATS_ENDPOINT,
+    FOOTY_LIVE_SCORED_LEAGUES,
     HTTP_REQUEST_TIMEOUT,
 )
 from logger import LOGGER
@@ -55,7 +55,7 @@ def footy_live_fixtures_per_league(
     :returns: Optional[str]
     """
     try:
-        live_fixtures = "\n\n\n\n"
+        live_fixtures = "\n\n\n"
         fixtures = fetch_live_fixtures(league_id, room, username)
         if fixtures:
             live_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
@@ -73,7 +73,7 @@ def footy_live_fixtures_per_league(
                     live_fixtures += parse_events_per_live_fixture(fixture_events_response, subs=subs)
                 if i < len(fixtures):
                     live_fixtures += "\n\n\n"
-            if live_fixtures != "\n\n\n\n":
+            if live_fixtures != "\n\n\n":
                 return live_fixtures
         return None
     except HTTPError as e:
@@ -154,7 +154,6 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
             player_name = event["player"].get("name")
             assisting_player = event.get("assist")
             event_comments = f" <i>({event['comments']})</i>" if event.get("comments", "") else ""
-            LOGGER.info(f"Event comments: {event_comments}")
             event_type = event.get("type")
             event_detail = event.get("detail", "")
             if time_elapsed:
@@ -302,7 +301,7 @@ def get_stats_per_live_fixture(fixture_id: int) -> Optional[str]:
                 for stat in team[i]["statistics"]:
                     fixture_stats += f"{stat['type']: stat['value']}\n"
                 if i == 0:
-                    fixture_stats += f"\n"
+                    fixture_stats += "\n"
             return fixture_stats
         return None
     except HTTPError as e:

@@ -1,11 +1,10 @@
 """Clients & SDKs for interacting with third-party services."""
 import lyricsgenius
 import praw
-from redis import Redis
 import wikipediaapi
-from rq_scheduler import Scheduler
-
 from imdb import Cinemagoer
+from redis import Redis
+from rq_scheduler import Scheduler
 from twilio.rest import Client
 
 from config import (
@@ -32,8 +31,8 @@ from config import (
 from .crypto import CryptoChartHandler
 from .gcs import GCS
 from .geo import GeoIP
-from .stock import StockChartHandler
 from .psn import PlaystationClient
+from .stock import StockChartHandler
 
 # Google Cloud Storage
 gcs = GCS(GOOGLE_BUCKET_NAME, GOOGLE_BUCKET_URL)

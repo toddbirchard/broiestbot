@@ -6,7 +6,7 @@ import requests
 from requests import Response
 from requests.exceptions import HTTPError
 
-from config import NBA_BASE_URL, NBA_SEASON_YEAR, RAPID_API_KEY, HTTP_REQUEST_TIMEOUT
+from config import HTTP_REQUEST_TIMEOUT, NBA_BASE_URL, NBA_SEASON_YEAR, RAPID_API_KEY
 from logger import LOGGER
 
 

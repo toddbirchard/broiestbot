@@ -1,22 +1,22 @@
 """Miscellaneous utility commands."""
 from calendar import day_name
 from datetime import datetime, timedelta
-from typing import Optional
 from math import floor
+from typing import Optional
 
+import pytz
 import requests
 from emoji import emojize
-import pytz
 
 from clients import sms
 from config import (
     CHATANGO_SPECIAL_USERS,
+    COVID_API_ENDPOINT,
+    HTTP_REQUEST_TIMEOUT,
     RAPID_API_KEY,
     TIMEZONE_US_EASTERN,
     TWILIO_PHONE_NUMBERS,
     TWILIO_SENDER_PHONE,
-    HTTP_REQUEST_TIMEOUT,
-    COVID_API_ENDPOINT,
 )
 from logger import LOGGER
 

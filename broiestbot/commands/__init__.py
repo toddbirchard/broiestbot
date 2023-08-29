@@ -12,23 +12,23 @@ from .footy import (
     epl_golden_boot,
     fetch_fox_fixtures,
     footy_all_upcoming_fixtures,
+    footy_live_fixture_stats,
     footy_live_fixtures,
-    footy_today_fixtures_odds,
     footy_team_lineups,
+    footy_today_fixtures_odds,
     footy_upcoming_fixtures,
     get_today_footy_odds_for_league,
-    today_upcoming_fixtures,
     league_table_standings,
     mls_standings,
-    footy_live_fixture_stats,
+    today_upcoming_fixtures,
 )
 from .images import (
+    fetch_latest_image_from_gcs_bucket,
     fetch_random_image_from_gcs_bucket,
     gcs_count_images_in_bucket,
-    spam_random_images_from_gcs_bucket,
-    fetch_latest_image_from_gcs_bucket,
     giphy_image_search,
     random_image,
+    spam_random_images_from_gcs_bucket,
     subreddit_image,
 )
 from .lyrics import get_song_lyrics
@@ -43,18 +43,22 @@ from .mlb import today_phillies_games
 from .movies import find_imdb_movie
 from .nba import live_nba_games, nba_standings, upcoming_nba_games
 from .nfl import get_live_nfl_games
+from .odds import get_odds
 from .olympics import get_summer_olympic_medals, get_winter_olympic_medals
-from .polls import change_or_stay_vote, tovala_counter, get_live_poll_results, completed_poll_results, bach_gang_counter
+from .playstation import get_psn_online_friends
+from .polls import (
+    bach_gang_counter,
+    change_or_stay_vote,
+    completed_poll_results,
+    get_live_poll_results,
+    tovala_counter,
+)
 from .previews import extract_url
 from .tuner import get_current_show, tuner
-
-from .tuner import tuner
 
 # from .video import search_youtube_for_video
 from .video import get_all_live_twitch_streams
 from .weather import get_current_weather
-from .playstation import get_psn_online_friends
-from .odds import get_odds
 
 
 def basic_message(message):

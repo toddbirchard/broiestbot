@@ -6,9 +6,9 @@ from requests.exceptions import HTTPError
 
 from clients import wiki
 from config import (
-    RAPID_API_KEY,
-    HTTP_REQUEST_TIMEOUT,
     GOOGLE_TRANSLATE_ENDPOINT,
+    HTTP_REQUEST_TIMEOUT,
+    RAPID_API_KEY,
     URBAN_DICTIONARY_ENDPOINT,
 )
 from logger import LOGGER

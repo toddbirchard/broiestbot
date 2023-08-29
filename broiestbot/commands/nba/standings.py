@@ -3,11 +3,11 @@ import requests
 from requests.exceptions import HTTPError
 
 from config import (
+    HTTP_REQUEST_TIMEOUT,
     NBA_API_KEY,
     NBA_BASE_URL,
     NBA_CONFERENCE_NAMES,
     NBA_SEASON_YEAR,
-    HTTP_REQUEST_TIMEOUT,
 )
 from logger import LOGGER
 

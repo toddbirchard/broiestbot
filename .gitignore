@@ -137,5 +137,5 @@ logs/*
 
 # IDEs
 .vscode
-idea
+.idea
 

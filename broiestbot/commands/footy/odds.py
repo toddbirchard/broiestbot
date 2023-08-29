@@ -4,7 +4,7 @@ import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
-from config import RAPID_API_KEY, HTTP_REQUEST_TIMEOUT, FOOTY_ODDS_ENDPOINT
+from config import FOOTY_ODDS_ENDPOINT, HTTP_REQUEST_TIMEOUT, RAPID_API_KEY
 from logger import LOGGER
 
 
@@ -24,7 +24,7 @@ def get_today_footy_odds_for_league(league_id: int):
             return None
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy odds: {e}")
-        return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
+        return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
 
 
 @DeprecationWarning
@@ -55,7 +55,7 @@ def fetch_today_footy_odds_for_league(league_id: int):
         LOGGER.error(f"HTTPError while fetching footy odds: {e.response.content}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy odds: {e}")
-        return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
+        return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
 
 
 def format_fixture_odds(fixtures: List[dict]) -> Optional[str]:
