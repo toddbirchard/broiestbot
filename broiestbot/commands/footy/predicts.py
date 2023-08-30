@@ -44,7 +44,7 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
         if today_fixtures_odds != "\n\n\n":
             return today_fixtures_odds
         return emojize(
-            f":soccer_ball: :cross_mark: sry no fixtures today :( :cross_mark: :soccer_ball:",
+            ":soccer_ball: :cross_mark: sry no fixtures today :( :cross_mark: :soccer_ball:",
             language="en",
         )
     except HTTPError as e:

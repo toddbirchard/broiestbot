@@ -10,15 +10,6 @@ from clients import sms
 from config import BASE_DIR, ENVIRONMENT, TWILIO_BRO_PHONE_NUMBER, TWILIO_SENDER_PHONE
 
 
-DD_APM_FORMAT = (
-    "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] "
-    "[dd.service=%(dd.service)s dd.env=%(dd.env)s "
-    "dd.version=%(dd.version)s "
-    "dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s]"
-    "- %(message)s"
-)
-
-
 def json_formatter(record: dict) -> str:
     """
     Format info message logs.
@@ -96,7 +87,7 @@ def json_formatter(record: dict) -> str:
     if record["level"].name == "INFO":
         record["extra"]["serialized"] = serialize_as_admin(record)
         return "{extra[serialized]},\n"
-    elif record["level"].name in ("WARNING", "SUCCESS"):
+    if record["level"].name in ("WARNING", "SUCCESS"):
         record["extra"]["serialized"] = serialize_event(record)
         return "{extra[serialized]},\n"
     else:
@@ -123,16 +114,18 @@ def sms_error_handler(log: dict) -> None:
 def log_formatter(record: dict) -> str:
     """
     Formatter for .log records
-    :param dict record: Key/value object containing a single log's message & metadata.
+
+    :param dict record: Key/value object containing log message & metadata.
+
     :returns: str
     """
     if record["level"].name == "INFO":
         return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #b3cfe7>{level}</fg #b3cfe7>: <light-white>{message}</light-white>\n"
-    elif record["level"].name == "WARNING":
+    if record["level"].name == "WARNING":
         return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> |  <fg #b09057>{level}</fg #b09057>: <light-white>{message}</light-white>\n"
-    elif record["level"].name == "SUCCESS":
+    if record["level"].name == "SUCCESS":
         return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #6dac77>{level}</fg #6dac77>: <light-white>{message}</light-white>\n"
-    elif record["level"].name == "ERROR":
+    if record["level"].name == "ERROR":
         return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #a35252>{level}</fg #a35252>: <light-white>{message}</light-white>\n"
     return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #b3cfe7>{level}</fg #b3cfe7>: <light-white>{message}</light-white>\n"
 
@@ -145,6 +138,7 @@ def create_logger() -> logger:
     logger.remove()
     logger.add(stdout, colorize=True, catch=True, format=log_formatter)
     if ENVIRONMENT == "production":
+        # Human-readable info logs
         logger.add(
             "/var/log/broiestbot/info.log",
             colorize=True,
@@ -153,6 +147,7 @@ def create_logger() -> logger:
             rotation="300 MB",
             compression="zip",
         )
+        # Human-readable error logs
         logger.add(
             "/var/log/broiestbot/error.log",
             colorize=True,
@@ -162,23 +157,15 @@ def create_logger() -> logger:
             rotation="300 MB",
             compression="zip",
         )
-        # Datadog JSON logs
+        # JSON logs to be consumed by Datadog
         logger.add(
             "/var/log/broiestbot/info.json",
             format=json_formatter,
             rotation="300 MB",
             compression="zip",
         )
-        # Datadog APM tracing
-        logger.add(
-            "/var/log/broiestbot/apm.json",
-            serialize=True,
-            catch=True,
-            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
-            rotation="300 MB",
-            compression="zip",
-        )
     elif ENVIRONMENT == "development":
+        # Human-readable info logs
         logger.add(
             f"{BASE_DIR}/logs/info.log",
             colorize=True,
@@ -187,16 +174,17 @@ def create_logger() -> logger:
             rotation="300 MB",
             compression="zip",
         )
-        # Datadog APM tracing
+        # Human-readable error logs
         logger.add(
-            f"{BASE_DIR}/logs/apm.json",
-            serialize=True,
+            f"{BASE_DIR}/logs/errors.log",
+            colorize=True,
             catch=True,
-            format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}",
+            level="ERROR",
+            format=log_formatter,
             rotation="300 MB",
             compression="zip",
         )
-        # Datadog JSON logs
+        # JSON logs to be consumed by Datadog
         logger.add(
             f"{BASE_DIR}/logs/info.json",
             format=json_formatter,

@@ -28,14 +28,14 @@ def footy_live_fixtures(room: str, username: str, subs=False) -> str:
 
     :returns: str
     """
-    live_fixtures = "\n\n\n\n"
+    live_fixtures = "\n\n\n"
     i = 0
     for league_name, league_id in FOOTY_LIVE_SCORED_LEAGUES.items():
         live_league_fixtures = footy_live_fixtures_per_league(league_id, league_name, room, username, subs=subs)
         if live_league_fixtures is not None and i < 6:
             i += 1
             live_fixtures += live_league_fixtures + "\n"
-    if live_fixtures == "\n\n\n\n":
+    if live_fixtures == "\n\n\n":
         return emojize(":warning: No live fixtures :warning:", language="en")
     return live_fixtures
 
@@ -152,9 +152,8 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
         for event in events:
             time_elapsed = event["time"].get("elapsed")
             player_name = event["player"].get("name")
-            assisting_player = event.get("assist")
-            event_comments = f" <i>({event['comments']})</i>" if event.get("comments", "") else ""
-            LOGGER.info(f"Event comments: {event_comments}")
+            assisting_player = event.get("assist") if event.get("assist") is not None else ""
+            event_comments = f" <i>({event['comments']})</i>" if event.get("comments") is not None else ""
             event_type = event.get("type")
             event_detail = event.get("detail", "")
             if time_elapsed:
@@ -164,32 +163,32 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
             if player_name and time_elapsed:
                 if "Goal" in event_detail and event_type == "Var":
                     event_log += emojize(
-                        f":cross_mark: :soccer_ball: {player_name} <i>({event_detail})</i>, {time_elapsed}\n",
+                        f':cross_mark: :soccer_ball: {player_name} <i>({event_detail})</i>, {time_elapsed}"\n',
                         language="en",
                     )
                 elif event_detail == "Yellow Card":
                     event_log += emojize(
-                        f':yellow_square: {player_name}{event_comments if not None else ""}, {time_elapsed}\n',
+                        f':yellow_square: {player_name}{event_comments}, {time_elapsed}"\n',
                         language="en",
                     )
                 elif event_detail == "Second Yellow card":
                     event_log += emojize(
-                        f':yellow_square::red_square: {player_name}{event_comments if not None else ""}, {time_elapsed}\n',
+                        f':yellow_square::red_square: {player_name}{event_comments}, {time_elapsed}"\n',
                         language="en",
                     )
                 elif event_detail == "Red Card" and player_name:
                     event_log += emojize(
-                        f':red_square: {player_name}{event_comments if not None else ""}, {time_elapsed} \n',
+                        f':red_square: {player_name}{event_comments}, {time_elapsed}"\n',
                         language="en",
                     )
                 elif event_detail == "Normal Goal":
                     event_log += emojize(
-                        f":soccer_ball: {event_type}, {player_name}, {time_elapsed}\n",
+                        f':soccer_ball: {event_type}, {player_name}, {time_elapsed}"\n',
                         language="en",
                     )
                 elif event_detail == "Penalty":
                     event_log += emojize(
-                        f":goal_net: :soccer_ball: (PEN), {player_name}, {time_elapsed}\n",
+                        f':goal_net: :soccer_ball: (PEN), {player_name}, {time_elapsed}"\n',
                         language="en",
                     )
                 elif event_detail == "Own Goal":
@@ -246,9 +245,9 @@ def footy_live_fixture_stats_per_league(
     :returns: Optional[str]
     """
     try:
-        live_fixtures = "\n\n\n\n"
+        live_fixtures = "\n\n\n"
         fixtures = fetch_live_fixtures(league_id, room, username)
-        if fixtures:
+        if bool(fixtures):
             live_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             for i, fixture in enumerate(fixtures):
                 fixture_id = fixture["fixture"]["id"]
@@ -267,7 +266,7 @@ def footy_live_fixture_stats_per_league(
                     live_fixtures += events
                 if i < len(fixtures):
                     live_fixtures += "\n\n\n"
-            if live_fixtures != "\n\n\n\n":
+            if live_fixtures != "\n\n\n":
                 return live_fixtures
         return None
     except HTTPError as e:
@@ -298,11 +297,11 @@ def get_stats_per_live_fixture(fixture_id: int) -> Optional[str]:
         fixture_stats = resp.json().get("response")
         if fixture_stats:
             for i, team in enumerate(fixture_stats):
-                team += f"<b>{team[i]['team']['name']}</b> \n"
+                team += f"<b>{team[i]['team']['name']}</b>\n"
                 for stat in team[i]["statistics"]:
                     fixture_stats += f"{stat['type']: stat['value']}\n"
                 if i == 0:
-                    fixture_stats += f"\n"
+                    fixture_stats += "\n"
             return fixture_stats
         return None
     except HTTPError as e:

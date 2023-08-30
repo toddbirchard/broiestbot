@@ -38,7 +38,7 @@ def today_upcoming_fixtures(room: str, username: str) -> str:
     if upcoming_fixtures != "\n\n\n\n":
         return upcoming_fixtures
     return emojize(
-        f":soccer_ball: :cross_mark: sry no fixtures today :( :cross_mark: :soccer_ball:",
+        ":soccer_ball: :cross_mark: sry no fixtures today :( :cross_mark: :soccer_ball:",
         language="en",
     )
 
