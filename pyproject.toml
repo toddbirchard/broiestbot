@@ -12,7 +12,7 @@ documentation = "https://github.com/toddbirchard/broiestbot/blob/master/README.m
 keywords = ["Chatbot", "Chat", "Chatango", "Bot", "Python"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 requests = "*"
 sqlalchemy = "*"
 pymysql = "*"
@@ -25,7 +25,6 @@ bs4 = "*"
 wikipedia-api = "*"
 cinemagoer = "*"
 ipdata = "*"
-kaleido = "0.2.1"
 boto = "*"
 botocore = "*"
 redis = "*"
@@ -49,7 +48,7 @@ isort = "*"
 flake8 = "*"
 pylint = "*"
 rq = "*"
-rq-scheduler = "^0.13.1"
+rq-scheduler = "*"
 
 [tool.poetry.scripts]
 run = "wsgi:init_bot"
@@ -58,7 +57,7 @@ run = "wsgi:init_bot"
 issues = "https://github.com/toddbirchard/broiestbot/issues"
 
 [tool.poetry.group.dev.dependencies]
-black = { version = "^22.10.0", allow-prereleases = true }
+black = { version = "^23.7.0", allow-prereleases = true }
 
 [build-system]
 requires = ["poetry>=1.5.1"]

@@ -119,7 +119,6 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, username: str)
 
 
 def parse_fixture_odds(league_name: str, fixtures: dict, fixtures_odds: dict, room: str, username: str) -> str:
-
     """
     Parse fixture details and odds.
 

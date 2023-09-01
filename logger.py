@@ -1,10 +1,10 @@
 """Custom logger and error notifications."""
 import json
 import re
+from datetime import datetime
 from sys import stdout
 
 from loguru import logger
-
 
 from clients import sms
 from config import BASE_DIR, ENVIRONMENT, TWILIO_BRO_PHONE_NUMBER, TWILIO_SENDER_PHONE
@@ -18,6 +18,8 @@ def json_formatter(record: dict) -> str:
 
     :returns: str
     """
+    if isinstance(record, (str, bool)):
+        return construct_json_from_corrupted_log(record)
 
     record["time"] = record["time"].strftime("%m/%d/%Y, %H:%M:%S")
     record["elapsed"] = record["elapsed"].total_seconds()
@@ -90,10 +92,24 @@ def json_formatter(record: dict) -> str:
     if record["level"].name in ("WARNING", "SUCCESS"):
         record["extra"]["serialized"] = serialize_event(record)
         return "{extra[serialized]},\n"
-    else:
-        record["extra"]["serialized"] = serialize_error(record)
-        sms_error_handler(record)
-        return "{extra[serialized]},\n"
+    record["extra"]["serialized"] = serialize_error(record)
+    sms_error_handler(record)
+    return "{extra[serialized]},\n"
+
+
+def construct_json_from_corrupted_log(log: str) -> str:
+    """
+    Create JSON log record from corrupt string.
+
+    :param str log: Corrupt log string.
+
+    :returns: str
+    """
+    return {
+        "time": datetime.strftime(datetime.now(), "%m/%d/%Y, %H:%M:%S"),
+        "level": "ERROR",
+        "message": log,
+    }
 
 
 def sms_error_handler(log: dict) -> None:

@@ -200,7 +200,6 @@ class CryptoChartHandler:
                     sharing="public",
                     auto_open=False,
                 )
-                # return fig.write_image("figure.png", engine="kaleido")
                 return chart.replace("https://plotly.com/", "https://chart-studio.plotly.com/")[:-1] + ".png"
         except HTTPError as e:
             return emojize(f":warning: fk bro's plotly subscription died: {e} :warning:", language="en")

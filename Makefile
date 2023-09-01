@@ -91,13 +91,13 @@ lint: env
 			--show-source \
 			--statistics
 
-
 .PHONY: clean
 clean:
 	find . -name 'poetry.lock' -delete && \
 	find . -name '.coverage' -delete && \
-	find . -name './logs/*.json' -delete && \
 	find . -wholename '**/*.pyc' -delete && \
+	find . -wholename '**/logs/*.json' -exec rm -rf {} + && \
+	find . -wholename '**/logs/*.log' -exec rm -rf {} + && \
 	find . -type d -wholename '__pycache__' -exec rm -rf {} + && \
 	find . -type d -wholename '.venv' -exec rm -rf {} + && \
 	find . -type d -wholename '.pytest_cache' -exec rm -rf {} + && \

@@ -1,5 +1,4 @@
 """Top scorers for a given league."""
-from datetime import datetime
 from typing import List, Tuple
 
 import requests
