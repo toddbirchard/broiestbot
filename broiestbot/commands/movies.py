@@ -35,19 +35,19 @@ def find_imdb_movie(movie_title: str) -> str:
                 if title and year:
                     title = f"{title} ({year})"
                 if rating:
-                    rating = f"RATING: :star: {movie.data.get('rating')}/10"
+                    rating = f":star: <b>Rating</b>: {movie.data.get('rating')}/10"
                 if cast:
                     cast = (
-                        f":people_hugging: STARRING: {', '.join([actor['name'] for actor in movie.data['cast'][:2]])}"
+                        f":people_hugging: <b>Starring</b>: {', '.join([actor['name'] for actor in movie.data['cast'][:2]])}"
                     )
                 if director:
-                    director = f":clapper_board: DIRECTED BY: {movie.data.get('director')[0].get('name')}"
+                    director = f":clapper_board: <b>Directed by</b>: {movie.data.get('director')[0].get('name')}"
                 if genres:
-                    genres = f":movie_camera: GENRES: {', '.join(movie.data.get('genres'))}"
+                    genres = f":movie_camera: <b>Genres</b>: {', '.join(movie.data.get('genres'))}"
                 if synopsis:
                     synopsis = synopsis[0]
                     synopsis = " ".join(synopsis.split(". ")[:2])
-                    synopsis = f":speech_balloon: {synopsis}"
+                    synopsis = f":speech_balloon: <b>Description</b>: {synopsis}"
                 response = "\n".join(
                     filter(
                         None,
@@ -64,14 +64,13 @@ def find_imdb_movie(movie_title: str) -> str:
                     )
                 )
                 return emojize(f"\n\n\n{response}", language="en")
-            LOGGER.warning(f"No IMDB info found for `{movie_title}`.")
             return emojize(f":warning: wtf kind of movie is {movie} :warning:", language="en")
     except IMDbError as e:
         LOGGER.warning(f"IMDB failed to find `{movie_title}`: {e}")
         return emojize(f":warning: wtf kind of movie is {movie_title} :warning:", language="en")
     except Exception as e:
         LOGGER.error(f"Unexpected error while fetching IMDB movie `{movie_title}`: {e}")
-        return emojize(f":warning: omfg u broke me with ur shit movie :warning:", language="en")
+        return emojize(":warning: omfg u broke me with ur shit movie :warning:", language="en")
 
 
 def get_box_office_data(movie: Movie) -> Optional[str]:
@@ -89,11 +88,11 @@ def get_box_office_data(movie: Movie) -> Optional[str]:
             opening_week = movie.data["box office"].get("Opening Weekend United States", None)
             gross = movie.data["box office"].get("Cumulative Worldwide Gross", None)
             if budget:
-                response.append(f":money_bag: BUDGET {budget}.")
+                response.append(f":money_bag: <b>Budget</b>: {budget}.")
             if opening_week:
-                response.append(f":ticket: OPENING WEEK {opening_week}.")
+                response.append(f":ticket: <b>Opening week</b>: {opening_week}.")
             if gross:
-                response.append(f":globe_showing_Americas: :dollar_banknote: CUMULATIVE WORLDWIDE GROSS {gross}.")
+                response.append(f":globe_showing_Americas: <b>Worldwide gross</b>: {gross}")
             return "\n".join(response)
         LOGGER.warning(f"No IMDB box office info found for `{movie}`.")
     except KeyError as e:
