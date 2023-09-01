@@ -113,13 +113,14 @@ def parse_golden_boot_leaders(players: dict) -> str:
                 name = player["player"]["name"]
                 team = player["statistics"][0]["team"]["name"]
                 goals = player["statistics"][0]["goals"]["total"]
-                assists = player["statistics"][0]["goals"].get("assists", 0)
+                assists = player["statistics"][0]["goals"].get("assists")
+                parsed_assists = f"{assists} assists, " if assists else ""
                 shots_on = player["statistics"][0]["shots"].get("on", 0)
                 shots_total = player["statistics"][0]["shots"].get("total", 0)
                 top_scorers.append(
                     (
                         goals,
-                        f"{goals} - {name}, {team}  ({assists} assists, {shots_on}/{shots_total} SOG)",
+                        f"<b>{goals}. {name}</b>, {team} <i>({parsed_assists}{shots_on}/{shots_total} SOG)</i>",
                     )
                 )
                 if i > 9:
