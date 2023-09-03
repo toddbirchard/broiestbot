@@ -28,7 +28,7 @@ class GeoIP:
         except Exception as e:
             print(f"Unexpected exception while creating IPData client: {e}")
 
-    def lookup_user(self, ip_address: str) -> dict:
+    def lookup_user_by_ip(self, ip_address: str) -> dict:
         """
         Fetch metadata associated with user's IP address.
 
@@ -47,8 +47,7 @@ class GeoIP:
                     "longitude",
                     "postal",
                     "emoji_flag",
-                    "time_zone",
-                    "threat",
+                    "time_zone_name",
                     "asn",
                     "carrier",
                 ],

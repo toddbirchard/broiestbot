@@ -3,10 +3,10 @@ from typing import Optional
 from datetime import datetime
 
 import requests
-from database import session
-from database.models import Weather
 from emoji import emojize
 from requests.exceptions import HTTPError
+from database import session
+from database.models import Weather
 
 from config import (
     CHATANGO_OBI_ROOM,
@@ -116,7 +116,7 @@ def parse_weather_response(weather: dict, measurement_units: str) -> str:
     except Exception as e:
         LOGGER.error(f"Failed to parse weather response: {e}")
         return emojize(
-            f":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
+            ":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
             language="en",
         )
 

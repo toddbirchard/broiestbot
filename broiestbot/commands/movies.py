@@ -37,9 +37,7 @@ def find_imdb_movie(movie_title: str) -> str:
                 if rating:
                     rating = f":star: <b>Rating</b>: {movie.data.get('rating')}/10"
                 if cast:
-                    cast = (
-                        f":people_hugging: <b>Starring</b>: {', '.join([actor['name'] for actor in movie.data['cast'][:2]])}"
-                    )
+                    cast = f":people_hugging: <b>Starring</b>: {', '.join([actor['name'] for actor in movie.data['cast'][:2]])}"
                 if director:
                     director = f":clapper_board: <b>Directed by</b>: {movie.data.get('director')[0].get('name')}"
                 if genres:

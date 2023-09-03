@@ -27,7 +27,7 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
         if message.ip and PERSIST_USER_DATA and bot_username in ("broiestbro", "broiestbot"):
             existing_user = fetch_existing_user(room_name, user, message)
             if existing_user is None:
-                user_metadata = geo.lookup_user(message.ip)
+                user_metadata = geo.lookup_user_by_ip(message.ip)
                 # fmt: off
                 session.add(
                     ChatangoUser(

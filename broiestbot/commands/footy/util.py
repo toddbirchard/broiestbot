@@ -5,6 +5,10 @@ from typing import Optional, Tuple, Union
 import pytz
 from pytz import BaseTzInfo
 
+from database import session
+from database.models import ChatangoUser
+from logger import LOGGER
+
 
 from config import (
     CHATANGO_OBI_ROOM,
@@ -35,6 +39,21 @@ from config import (
 )
 
 
+def lookup_user_by_username(username: str) -> Optional[str]:
+    """
+    Lookup user to determine preferred timezone.
+
+    :param str username: Chatango username.
+
+    :returns: Optional[str]
+    """
+    user = session.query(ChatangoUser).filter(ChatangoUser.username == username).first()
+    if user:
+        # TODO: Prevent fetching for preferred TZ per fixture
+        # LOGGER.info(f"Found user {username} in database with tz: {user.time_zone_name}")
+        return user.time_zone_name
+
+
 def get_preferred_timezone(room: str, username: str) -> dict:
     """
     Display fixture dates depending on preferred timezone of requesting user.
@@ -44,6 +63,9 @@ def get_preferred_timezone(room: str, username: str) -> dict:
 
     :returns: dict
     """
+    tz_string = lookup_user_by_username(username)
+    if "anon" not in username and tz_string:
+        return {"timezone": tz_string}
     if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
         return {}
     return {"timezone": "America/New_York"}
@@ -59,6 +81,9 @@ def get_preferred_time_format(start_time: datetime, room: str, username: str) ->
 
     :returns: Tuple[str, BaseTzInfo]
     """
+    tz_dict = get_preferred_timezone(room, username)
+    if "anon" not in username and tz_dict.get("timezone"):
+        return start_time.strftime("%b %d, %H:%M"), pytz.timezone(tz_dict["timezone"])
     if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
         return start_time.strftime("%b %d, %H:%M"), pytz.utc
     return (
@@ -185,11 +210,11 @@ def get_season_year(league_id: int) -> Optional[int]:
     ):
         return current_year
     # Exception for leagues that have a nonsensical `season` year.
-    elif league_id == CONCACAF_NATIONS_LEAGUE_ID:
+    if league_id == CONCACAF_NATIONS_LEAGUE_ID:
         return current_year - 1
     # Domestic leagues that begin in the summer and end in the spring.
     if current_month >= 8:
         return current_year
-    elif current_month <= 6:
+    if current_month <= 6:
         return current_year - 1
     return current_year
