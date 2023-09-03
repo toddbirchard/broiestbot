@@ -7,8 +7,6 @@ from pytz import BaseTzInfo
 
 from database import session
 from database.models import ChatangoUser
-from logger import LOGGER
-
 
 from config import (
     CHATANGO_OBI_ROOM,

@@ -41,35 +41,33 @@ def footy_team_lineups(room: str, username: str) -> str:
         for league_name, league_id in FOOTY_XI_LEAGUES.items():
             league_fixtures = get_today_live_or_upcoming_fixtures(league_id, room, username)
             league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures, room, username)
-            if bool(league_fixtures_with_lineups) is False:
-                continue
-            if bool(league_fixtures_with_lineups) and i < 3:
+            if bool(league_fixtures_with_lineups) and i <= 3:
                 i += 1
                 today_fixture_lineups += emojize(f"<b>{league_name}</b>\n", language="en")
-                for fixture in league_fixtures_with_lineups:
-                    if bool(fixture):
-                        LOGGER.warning(f"league_fixture for {league_name}: {fixture}")
-                        fixture_id = fixture["fixture"]["id"]
-                        fixture_summary = build_fixture_summary(fixture, room, username)
-                        lineups = fetch_lineups_per_fixture(fixture_id)
-                        if lineups:
-                            today_fixture_lineups += f"{fixture_summary} {get_fixture_xis(lineups)}"
-                        if i == len(league_fixtures_with_lineups):
-                            today_fixture_lineups += "\n\n----------------------\n\n"
+                for fixture_xi in league_fixtures_with_lineups:
+                    if bool(fixture_xi):
+                        fixture_id = fixture_xi["fixture"]["id"]
+                        fixture_summary = build_fixture_summary(fixture_xi, room, username)
+                        fixture_lineups = fetch_lineups_per_fixture(fixture_id)
+                        if fixture_lineups == []:
+                            today_fixture_lineups += f"{fixture_summary} \
+                                <i>(Lineups not yet available)</i>\n\n"
                         else:
-                            today_fixture_lineups += "\n\n"
+                            today_fixture_lineups += f"{fixture_summary} \n \
+                                {get_fixture_xis(fixture_lineups)}\n\n"
+                today_fixture_lineups += "\n\n----------------------\n\n"
         return today_fixture_lineups.rstrip("\n\n----------------------\n\n")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy XIs: {e}")
 
 
-def fetch_lineups_per_fixture(fixture_id: int) -> Optional[dict]:
+def fetch_lineups_per_fixture(fixture_id: int) -> List[Optional[dict]]:
     """
     Get team lineup for given fixture.
 
     :param int fixture_id: ID of an upcoming fixture.
 
-    :returns: dict
+    :returns: List[Optional[dict]
     """
     try:
         params = {"fixture": fixture_id}
@@ -175,12 +173,12 @@ def build_fixture_summary(fixture: dict, room: str, username: str) -> str:
         display_date, tz = get_preferred_time_format(date, room, username)
         display_date = check_fixture_start_date(date, tz, display_date)
         if status == "FT":
-            return f"<b><i>{away_team} @ {home_team} ({status})</i></b>\n"
+            return f"<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({status})</i>\n"
         if status == "NS":
-            return f"<b><i>{away_team} @ {home_team} ({display_date})</i></b>\n"
+            return f"<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({display_date.replace('<b>Today</b>, ', '')})</i>\n"
         if status in ("1H", "2H"):
-            return f'<b><i>{away_team} @ {home_team} ({elapsed}")</i></b>\n'
-        return f"<b><i>{away_team} @ {home_team} ({status_detail})</i></b>\n"
+            return f'<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({elapsed}</i>")\n'
+        return f"<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({status_detail})</i>\n"
     except Exception as e:
         LOGGER.error(f"Unexpected error when parsing footy fixture summaries for footyXI: {e}")
 
