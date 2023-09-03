@@ -64,10 +64,10 @@ def get_preferred_timezone(room: str, username: str) -> dict:
     :returns: dict
     """
     tz_string = lookup_user_by_username(username)
+    if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
+        return {"timezone": "UTC"}
     if "anon" not in username and tz_string:
         return {"timezone": tz_string}
-    if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
-        return {}
     return {"timezone": "America/New_York"}
 
 
