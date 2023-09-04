@@ -56,7 +56,8 @@ def today_upcoming_fixtures_per_league(league_name: str, league_id: int, room: s
     """
     try:
         league_upcoming_fixtures = ""
-        fixtures = fetch_today_fixtures_by_league(league_id, room, username)
+        tz_name = get_preferred_timezone(room, username)
+        fixtures = fetch_today_fixtures_by_league(league_id, room, tz_name)
         if fixtures:
             for i, fixture in enumerate(fixtures):
                 fixture_start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
@@ -73,13 +74,13 @@ def today_upcoming_fixtures_per_league(league_name: str, league_id: int, room: s
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_today_fixtures_by_league(league_id: int, room: str, username: str) -> List[Optional[dict]]:
+def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> List[Optional[dict]]:
     """
     Fetch all upcoming fixtures for the current date.
 
     :param int league_id: ID of footy league/cup.
     :param str room: Chatango room in which command was triggered.
-    :param str username: Name of user who triggered the command.
+    :param str timezone_name: Name of user's preferred timezone (ie: `America/New_York`).
 
     :returns: List[Optional[dict]]
     """
@@ -90,8 +91,8 @@ def fetch_today_fixtures_by_league(league_id: int, room: str, username: str) -> 
             "league": league_id,
             "status": "NS",
             "season": get_season_year(league_id),
+            "timezone": tz_name,
         }
-        params.update(get_preferred_timezone(room, username))
         resp = requests.get(
             FOOTY_FIXTURES_ENDPOINT,
             headers=FOOTY_HTTP_HEADERS,

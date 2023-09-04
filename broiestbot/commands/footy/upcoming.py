@@ -36,9 +36,10 @@ def footy_upcoming_fixtures(room: str, username: str) -> str:
     :returns: str
     """
     upcoming_fixtures = "\n\n\n"
+    tz_name = get_preferred_timezone(room, username)
     i = 0
     for league_name, league_id in FOOTY_LEAGUES.items():
-        league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username)
+        league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
         if league_fixtures is not None and i < 10:
             i += 1
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
@@ -58,8 +59,9 @@ def footy_all_upcoming_fixtures(room: str, username: str) -> str:
     :returns: str
     """
     upcoming_fixtures = "\n\n\n"
+    tz_name = get_preferred_timezone(room, username)
     for league_name, league_id in FOOTY_LEAGUES.items():
-        league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username)
+        league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
         if league_fixtures is not None:
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             upcoming_fixtures += league_fixtures + "\n"
@@ -68,7 +70,9 @@ def footy_all_upcoming_fixtures(room: str, username: str) -> str:
     return emojize(":warning: Couldn't find upcoming fixtures for the next week :warning:", language="en")
 
 
-def footy_upcoming_fixtures_per_league(league_name, league_id: int, room: str, username: str) -> Optional[str]:
+def footy_upcoming_fixtures_per_league(
+    league_name, league_id: int, room: str, username: str, tz_name: str
+) -> Optional[str]:
     """
     Get this week's upcoming fixtures for a given league or tournament.
 
@@ -76,12 +80,13 @@ def footy_upcoming_fixtures_per_league(league_name, league_id: int, room: str, u
     :param int league_id: ID of footy league/cup.
     :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
+    :param str timezone_name: Name of user's preferred timezone (ie: `America/New_York`).
 
     :returns: Optional[str]
     """
     try:
         upcoming_fixtures = ""
-        fixtures = upcoming_fixture_fetcher(league_name, league_id, room, username)
+        fixtures = upcoming_fixture_fetcher(league_name, league_id, tz_name)
         if bool(fixtures) is not False:
             for fixture in fixtures:
                 date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
@@ -95,14 +100,13 @@ def footy_upcoming_fixtures_per_league(league_name, league_id: int, room: str, u
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def upcoming_fixture_fetcher(league_name: str, league_id: int, room: str, username: str) -> Optional[List[dict]]:
+def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> Optional[List[dict]]:
     """
     Fetch 6 upcoming fixtures for each top league, or 3 for each lower league.
 
     :param str league_name: Name of the league/cup.
     :param int league_id: ID of footy league/cup.
-    :param str room: Chatango room in which command was triggered.
-    :param str username: Name of user who triggered the command.
+    :param str timezone_name: User's preferred timezone (ie: `America/New_York`).
 
     :returns: Optional[List[dict]]
     """
@@ -111,8 +115,8 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, room: str, userna
             "next": 6 if "EPL" in league_name or "UCL" in league_name or "UEFA" in league_name else 3,
             "league": league_id,
             "status": "NS-1H-2H",
+            "timezone": tz_name,
         }
-        params.update(get_preferred_timezone(room, username))
         return fetch_upcoming_fixtures_by_league(params)
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
@@ -157,7 +161,7 @@ def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str
     display_date, tz = get_preferred_time_format(date, room, username)
     display_date = check_fixture_start_date(date, tz, display_date)
     matchup = f"{away_team} @ {home_team}"
-    return f"{matchup:<30} | <i>{display_date}</i>\n"
+    return f"{matchup:<40} | <i>{display_date}</i>\n"
 
 
 def fetch_fox_fixtures(room: str, username: str) -> str:
