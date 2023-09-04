@@ -1,10 +1,10 @@
 """Persist user metadata."""
 from typing import Optional
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from database import session
 from database.models import ChatangoUser
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from chatango.ch import Message, User
 from clients import geo
@@ -27,38 +27,53 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
         if message.ip and PERSIST_USER_DATA and bot_username in ("broiestbro", "broiestbot"):
             existing_user = fetch_existing_user(room_name, user, message)
             if existing_user is None:
-                user_metadata = geo.lookup_user_by_ip(message.ip)
-                # fmt: off
-                session.add(
-                    ChatangoUser(
-                        username=user.name.lower().replace("!anon", "anon"),
-                        chatango_room=room_name,
-                        ip=message.ip,
-                        city=user_metadata.get("city"),
-                        region=user_metadata.get("region"),
-                        country_name=user_metadata.get("country_name"),
-                        latitude=user_metadata.get("latitude"),
-                        longitude=user_metadata.get("longitude"),
-                        postal=user_metadata.get("postal"),
-                        emoji_flag=user_metadata.get("emoji_flag"),
-                        time_zone_name=user_metadata.get("time_zone").get("name") if user_metadata.get("time_zone") else None,
-                        time_zone_abbr=user_metadata.get("time_zone").get("abbr") if user_metadata.get("time_zone") else None,
-                        time_zone_offset=user_metadata.get("time_zone").get("offset") if user_metadata.get("time_zone") else None,
-                        time_zone_is_dst=user_metadata.get("time_zone").get("is_dst") if user_metadata.get("time_zone") else None,
-                        time_zone_current_time=user_metadata.get("time_zone").get("current_time") if user_metadata.get("time_zone") else None,
-                        carrier_name=user_metadata.get("carrier").get("name") if user_metadata.get("carrier") else None,
-                        carrier_mnc=user_metadata.get("carrier").get("mnc") if user_metadata.get("carrier") else None,
-                        carrier_mcc=user_metadata.get("carrier").get("mcc") if user_metadata.get("carrier") else None,
-                        asn_asn=user_metadata.get("asn").get("asn") if user_metadata.get("asn") else None,
-                        asn_name=user_metadata.get("asn").get("name") if user_metadata.get("asn") else None,
-                        asn_domain=user_metadata.get("asn").get("domain") if user_metadata.get("asn") else None,
-                        asn_route=user_metadata.get("asn").get("route") if user_metadata.get("asn") else None,
-                        asn_type=user_metadata.get("asn").get("type") if user_metadata.get("asn") else None,
-                        created_at=datetime.now()
+                user_data = geo.lookup_user_by_ip(message.ip)
+                if user_data:
+                    user_asn_data = user_data.get("asn")
+                    user_language_data = user_data.get("languages")[0]
+                    user_currency_data = user_data.get("currency")
+                    user_threat_data = user_data.get("threat")
+                    user_timezone_data = user_data.get("time_zone")
+                    user_carrier_data = user_data.get("carrier")
+                    # fmt: off
+                    session.add(
+                        ChatangoUser(
+                            username=user.name.lower().replace("!anon", "anon"),
+                            chatango_room=room_name,
+                            ip=message.ip,
+                            city=user_data.get("city"),
+                            region=user_data.get("region"),
+                            country_name=user_data.get("country_name"),
+                            company=user_data.get("company"),
+                            latitude=user_data.get("latitude"),
+                            longitude=user_data.get("longitude"),
+                            postal=user_data.get("postal"),
+                            emoji_flag=user_data.get("emoji_flag"),
+                            language=user_language_data.get("name") if user_language_data else None,
+                            currency_name=user_currency_data.get("name") if user_currency_data else None,
+                            currency_symbol=user_currency_data.get("symbol") if user_currency_data else None,
+                            time_zone_name=user_timezone_data.get("name") if user_timezone_data else None,
+                            time_zone_abbr=user_timezone_data.get("abbr") if user_timezone_data else None,
+                            time_zone_offset=user_timezone_data.get("offset") if user_timezone_data else None,
+                            time_zone_is_dst=user_timezone_data.get("is_dst") if user_timezone_data else None,
+                            time_zone_current_time=user_timezone_data.get("current_time") if user_timezone_data else None,
+                            carrier_name=user_carrier_data.get("name") if user_carrier_data else None,
+                            carrier_mnc=user_carrier_data.get("mnc") if user_carrier_data else None,
+                            carrier_mcc=user_carrier_data.get("mcc") if user_carrier_data else None,
+                            asn_asn=user_asn_data.get("asn") if user_asn_data else None,
+                            asn_name=user_asn_data.get("name") if user_asn_data else None,
+                            asn_domain=user_asn_data.get("domain") if user_asn_data else None,
+                            asn_route=user_asn_data.get("route") if user_asn_data else None,
+                            asn_type=user_asn_data.get("type") if user_asn_data else None,
+                            is_tor=user_threat_data.get("is_tor") if user_threat_data else None,
+                            is_proxy=user_threat_data.get("is_proxy") if user_threat_data else None,
+                            is_known_attacker=user_threat_data.get("is_known_attacker") if user_threat_data else None,
+                            is_threat=user_threat_data.get("is_threat") if user_threat_data else None,
+                            created_at=datetime.now()
+                        )
                     )
-                )
-                LOGGER.success(f"Persisted new user: {user_metadata}")
-                # fmt: on
+                    LOGGER.success(f"Persisted new user: {user_data}")
+                    # fmt: on
     except IntegrityError as e:
         LOGGER.error(f"Failed to save duplicate entry for {user.name}: {e}")
     except SQLAlchemyError as e:

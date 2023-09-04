@@ -64,10 +64,14 @@ class ChatangoUser(Base):
     city = Column(String(255))
     region = Column(String(255))
     country_name = Column(String(255))
+    company = Column(String(255))
     latitude = Column(Float)
     longitude = Column(Float)
     postal = Column(String(255))
     emoji_flag = Column(Text)
+    language = Column(String(255))
+    currency_name = Column(String(255))
+    currency_symbol = Column(String(255))
     time_zone_name = Column(String(255))
     time_zone_abbr = Column(String(255))
     time_zone_offset = Column(Integer)
@@ -81,11 +85,15 @@ class ChatangoUser(Base):
     asn_domain = Column(String(255))
     asn_route = Column(String(255))
     asn_type = Column(String(255))
+    is_tor = Column(Boolean)
+    is_proxy = Column(Boolean)
+    is_known_attacker = Column(Boolean)
+    is_threat = Column(Boolean)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
-        return f"id={self.id}, username={self.username}, chatango_room={self.chatango_room}, city={self.city}, region={self.ip}"
+        return f"id={self.id}, username={self.username}, chatango_room={self.chatango_room}, ip={self.ip}, city={self.city}"
 
 
 class Weather(Base):
