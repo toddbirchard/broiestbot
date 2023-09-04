@@ -82,10 +82,10 @@ class ChatangoUser(Base):
     asn_route = Column(String(255))
     asn_type = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
-        return f"username={self.username}, chatango_room={self.chatango_room}, city={self.city}, region={self.ip}"
+        return f"id={self.id}, username={self.username}, chatango_room={self.chatango_room}, city={self.city}, region={self.ip}"
 
 
 class Weather(Base):
@@ -111,7 +111,7 @@ class PollResult(Base):
     id = Column(Integer, primary_key=True, index=True)
     type = Column(String(255), nullable=False, index=True, unique=True)
     count = Column(Integer)
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         return f"id={self.id}, type={self.type}, count={self.count}, updated_at={self.updated_at}"
@@ -127,7 +127,7 @@ class Sport(Base):
     abbr = Column(String(255))
     emoji = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         return f"id={self.id}, name={self.name}, emoji={self.emoji}"
@@ -148,7 +148,7 @@ class League(Base):
     season_start_date = Column(DateTime)
     is_active = Column(Boolean, index=True)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         return f"id={self.id}, name={self.name}, country={self.country}, is_active={self.is_active}"

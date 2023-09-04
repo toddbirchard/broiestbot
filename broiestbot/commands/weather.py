@@ -36,7 +36,7 @@ def get_current_weather(location: str, room: str, user: str) -> str:
     except Exception as e:
         LOGGER.error(f"Failed to fetch & parse weather for `{location}`: {e}")
         return emojize(
-            f":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
+            ":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
             language="en",
         )
 
@@ -62,17 +62,17 @@ def fetch_current_weather_by_location(location: str, measurement_units: str) -> 
         return resp.json()
     except HTTPError as e:
         LOGGER.error(f"Failed to get weather for `{location}`: {e.response.content}")
-        return emojize(f":warning:️️ ughhh fgma me the weather API is down or something :warning:", language="en")
+        return emojize(":warning:️️ ughhh fgma me the weather API is down or something :warning:", language="en")
     except LookupError as e:
         LOGGER.error(f"KeyError while fetching weather for `{location}`: {e}", language="en")
         return emojize(
-            f":warning:️️ sry but BROUGH coded this bert like a MORAN and it DIED! :warning:",
+            ":warning:️️ sry but BROUGH coded this bert like a MORAN and it DIED! :warning:",
             language="en",
         )
     except Exception as e:
         LOGGER.error(f"Failed to get weather for `{location}`: {e}")
         return emojize(
-            f":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
+            ":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
             language="en",
         )
 

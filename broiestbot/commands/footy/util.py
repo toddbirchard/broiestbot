@@ -37,7 +37,7 @@ from config import (
 )
 
 
-def lookup_user_by_username(username: str) -> Optional[str]:
+def lookup_user_preferred_timezone(username: str) -> Optional[str]:
     """
     Lookup user to determine preferred timezone.
 
@@ -45,8 +45,13 @@ def lookup_user_by_username(username: str) -> Optional[str]:
 
     :returns: Optional[str]
     """
-    user = session.query(ChatangoUser).filter(ChatangoUser.username == username).first()
-    if user:
+    user = (
+        session.query(ChatangoUser)
+        .filter(ChatangoUser.username == username)
+        .filter(ChatangoUser.ip is not None)
+        .first()
+    )
+    if user and user.time_zone_name:
         # TODO: Prevent fetching for preferred TZ per fixture
         # LOGGER.info(f"Found user {username} in database with tz: {user.time_zone_name}")
         return user.time_zone_name
@@ -61,11 +66,12 @@ def get_preferred_timezone(room: str, username: str) -> dict:
 
     :returns: dict
     """
-    tz_string = lookup_user_by_username(username)
     if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
         return {"timezone": "UTC"}
-    if "anon" not in username and tz_string:
-        return {"timezone": tz_string}
+    if "anon" not in username:
+        tz_string = lookup_user_preferred_timezone(username)
+        if tz_string:
+            return {"timezone": tz_string}
     return {"timezone": "America/New_York"}
 
 
@@ -80,13 +86,19 @@ def get_preferred_time_format(start_time: datetime, room: str, username: str) ->
     :returns: Tuple[str, BaseTzInfo]
     """
     tz_dict = get_preferred_timezone(room, username)
-    if "anon" not in username and tz_dict.get("timezone"):
+    timezone_name = tz_dict.get("timezone")
+    if "America" in timezone_name:
+        return (
+            start_time.strftime("%b %d, %l:%M%p").replace("AM", "am").replace("PM", "pm"),
+            pytz.timezone(timezone_name),
+        )
+    if "anon" not in username and timezone_name:
         return start_time.strftime("%b %d, %H:%M"), pytz.timezone(tz_dict["timezone"])
     if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
         return start_time.strftime("%b %d, %H:%M"), pytz.utc
     return (
         start_time.strftime("%b %d, %l:%M%p").replace("AM", "am").replace("PM", "pm"),
-        pytz.timezone("America/New_York"),
+        pytz.timezone(timezone_name),
     )
 
 
