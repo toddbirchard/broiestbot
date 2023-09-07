@@ -38,9 +38,10 @@ def footy_team_lineups(room: str, username: str) -> str:
     try:
         i = 0
         today_fixture_lineups = "\n\n\n"
+        tz_name = get_preferred_timezone(room, username)
         for league_name, league_id in FOOTY_XI_LEAGUES.items():
-            league_fixtures = get_today_live_or_upcoming_fixtures(league_id, room, username)
-            league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures, room, username)
+            league_fixtures = get_today_live_or_upcoming_fixtures(league_id, room, tz_name)
+            league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures, tz_name)
             if bool(league_fixtures_with_lineups) and i <= 3:
                 i += 1
                 today_fixture_lineups += emojize(f"<b>{league_name}</b>\n", language="en")
@@ -121,13 +122,13 @@ def get_fixture_xis(teams: dict) -> str:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str) -> Optional[List[dict]]:
+def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
     """
     Get fixtures for a league for the current day (live or upcoming).
 
     :param int league_id: ID of a footy league to fetch fixtures for.
     :param str room: Chatango room in which command was triggered.
-    :param str username: Name of user who triggered the command.
+    :param str tz_name: Chatango room in which command was triggered.
 
     :returns: Optional[List[dict]]
     """
@@ -138,8 +139,8 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, username: str
             "league": league_id,
             "season": get_season_year(league_id),
             "status": "NS-1H-2H",
+            "timezone": tz_name,
         }
-        params.update(get_preferred_timezone(room, username))
         resp = requests.get(
             FOOTY_FIXTURES_ENDPOINT,
             headers=FOOTY_HTTP_HEADERS,
@@ -183,20 +184,20 @@ def build_fixture_summary(fixture: dict, room: str, username: str) -> str:
         LOGGER.error(f"Unexpected error when parsing footy fixture summaries for footyXI: {e}")
 
 
-def filter_fixtures_with_lineups(fixtures: List[dict], room, username):
+def filter_fixtures_with_lineups(fixtures: List[dict], tz_name: str):
     """
     Filter fixtures lacking lineup data.
 
     :param List[dict] fixtures: List of fixtures for a given league.
+    :param str tz_name: Timezone of user who triggered the command.
 
     :returns: List[Optional[dict]]
     """
     try:
         fixtures_with_lineups = []
-        tz = pytz.timezone(get_preferred_timezone(room, username)["timezone"])
         for fixture in fixtures:
-            start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z").now(tz)
-            now_time = datetime.now(tz)
+            start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z").now(tz_name)
+            now_time = datetime.now(tz_name)
             footy_xi_time = start_time - timedelta(hours=1)
             if now_time >= footy_xi_time:
                 fixtures_with_lineups.append(fixture)

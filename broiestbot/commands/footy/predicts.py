@@ -31,9 +31,10 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
     try:
         i = 0
         today_fixtures_odds = "\n\n\n"
+        tz_name = get_preferred_timezone(room, username)
         for league_name, league_id in FOOTY_LEAGUES.items():
-            league_fixtures = _fetch_today_fixtures_by_league(league_id, room, username)
-            league_fixture_odds = fetch_today_fixture_odds_by_league(league_id, room, username)
+            league_fixtures = _fetch_today_fixtures_by_league(league_id, room, tz_name)
+            league_fixture_odds = fetch_today_fixture_odds_by_league(league_id, room, tz_name)
             if not bool(league_fixture_odds):
                 continue
             if league_fixtures is not None and i < 7:
@@ -55,13 +56,13 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
         LOGGER.error(f"Unexpected error when fetching today's footy predicts: {e}")
 
 
-def _fetch_today_fixtures_by_league(league_id: int, room: str, username: str) -> List[Optional[dict]]:
+def _fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> List[Optional[dict]]:
     """
     Fetch all upcoming fixtures for the current date.
 
     :param int league_id: ID of footy league/cup.
     :param str room: Chatango room in which command was triggered.
-    :param str username: Name of user who triggered the command.
+    :param str tz_name: Name of user who triggered the command.
 
     :returns: List[Optional[dict]]
     """
@@ -71,8 +72,8 @@ def _fetch_today_fixtures_by_league(league_id: int, room: str, username: str) ->
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
             "season": get_season_year(league_id),
+            "timezone": tz_name,
         }
-        params.update(get_preferred_timezone(room, username))
         resp = requests.get(
             FOOTY_FIXTURES_ENDPOINT,
             headers=FOOTY_HTTP_HEADERS,
@@ -88,13 +89,13 @@ def _fetch_today_fixtures_by_league(league_id: int, room: str, username: str) ->
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_today_fixture_odds_by_league(league_id: int, room: str, username: str) -> Optional[dict]:
+def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) -> Optional[dict]:
     """
     Get all fixtures scheduled for today's date.
 
     :param int league_id: ID of footy league/cup.
     :param str room: Chatango room in which command was triggered.
-    :param str username: Name of user who triggered the command.
+    :param str tz_name:
 
     :returns: Optional[dict]
     """
@@ -106,8 +107,8 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, username: str)
             "season": get_season_year(league_id),
             "bookmaker": 8,
             "bet": 1,
+            "timezone": tz_name,
         }
-        params.update(get_preferred_timezone(room, username))
         resp = requests.get(FOOTY_ODDS_ENDPOINT_2, params=params, headers=FOOTY_HTTP_HEADERS)
         return resp.json().get("response")
     except HTTPError as e:

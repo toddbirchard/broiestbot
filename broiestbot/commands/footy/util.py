@@ -22,18 +22,18 @@ from config import (
     AFCON_CUP_ID,
     AFCON_QUALIFIERS_ID,
     EUROS_LEAGUE_ID,
-    EUROS_QUALIFIERS_ID,
     CONCACAF_NATIONS_LEAGUE_ID,
     U20_WORLD_CUP_ID,
     WOMENS_WORLD_CUP_ID,
     INT_FRIENDLIES_LEAGUE_ID,
     USL_LEAGUE_1_ID,
     USL_LEAGUE_2_ID,
-    UEFA_U19_QUALIFIERS_ID,
-    UEFA_U21_QUALIFIERS_ID,
     CLUB_FRIENDLIES_LEAGUE_ID,
     EPL_SUMMER_SERIES_LEAGUE_ID,
     UEFA_SUPER_CUP_ID,
+    EUROS_QUALIFIERS_ID,
+    U20_ELITE_LEAGUE_ID,
+    OBOS_LIGAEN_ID,
 )
 
 
@@ -210,12 +210,12 @@ def get_season_year(league_id: int) -> Optional[int]:
         WOMENS_WORLD_CUP_ID,
         CLUB_FRIENDLIES_LEAGUE_ID,
         INT_FRIENDLIES_LEAGUE_ID,
-        UEFA_U19_QUALIFIERS_ID,
-        UEFA_U21_QUALIFIERS_ID,
         USL_LEAGUE_1_ID,
         USL_LEAGUE_2_ID,
         EPL_SUMMER_SERIES_LEAGUE_ID,
         UEFA_SUPER_CUP_ID,
+        U20_ELITE_LEAGUE_ID,
+        OBOS_LIGAEN_ID,
     ):
         return current_year
     # Exception for leagues that have a nonsensical `season` year.

@@ -56,7 +56,7 @@ def footy_live_fixtures_per_league(
     """
     try:
         live_fixtures = "\n\n\n\n"
-        fixtures = fetch_live_fixtures(league_id, room, username)
+        fixtures = fetch_live_fixtures(league_id, username)
         if fixtures:
             live_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             for i, fixture in enumerate(fixtures):
@@ -84,19 +84,17 @@ def footy_live_fixtures_per_league(
         LOGGER.error(f"Unexpected error when fetching live fixtures: {e}")
 
 
-def fetch_live_fixtures(league_id: int, room: str, username: str) -> Optional[dict]:
+def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
     """
     Fetch live footy fixtures across EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
 
     :param int league_id: ID of footy league/cup.
-    :param str room: Chatango room in which command was triggered.
-    :param str username: Name of user who triggered the command.
+    :param str tz_name: Timezone of the user who triggered the command.
 
     :returns: Optional[dict]
     """
     try:
-        params = {"league": league_id, "live": "all"}
-        params.update(get_preferred_timezone(room, username))
+        params = {"league": league_id, "live": "all", "timezone": tz_name}
         resp = requests.get(
             FOOTY_FIXTURES_ENDPOINT,
             headers=FOOTY_HTTP_HEADERS,
@@ -246,7 +244,8 @@ def footy_live_fixture_stats_per_league(
     """
     try:
         live_fixtures = "\n\n\n"
-        fixtures = fetch_live_fixtures(league_id, room, username)
+        tz_name = get_preferred_timezone(room, username)
+        fixtures = fetch_live_fixtures(league_id, tz_name)
         if bool(fixtures):
             live_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             for i, fixture in enumerate(fixtures):
