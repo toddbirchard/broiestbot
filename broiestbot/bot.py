@@ -46,7 +46,7 @@ from broiestbot.commands import (
     random_image,
     send_text_message,
     time_until_wayne,
-    today_phillies_games,
+    # today_phillies_games,
     today_upcoming_fixtures,
     tovala_counter,
     tuner,
@@ -59,12 +59,11 @@ from broiestbot.commands import (
     generate_twitter_preview,
     mls_standings,
     get_odds,
-    get_today_footy_odds_for_league,
+    # get_today_footy_odds_for_league,
     bach_gang_counter,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
-    CHATANGO_BOTS,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
     EPL_LEAGUE_ID,
@@ -355,8 +354,8 @@ class Bot(RoomManager):
         """
         if f"@{bot_username}" in chat_message and "*waves*" in chat_message:
             self._wave_back(room, user_name, bot_username)
-        elif "petition" in chat_message and "competition" not in chat_message:
-            self._petition(room, user_name)
+        # elif "petition" in chat_message and "competition" not in chat_message:
+        # self._petition(room, user_name)
         elif chat_message.endswith("only on aclee"):
             room.message("™")
         elif chat_message.lower() == "tm":
@@ -418,8 +417,7 @@ class Bot(RoomManager):
         """
         if user_name == bot_username:
             room.message(f"stop talking to urself and get some friends u loser jfc kys @{bot_username}")
-        else:
-            room.message(f"@{user_name} *waves*")
+        room.message(f"@{user_name} *waves*")
 
     @staticmethod
     def _giphy_fallback(message: str, room: Room) -> None:

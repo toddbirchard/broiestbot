@@ -174,10 +174,10 @@ def fetch_fox_fixtures(room: str, username: str) -> str:
     :returns: str
     """
     try:
+        tz_name = get_preferred_timezone(room, username)
         upcoming_foxtures = "\n\n\n\n<b>:fox: FOXTURES</b>\n"
         season = get_season_year(ENGLISH_CHAMPIONSHIP_LEAGUE_ID)
-        params = {"season": season, "team": FOXES_TEAM_ID, "next": "7"}
-        params.update(get_preferred_timezone(room, username))
+        params = {"season": season, "team": FOXES_TEAM_ID, "next": "7", "timezone": tz_name}
         resp = requests.get(
             FOOTY_FIXTURES_ENDPOINT,
             headers=FOOTY_HTTP_HEADERS,

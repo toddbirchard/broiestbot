@@ -1,7 +1,6 @@
 """Fetch lineups before kickoff or during the match."""
 from datetime import datetime, timedelta
 from typing import List, Optional
-import pytz
 
 import requests
 from emoji import emojize

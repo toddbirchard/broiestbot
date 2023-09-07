@@ -31,7 +31,7 @@ def footy_live_fixtures(room: str, username: str, subs=False) -> str:
     live_fixtures = "\n\n\n"
     i = 0
     for league_name, league_id in FOOTY_LIVE_SCORED_LEAGUES.items():
-        live_league_fixtures = footy_live_fixtures_per_league(league_id, league_name, room, username, subs=subs)
+        live_league_fixtures = footy_live_fixtures_per_league(league_id, league_name, username, subs=subs)
         if live_league_fixtures is not None and i < 6:
             i += 1
             live_fixtures += live_league_fixtures + "\n"
@@ -40,15 +40,12 @@ def footy_live_fixtures(room: str, username: str, subs=False) -> str:
     return live_fixtures
 
 
-def footy_live_fixtures_per_league(
-    league_id: int, league_name: str, room: str, username: str, subs=False
-) -> Optional[str]:
+def footy_live_fixtures_per_league(league_id: int, league_name: str, username: str, subs=False) -> Optional[str]:
     """
     Construct summary of events for all live fixtures in a given league.
 
     :param int league_id: ID of footy league/cup.
     :param str league_name: Name of league or cup fixtures belong to.
-    :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
     :param bool subs: Whether to include substitutions in match summaries.
 
