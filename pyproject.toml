@@ -33,7 +33,6 @@ ddtrace = "*"
 uWSGI = "*"
 python-dotenv = "*"
 twilio = "*"
-datadog = "*"
 lyricsgenius = "*"
 pytz = "*"
 pandas = "*"
@@ -51,7 +50,7 @@ rq = "*"
 rq-scheduler = "*"
 
 [tool.poetry.scripts]
-run = "wsgi:init_bot"
+run = "main:run"
 
 [tool.poetry.urls]
 issues = "https://github.com/toddbirchard/broiestbot/issues"

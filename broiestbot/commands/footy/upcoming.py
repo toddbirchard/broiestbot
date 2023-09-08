@@ -1,5 +1,5 @@
 """Fetch scheduled fixtures across leagues."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 import requests
@@ -40,7 +40,7 @@ def footy_upcoming_fixtures(room: str, username: str) -> str:
     i = 0
     for league_name, league_id in FOOTY_LEAGUES.items():
         league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
-        if league_fixtures is not None and i < 10:
+        if bool(league_fixtures) is not False and i < 10:
             i += 1
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             upcoming_fixtures += league_fixtures + "\n"
@@ -62,7 +62,7 @@ def footy_all_upcoming_fixtures(room: str, username: str) -> str:
     tz_name = get_preferred_timezone(room, username)
     for league_name, league_id in FOOTY_LEAGUES.items():
         league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
-        if league_fixtures is not None:
+        if bool(league_fixtures) is False:
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             upcoming_fixtures += league_fixtures + "\n"
     if upcoming_fixtures != "\n\n\n":
@@ -89,10 +89,11 @@ def footy_upcoming_fixtures_per_league(
         fixtures = upcoming_fixture_fetcher(league_name, league_id, tz_name)
         if bool(fixtures) is not False:
             for fixture in fixtures:
-                date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
-                upcoming_fixture = add_upcoming_fixture(fixture, date, room, username)
-                if upcoming_fixture:
-                    upcoming_fixtures += upcoming_fixture
+                fixture_date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
+                if fixture_date.date() <= datetime.now().date() + timedelta(days=8):
+                    upcoming_fixture = add_upcoming_fixture(fixture, fixture_date, room, username)
+                    if upcoming_fixture:
+                        upcoming_fixtures += upcoming_fixture
             return upcoming_fixtures
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")

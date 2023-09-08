@@ -215,12 +215,13 @@ def get_season_year(league_id: int) -> Optional[int]:
         EPL_SUMMER_SERIES_LEAGUE_ID,
         UEFA_SUPER_CUP_ID,
         U20_ELITE_LEAGUE_ID,
+        CONCACAF_NATIONS_LEAGUE_ID,
         OBOS_LIGAEN_ID,
     ):
         return current_year
     # Exception for leagues that have a nonsensical `season` year.
-    if league_id == CONCACAF_NATIONS_LEAGUE_ID:
-        return current_year - 1
+    # if league_id == CONCACAF_NATIONS_LEAGUE_ID:
+    # return current_year - 1
     # Domestic leagues that begin in the summer and end in the spring.
     if current_month >= 8:
         return current_year
