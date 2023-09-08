@@ -37,13 +37,11 @@ $(VIRTUAL_ENVIRONMENT):
 
 .PHONY: dev
 dev: env
-	$(LOCAL_PYTHON) -m wsgi
-
+	$(LOCAL_PYTHON) -m main
 
 .PHONY: run
 run: env
-	$(LOCAL_PYTHON) -m wsgi
-
+	$(LOCAL_PYTHON) -m main
 
 .PHONY: install
 install: env
@@ -51,13 +49,11 @@ install: env
 	$(LOCAL_PYTHON) -m pip install -r requirements.txt && \
 	echo "Installed dependencies in virtualenv \`${VIRTUAL_ENVIRONMENT}\`";
 
-
 .PHONY: deploy
 deploy:
 	make clean \
 	make install \
 	make run
-
 
 .PHONY: test
 test: env
@@ -67,7 +63,6 @@ test: env
 		coverage html --title='Coverage Report' -d .reports && \
 		open .reports/index.html
 
-
 .PHONY: update
 update: env
 	$(LOCAL_PYTHON) -m pip install --upgrade pip setuptools wheel && \
@@ -75,13 +70,11 @@ update: env
 	poetry export -f requirements.txt --output requirements.txt --without-hashes && \
 	echo "Updated dependencies in virtualenv \`${VIRTUAL_ENVIRONMENT}\`";
 
-
 .PHONY: format
 format: env
 	source $(LOCAL_PYTHON_ACTIVATE) \
 	isort --multi-line=3 . \
 	&& black .
-
 
 .PHONY: lint
 lint: env

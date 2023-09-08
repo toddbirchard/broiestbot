@@ -12,7 +12,7 @@ documentation = "https://github.com/toddbirchard/broiestbot/blob/master/README.m
 keywords = ["Chatbot", "Chat", "Chatango", "Bot", "Python"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.10,<4.0"
 requests = "*"
 sqlalchemy = "*"
 pymysql = "*"
