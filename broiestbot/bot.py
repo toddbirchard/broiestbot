@@ -68,13 +68,13 @@ from config import (
     CHATANGO_IGNORED_USERS,
     EPL_LEAGUE_ID,
     LIGA_LEAGUE_ID,
-    ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
-    ENGLISH_LEAGUE_THREE_ID,
-    ENGLISH_LEAGUE_FOUR_ID,
-    ENGLISH_LEAGUE_FIVE_ID,
     BUND_LEAGUE_ID,
     LIGUE_ONE_ID,
     PRIMEIRA_LIGA_ID,
+    ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    ENGLISH_LEAGUE_ONE_ID,
+    ENGLISH_LEAGUE_TWO_ID,
+    ENGLISH_NATIONAL_LEAGUE_ID,
 )
 from logger import LOGGER
 
@@ -152,12 +152,12 @@ class Bot(RoomManager):
             return league_table_standings(BUND_LEAGUE_ID)
         elif cmd_type == "efltable":
             return league_table_standings(ENGLISH_CHAMPIONSHIP_LEAGUE_ID)
-        elif cmd_type == "eng3table":
-            return league_table_standings(ENGLISH_LEAGUE_THREE_ID)
-        elif cmd_type == "eng4table":
-            return league_table_standings(ENGLISH_LEAGUE_FOUR_ID)
-        elif cmd_type == "eng5table":
-            return league_table_standings(ENGLISH_LEAGUE_FIVE_ID)
+        elif cmd_type == "eng1table":
+            return league_table_standings(ENGLISH_LEAGUE_ONE_ID)
+        elif cmd_type == "eng2table":
+            return league_table_standings(ENGLISH_LEAGUE_TWO_ID)
+        elif cmd_type == "engnationaltable":
+            return league_table_standings(ENGLISH_NATIONAL_LEAGUE_ID)
         elif cmd_type == "liguetable":
             return league_table_standings(LIGUE_ONE_ID)
         elif cmd_type == "primeratable":

@@ -63,7 +63,7 @@ def footy_live_fixtures_per_league(league_id: int, league_name: str, username: s
                 away_score = fixture["goals"]["away"]
                 elapsed = fixture["fixture"]["status"]["elapsed"]
                 venue = fixture["fixture"]["venue"]["name"]
-                live_fixture = f'<b>{away_team} {away_score} @ {home_team} {home_score}</b>\n{venue}, {elapsed}"'
+                live_fixture = f'<b>{away_team} {away_score} @ {home_team} {home_score}</b>\n<i>{venue}, {elapsed}"</i>'
                 live_fixtures += live_fixture
                 fixture_events_response = fetch_events_per_live_fixture(fixture["fixture"]["id"])
                 if fixture_events_response:
@@ -158,7 +158,7 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
             if player_name and time_elapsed:
                 if "Goal" in event_detail and event_type == "Var":
                     event_log += emojize(
-                        f':cross_mark: :soccer_ball: {player_name} <i>({event_detail})</i>, {time_elapsed}"\n',
+                        f":cross_mark: :soccer_ball: {player_name} <i>({event_detail}), {time_elapsed}</i>",
                         language="en",
                     )
                 elif event_detail == "Yellow Card":
@@ -254,7 +254,7 @@ def footy_live_fixture_stats_per_league(
                 elapsed = fixture["fixture"]["status"]["elapsed"]
                 venue = fixture["fixture"]["venue"]["name"]
                 live_fixture = (
-                    f'<b>{home_team_name} {home_score} - {away_team_name} {away_score}</b>\n{venue}, {elapsed}"'
+                    f"<b>{home_team_name} {home_score} - {away_team_name} {away_score}</b>\n<i>{venue}, {elapsed}</i>"
                 )
                 live_fixtures += live_fixture
                 events = get_stats_per_live_fixture(fixture_id)
