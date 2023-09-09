@@ -108,7 +108,9 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) 
             "bet": 1,
             "timezone": tz_name,
         }
-        resp = requests.get(FOOTY_ODDS_ENDPOINT_2, params=params, headers=FOOTY_HTTP_HEADERS, timeout=HTTP_REQUEST_TIMEOUT)
+        resp = requests.get(
+            FOOTY_ODDS_ENDPOINT_2, params=params, headers=FOOTY_HTTP_HEADERS, timeout=HTTP_REQUEST_TIMEOUT
+        )
         return resp.json().get("response")
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching today's footy fixtures: {e.response.content}")
