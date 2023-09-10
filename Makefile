@@ -24,9 +24,7 @@ export HELP
 all help:
 	@echo "$$HELP"
 
-
 env: $(VIRTUAL_ENVIRONMENT)
-
 
 $(VIRTUAL_ENVIRONMENT):
 	if [ ! -d $(VIRTUAL_ENVIRONMENT) ]; then \
@@ -36,7 +34,7 @@ $(VIRTUAL_ENVIRONMENT):
 
 .PHONY: run
 run: env
-	$(LOCAL_PYTHON) -m uwsgi main:run
+	$(LOCAL_PYTHON) -m main
 
 .PHONY: install
 install: env

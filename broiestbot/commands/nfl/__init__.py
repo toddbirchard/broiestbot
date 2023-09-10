@@ -1,4 +1,6 @@
+from datetime import datetime
 import requests
+import pytz
 from emoji import emojize
 from requests.exceptions import HTTPError
 
@@ -13,26 +15,40 @@ def get_live_nfl_games() -> str:
     :returns: str
     """
     try:
-        params = {"status": "in progress", "league": "NFL"}
-        resp = requests.get(NFL_GAMES_URL, headers=NFL_HTTP_HEADERS, params=params, timeout=HTTP_REQUEST_TIMEOUT)
-        games = resp.json().get("results")
-        if resp.status_code == 429:
+        games_response = fetch_today_nfl_games()
+        if games_response.status_code == 429:
             return emojize(
                 f":warning: y'all used the command too much now they tryna charge me smh :warning:",
                 language="en",
             )
-        if games:
+        games = games_response.json().get("results")
+        if bool(games):
             game_summaries = "\n\n\n\n"
-            for i, game in enumerate(games):
+            for game in games:
                 game_summaries += format_live_nfl_game(game)
             return game_summaries
         return emojize(":warning: No live NFL games atm :warning:", language="en")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching live NFL games: {e.response.content}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching live NFL games: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching live NFL games: {e}")
+
+
+def fetch_today_nfl_games() -> dict:
+    """
+    Get summary of NFL games scheduled today; includes scores and odds.
+
+    :returns: str
+    """
+    try:
+        todays_date = datetime.now(pytz.timezone("America/New_York")).strftime("%Y-%m-%d")
+        params = {"league": "NFL", "date": todays_date}
+        resp = requests.get(NFL_GAMES_URL, headers=NFL_HTTP_HEADERS, params=params, timeout=HTTP_REQUEST_TIMEOUT)
+        return resp
+    except HTTPError as e:
+        LOGGER.error(f"HTTPError while fetching NFL games: {e.response.content}")
+    except Exception as e:
+        LOGGER.error(f"Unexpected error when fetching NFL games: {e}")
 
 
 def format_live_nfl_game(game: dict) -> str:
@@ -44,8 +60,33 @@ def format_live_nfl_game(game: dict) -> str:
     :returns: str
     """
     # fmt: off
-    summary = f"{game['teams']['away']['abbreviation']} {game['teams']['away']['mascot']} <b>({game['scoreboard']['score']['away']})</b> @ {game['teams']['home']['abbreviation']} {game['teams']['home']['mascot']} <b>({game['scoreboard']['score']['home']})</b>\n"
-    summary += f"Period {game['scoreboard']['currentPeriod']}, {game['scoreboard']['periodTimeRemaining']}\n"
-    summary += f"Spread {game['odds'][0]['spread']['open']['home']} {game['teams']['home']['abbreviation']}, {game['odds'][0]['spread']['open']['away']} {game['teams']['away']['abbreviation']}\n\n"
+    fixture_status = game["status"]
+    away_team_score = ""
+    home_team_score = ""
+    fixture_start_time = datetime.strptime(game['schedule']['date'], "%Y-%m-%dT%H:%M:%S.000Z")
+    fixture_display_start_time = datetime.strftime(fixture_start_time, "%b %d, %I:%M%p")
+    away_team_city = game['teams']['away']['abbreviation']
+    away_team_name = game['teams']['away']['mascot']
+    away_team_current_spread = game['odds'][0]['spread']['current']['away']
+    away_team_current_moneyline = game['odds'][0]['moneyline']['current']['awayOdds']
+    home_team_city = game['teams']['home']['abbreviation']
+    home_team_name = game['teams']['home']['mascot']
+    home_team_current_spread = game['odds'][0]['spread']['current']['home']
+    home_team_current_moneyline = game['odds'][0]['moneyline']['current']['homeOdds']
+    if fixture_status == "in progress":
+        fixture_current_period = game['scoreboard']['currentPeriod']
+        fixture_period_time_remaining = game['scoreboard']['periodTimeRemaining']
+    if fixture_status != "scheduled":
+        away_team_score = f"({game['scoreboard']['score']['away']})"
+        home_team_score = f"({game['scoreboard']['score']['home']})"
+    summary = f"<b>{away_team_city} {away_team_name} {away_team_score} @ {home_team_city} {home_team_name} {home_team_score}</b>\n"
+    if fixture_status == "final":
+        summary += "<i>FINAL</i>\n"
+    if fixture_status == "scheduled":
+        summary += f":calendar: {fixture_display_start_time}\n"
+    if fixture_status == "in progress":
+        summary += f":one-thirty: Period {fixture_current_period}, {fixture_period_time_remaining}\n"
+    summary += f"<b>{away_team_city}</b> {away_team_current_spread} ({away_team_current_moneyline})\n"
+    summary += f"<b>{home_team_city}</b> {home_team_current_spread} ({home_team_current_moneyline})\n\n"
     # fmt: on
-    return summary
+    return emojize(summary, language="en")

@@ -72,7 +72,6 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
                             created_at=datetime.now()
                         )
                     )
-                    LOGGER.success(f"Persisted new user: {user_data}")
                     # fmt: on
     except IntegrityError as e:
         LOGGER.error(f"Failed to save duplicate entry for {user.name}: {e}")
