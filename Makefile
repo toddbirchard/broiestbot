@@ -1,6 +1,6 @@
 PROJECT_NAME := $(shell basename $CURDIR)
 VIRTUAL_ENVIRONMENT := $(CURDIR)/.venv
-LOCAL_PYTHON := $(VIRTUAL_ENVIRONMENT)/bin/python3
+LOCAL_PYTHON := $(VIRTUAL_ENVIRONMENT)/bin/python
 LOCAL_PYTHON_ACTIVATE := $(VIRTUAL_ENVIRONMENT)/bin/activate
 
 define HELP
@@ -34,14 +34,9 @@ $(VIRTUAL_ENVIRONMENT):
 		python3 -m venv $(VIRTUAL_ENVIRONMENT); \
 	fi
 
-
-.PHONY: dev
-dev: env
-	$(LOCAL_PYTHON) -m main
-
 .PHONY: run
 run: env
-	$(LOCAL_PYTHON) -m main
+	$(LOCAL_PYTHON) -m uwsgi main:run
 
 .PHONY: install
 install: env
