@@ -31,7 +31,7 @@ def get_current_weather(location: str, room: str, user: str) -> str:
     try:
         measurement_units = get_user_preferred_units(room, user)
         weather_response = fetch_current_weather_by_location(location, measurement_units)
-        if weather_response:
+        if weather_response.get("current"):
             return parse_weather_response(weather_response, measurement_units)
     except Exception as e:
         LOGGER.error(f"Failed to fetch & parse weather for `{location}`: {e}")

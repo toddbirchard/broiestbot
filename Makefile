@@ -34,7 +34,7 @@ $(VIRTUAL_ENVIRONMENT):
 
 .PHONY: run
 run: env
-	$(LOCAL_PYTHON) -m uwsgi broiestbot:run
+	$(LOCAL_PYTHON) -m wsgi
 
 .PHONY: install
 install: env

@@ -261,13 +261,13 @@ files = [
 
 [[package]]
 name = "botocore"
-version = "1.31.44"
+version = "1.31.45"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.31.44-py3-none-any.whl", hash = "sha256:83d61c1ca781e6ede19fcc4d5dd73004eee3825a2b220f0d7727e32069209d98"},
-    {file = "botocore-1.31.44.tar.gz", hash = "sha256:84f90919fecb4a4f417fd10145c8a87ff2c4b14d6381cd34d9babf02110b3315"},
+    {file = "botocore-1.31.45-py3-none-any.whl", hash = "sha256:cceb150cff1d7f7a6faf655510a8384eb4505a33b430495fe1744d03a70dc66a"},
+    {file = "botocore-1.31.45.tar.gz", hash = "sha256:85ff64a0ac2705c4ba36268c3b2dbc1184062e9cf729a89dd66c2f54f730fc79"},
 ]
 
 [package.dependencies]
@@ -693,19 +693,18 @@ requests = ["requests (>=2.20.0,<3.0.0.dev0)"]
 
 [[package]]
 name = "google-auth-httplib2"
-version = "0.1.0"
+version = "0.1.1"
 description = "Google Authentication Library: httplib2 transport"
 optional = false
 python-versions = "*"
 files = [
-    {file = "google-auth-httplib2-0.1.0.tar.gz", hash = "sha256:a07c39fd632becacd3f07718dfd6021bf396978f03ad3ce4321d060015cc30ac"},
-    {file = "google_auth_httplib2-0.1.0-py2.py3-none-any.whl", hash = "sha256:31e49c36c6b5643b57e82617cb3e021e3e1d2df9da63af67252c02fa9c1f4a10"},
+    {file = "google-auth-httplib2-0.1.1.tar.gz", hash = "sha256:c64bc555fdc6dd788ea62ecf7bccffcf497bf77244887a3f3d7a5a02f8e3fc29"},
+    {file = "google_auth_httplib2-0.1.1-py2.py3-none-any.whl", hash = "sha256:42c50900b8e4dcdf8222364d1f0efe32b8421fb6ed72f2613f12f75cc933478c"},
 ]
 
 [package.dependencies]
 google-auth = "*"
-httplib2 = ">=0.15.0"
-six = "*"
+httplib2 = ">=0.19.0"
 
 [[package]]
 name = "google-cloud-core"

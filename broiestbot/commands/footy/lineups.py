@@ -1,6 +1,7 @@
 """Fetch lineups before kickoff or during the match."""
 from datetime import datetime, timedelta
 from typing import List, Optional
+import pytz
 
 import requests
 from emoji import emojize
@@ -195,8 +196,10 @@ def filter_fixtures_with_lineups(fixtures: List[dict], tz_name: str):
     try:
         fixtures_with_lineups = []
         for fixture in fixtures:
-            start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z").now(tz_name)
-            now_time = datetime.now(tz_name)
+            start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z").now(
+                pytz.timezone(tz_name)
+            )
+            now_time = datetime.now(pytz.timezone(tz_name))
             footy_xi_time = start_time - timedelta(hours=1)
             if now_time >= footy_xi_time:
                 fixtures_with_lineups.append(fixture)

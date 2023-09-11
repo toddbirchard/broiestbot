@@ -11,7 +11,7 @@ from config import (
 from logger import LOGGER
 
 
-def run():
+def start_bot():
     """Initialize bot depending on environment."""
     if ENVIRONMENT == "production":
         LOGGER.info(f'Joining {", ".join(CHATANGO_ROOMS)}')
@@ -19,6 +19,7 @@ def run():
     else:
         LOGGER.info("Starting in dev mode...")
         join_rooms([CHATANGO_TEST_ROOM])
+    return f"Joined {len(CHATANGO_ROOMS)} rooms."
 
 
 def join_rooms(rooms: List[str]):
