@@ -1,4 +1,6 @@
+"""NFL games scheduled for today with scores & odds."""
 from datetime import datetime
+from typing import Optional
 import requests
 import pytz
 from emoji import emojize
@@ -8,33 +10,30 @@ from config import NFL_GAMES_URL, NFL_HTTP_HEADERS, HTTP_REQUEST_TIMEOUT
 from logger import LOGGER
 
 
-def get_live_nfl_games() -> str:
+def get_today_nfl_games() -> str:
     """
     Get summary of all live NFL games, scores and odds.
 
     :returns: str
     """
     try:
-        games_response = fetch_today_nfl_games()
-        if games_response.status_code == 429:
-            return emojize(
-                f":warning: y'all used the command too much now they tryna charge me smh :warning:",
-                language="en",
-            )
-        games = games_response.json().get("results")
+        games = fetch_today_nfl_games()
         if bool(games):
             game_summaries = "\n\n\n\n"
             for game in games:
-                game_summaries += format_live_nfl_game(game)
+                game_summaries += format_nfl_game(game)
             return game_summaries
-        return emojize(":warning: No live NFL games atm :warning:", language="en")
+        return emojize(
+            ":prohibited: :american_football: bruh there's no NFL today MORAN!! :american_football: :prohibited:",
+            language="en",
+        )
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching live NFL games: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching live NFL games: {e}")
 
 
-def fetch_today_nfl_games() -> dict:
+def fetch_today_nfl_games() -> Optional[dict]:
     """
     Get summary of NFL games scheduled today; includes scores and odds.
 
@@ -44,16 +43,16 @@ def fetch_today_nfl_games() -> dict:
         todays_date = datetime.now(pytz.timezone("America/New_York")).strftime("%Y-%m-%d")
         params = {"league": "NFL", "date": todays_date}
         resp = requests.get(NFL_GAMES_URL, headers=NFL_HTTP_HEADERS, params=params, timeout=HTTP_REQUEST_TIMEOUT)
-        return resp
+        return resp.json().get("results")
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching NFL games: {e.response.content}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching NFL games: {e}")
 
 
-def format_live_nfl_game(game: dict) -> str:
+def format_nfl_game(game: dict) -> str:
     """
-    Format live match-up summary between two teams.
+    Construct a summary of an NFL fixture.
 
     :params dict game: Dictionary summary of a single live NFL fixture.
 

@@ -32,7 +32,7 @@ from broiestbot.commands import (
     get_current_show,
     get_english_definition,
     get_english_translation,
-    get_live_nfl_games,
+    get_today_nfl_games,
     # get_redgifs_gif,
     get_song_lyrics,
     get_stock,
@@ -201,7 +201,7 @@ class Bot(RoomManager):
         elif cmd_type == "twitch":
             return get_all_live_twitch_streams()
         elif cmd_type == "livenfl":
-            return get_live_nfl_games()
+            return get_today_nfl_games()
         elif cmd_type == "topcrypto":
             return get_top_crypto()
         elif cmd_type == "define" and args:

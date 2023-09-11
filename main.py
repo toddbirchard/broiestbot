@@ -10,12 +10,12 @@ from logger import LOGGER
 
 def run():
     """Initialize bot depending on environment."""
-    if ENVIRONMENT == "development":
-        LOGGER.info("Starting in dev mode...")
-        join_rooms([CHATANGO_TEST_ROOM])
-    elif ENVIRONMENT == "production":
+    if ENVIRONMENT == "production":
         LOGGER.info(f'Joining {", ".join(CHATANGO_ROOMS)}')
         join_rooms(CHATANGO_ROOMS)
+    else:
+        LOGGER.info("Starting in dev mode...")
+        join_rooms([CHATANGO_TEST_ROOM])
 
 
 if __name__ == "__main__":
