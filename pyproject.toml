@@ -49,7 +49,7 @@ rq = "*"
 rq-scheduler = "*"
 
 [tool.poetry.scripts]
-run = "main:run"
+run = "broiestbot:run"
 
 [tool.poetry.urls]
 issues = "https://github.com/toddbirchard/broiestbot/issues"
