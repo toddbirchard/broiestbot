@@ -14,6 +14,7 @@ from config import (
     FOOTY_LEAGUES,
     FOXES_TEAM_ID,
     HTTP_REQUEST_TIMEOUT,
+    FOOTY_INTERNATIONAL_LEAGUES,
 )
 from logger import LOGGER
 
@@ -39,11 +40,12 @@ def footy_upcoming_fixtures(room: str, username: str) -> str:
     tz_name = get_preferred_timezone(room, username)
     i = 0
     for league_name, league_id in FOOTY_LEAGUES.items():
-        league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
-        if bool(league_fixtures) is not False and i < 10:
+        fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
+        fixtures += footy_upcoming_fixtures_by_team(room, username, tz_name)
+        if bool(fixtures) is not False and i < 10:
             i += 1
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
-            upcoming_fixtures += league_fixtures + "\n"
+            upcoming_fixtures += fixtures + "\n"
     if upcoming_fixtures != "\n\n\n":
         return upcoming_fixtures
     return emojize(":warning: Couldn't find any upcoming fixtures :warning:", language="en")
@@ -86,7 +88,7 @@ def footy_upcoming_fixtures_per_league(
     """
     try:
         upcoming_fixtures = ""
-        fixtures = upcoming_fixture_fetcher(league_name, league_id, tz_name)
+        fixtures = fetch_upcoming_fixtures_by_league(league_name, league_id, tz_name)
         if bool(fixtures) is not False:
             for fixture in fixtures:
                 fixture_date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
@@ -101,7 +103,30 @@ def footy_upcoming_fixtures_per_league(
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> Optional[List[dict]]:
+def footy_upcoming_fixtures_by_team(room: str, username: str, tz_name: str) -> Optional[str]:
+    """
+    :param str room: Chatango room in which command was triggered.
+    :param str username: Name of user who triggered the command.
+    :param str timezone_name: Name of user's preferred timezone (ie: `America/New_York`).
+    """
+    try:
+        upcoming_fixtures = ""
+        fixtures = fetch_upcoming_fixtures_by_league(FOOTY_INTERNATIONAL_LEAGUES, league_id, tz_name)
+        if bool(fixtures) is not False:
+            for fixture in fixtures:
+                fixture_date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
+                if fixture_date.date() <= datetime.now().date() + timedelta(days=8):
+                    upcoming_fixture = add_upcoming_fixture(fixture, fixture_date, room, username)
+                    if upcoming_fixture:
+                        upcoming_fixtures += upcoming_fixture
+            return upcoming_fixtures
+    except KeyError as e:
+        LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
+    except Exception as e:
+        LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+
+
+def fetch_upcoming_fixtures_by_league(league_name: str, league_id: int, tz_name: str) -> Optional[List[dict]]:
     """
     Fetch 6 upcoming fixtures for each top league, or 3 for each lower league.
 
@@ -118,20 +143,6 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> 
             "status": "NS-1H-2H",
             "timezone": tz_name,
         }
-        return fetch_upcoming_fixtures_by_league(params)
-    except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
-
-
-def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
-    """
-    Fetches upcoming fixtures for a single league.
-
-    :param dict params: Request parameters for fetching fixtures for a given league or cup.py
-
-    :returns: Optional[List[dict]]
-    """
-    try:
         resp = requests.get(
             FOOTY_FIXTURES_ENDPOINT,
             headers=FOOTY_HTTP_HEADERS,
@@ -140,8 +151,6 @@ def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
         )
         if resp.status_code == 200:
             return resp.json().get("response")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError {resp.status_code} while fetching footy fixtures: {e.response.content}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
