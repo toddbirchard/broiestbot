@@ -261,13 +261,13 @@ files = [
 
 [[package]]
 name = "botocore"
-version = "1.31.46"
+version = "1.31.48"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.31.46-py3-none-any.whl", hash = "sha256:ac0c1258b1782cde42950bd00138fdce6bd7d04855296af8c326d5844a426473"},
-    {file = "botocore-1.31.46.tar.gz", hash = "sha256:6c30be3371624a80d6a881d9c7771a80e0eb82697ee374aaf522cd59b76e14dd"},
+    {file = "botocore-1.31.48-py3-none-any.whl", hash = "sha256:9618c06f7e08ed590dae6613b8b2511055f7d6c07517382143ef8563169d4ef1"},
+    {file = "botocore-1.31.48.tar.gz", hash = "sha256:6ed16f66aa6ed6070fed26d69764cb14c7759e4cc0b1c191283cc48b05d65de9"},
 ]
 
 [package.dependencies]
@@ -1435,6 +1435,21 @@ files = [
 ]
 
 [[package]]
+name = "nflgame"
+version = "1.2.20"
+description = "An API to retrieve and read NFL Game Center JSON data. It can work with real-time data, which can be used for fantasy football."
+optional = false
+python-versions = "*"
+files = [
+    {file = "nflgame-1.2.20.tar.gz", hash = "sha256:0a9852009f71870ac3e44e9aeca4f4664c76accd2353fc7c4c9dd42f83e163a7"},
+]
+
+[package.dependencies]
+beautifulsoup4 = "*"
+httplib2 = "*"
+pytz = "*"
+
+[[package]]
 name = "numpy"
 version = "1.25.2"
 description = "Fundamental package for array computing in Python"
@@ -2505,4 +2520,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "4c9d05687c3919524b2aff11227a8f889ad0eef775d63df9bfed5b79f5eb78d7"
+content-hash = "50b1d8ed0424d6213b516c1c62dc30cdfbb21c4adf84989daf4964ca23a07d70"

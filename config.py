@@ -265,6 +265,13 @@ NFL_HTTP_HEADERS = {
     "x-rapidapi-host": "sportspage-feeds.p.rapidapi.com",
 }
 
+NFL_LIVE_GAMES_URL = "https://api-american-football.p.rapidapi.com/games"
+NFL_LIVE_HTTP_HEADERS = {
+    "content-type": "application/json",
+    "x-rapidapi-key": RAPID_API_KEY,
+    "x-rapidapi-host": "api-american-football.p.rapidapi.com",
+}
+
 
 # Sports Odds
 # -------------------------------------------------

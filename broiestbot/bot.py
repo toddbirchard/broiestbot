@@ -61,6 +61,7 @@ from broiestbot.commands import (
     get_odds,
     # get_today_footy_odds_for_league,
     bach_gang_counter,
+    get_leaders_per_game,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
@@ -200,8 +201,10 @@ class Bot(RoomManager):
             return footy_today_fixtures_odds(room.room_name.lower(), user_name)
         elif cmd_type == "twitch":
             return get_all_live_twitch_streams()
-        elif cmd_type == "livenfl":
+        elif cmd_type == "todaynfl":
             return get_today_nfl_games()
+        elif cmd_type == "livenfl":
+            return get_leaders_per_game()
         elif cmd_type == "topcrypto":
             return get_top_crypto()
         elif cmd_type == "define" and args:
