@@ -170,9 +170,9 @@ class Bot(RoomManager):
         elif cmd_type == "allfixtures":
             return footy_all_upcoming_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "livefixtures":
-            return footy_live_fixtures(room.room_name.lower(), user_name, subs=True)
+            return footy_live_fixtures(user_name, subs=True)
         elif cmd_type == "livefixtureswithsubs":
-            return footy_live_fixtures(room.room_name.lower(), user_name, subs=True)
+            return footy_live_fixtures(user_name, subs=True)
         elif cmd_type == "livefixturestats":
             return footy_live_fixture_stats(room.room_name.lower(), user_name)
         elif cmd_type == "todayfixtures":

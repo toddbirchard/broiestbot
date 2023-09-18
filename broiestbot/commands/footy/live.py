@@ -18,11 +18,10 @@ from logger import LOGGER
 from .util import get_preferred_timezone
 
 
-def footy_live_fixtures(room: str, username: str, subs=False) -> str:
+def footy_live_fixtures(username: str, subs=False) -> str:
     """
     Fetch live fixtures for EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
 
-    :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
     :param bool subs: Whether to include substitutions in match summaries.
 
@@ -163,27 +162,27 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
                     )
                 elif event_detail == "Yellow Card":
                     event_log += emojize(
-                        f':yellow_square: {player_name}{event_comments}, {time_elapsed}"\n',
+                        f":yellow_square: {player_name}{event_comments}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Second Yellow card":
                     event_log += emojize(
-                        f':yellow_square::red_square: {player_name}{event_comments}, {time_elapsed}"\n',
+                        f":yellow_square::red_square: {player_name}{event_comments}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Red Card" and player_name:
                     event_log += emojize(
-                        f':red_square: {player_name}{event_comments}, {time_elapsed}"\n',
+                        f":red_square: {player_name}{event_comments}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Normal Goal":
                     event_log += emojize(
-                        f':soccer_ball: {event_type}, {player_name}, {time_elapsed}"\n',
+                        f":soccer_ball: {event_type}, {player_name}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Penalty":
                     event_log += emojize(
-                        f':goal_net: :soccer_ball: (PEN), {player_name}, {time_elapsed}"\n',
+                        f":goal_net: :soccer_ball: (PEN), {player_name}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Own Goal":
