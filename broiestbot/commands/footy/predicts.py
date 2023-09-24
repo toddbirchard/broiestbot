@@ -142,9 +142,9 @@ def parse_fixture_odds(league_name: str, fixtures: dict, fixtures_odds: dict, ro
             draw_odds = fixtures_odds[i]["bookmakers"][0]["bets"][0]["values"][1]["odd"]
             away_odds = fixtures_odds[i]["bookmakers"][0]["bets"][0]["values"][2]["odd"]
             fixture_odds_summary = f"<b>{away_team} @ {home_team}</b> | <i>{fixture_start_time}</i>\n \
-                {home_team}: {home_odds}\n \
-                Draw: {draw_odds}\n \
-                {away_team}: {away_odds}\n\n"
+                {home_team.upper()}: {home_odds}\n \
+                DRAW: {draw_odds}\n \
+                {away_team.upper()}: {away_odds}\n\n"
             fixtures_odds_response += fixture_odds_summary
         return emojize(fixtures_odds_response, language="en")
     except Exception as e:

@@ -10,7 +10,6 @@ from config import (
     FOOTY_HTTP_HEADERS,
     FOOTY_LIVE_SCORED_LEAGUES,
     FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT,
-    FOOTY_LIVE_FIXTURE_STATS_ENDPOINT,
     HTTP_REQUEST_TIMEOUT,
 )
 from logger import LOGGER
@@ -202,6 +201,7 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
         LOGGER.error(f"Unexpected error while compiling events in live fixture: {e}")
 
 
+'''
 def footy_live_fixture_stats(room: str, username: str, subs=False) -> str:
     """
     Fetch live fixtures for EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
@@ -271,37 +271,4 @@ def footy_live_fixture_stats_per_league(
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching live fixtures: {e}")
 
-
-def get_stats_per_live_fixture(fixture_id: int) -> Optional[str]:
-    """
-    Construct fixture stats for a single live fixture.
-
-    :param int fixture_id: ID of a single live fixture.
-
-    :returns: Optional[str]
-    """
-    try:
-        fixture_stats = "\n"
-        params = {"fixture": fixture_id}
-        resp = requests.get(
-            FOOTY_LIVE_FIXTURE_STATS_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        fixture_stats = resp.json().get("response")
-        if fixture_stats:
-            for i, team in enumerate(fixture_stats):
-                team += f"<b>{team[i]['team']['name']}</b>\n"
-                for stat in team[i]["statistics"]:
-                    fixture_stats += f"{stat['type']: stat['value']}\n"
-                if i == 0:
-                    fixture_stats += "\n"
-            return fixture_stats
-        return None
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching live fixtures: {e.response.content}")
-    except KeyError as e:
-        LOGGER.error(f"KeyError while fetching live fixtures: {e}")
-    except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching live fixtures: {e}")
+'''

@@ -17,11 +17,11 @@ def get_today_footy_odds_for_league(league_id: int):
     :returns: str
     """
     try:
-        response = "\n\n"
+        all_fixture_odds = "\n\n\n"
         odds_response = fetch_today_footy_odds_for_league(league_id)
         fixtures_odds = odds_response.get("data")[::5]
         if odds_response.get("success"):
-            return None
+            all_fixture_odds = +fixtures_odds
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy odds: {e}")
         return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
@@ -37,7 +37,7 @@ def fetch_today_footy_odds_for_league(league_id: int):
     :returns: str
     """
     try:
-        url = FOOTY_ODDS_ENDPOINT
+        url = FOOTY_ODDS_ENDPOINT_2
         querystring = {
             "sport": "soccer_epl",
             "region": "uk",
@@ -55,7 +55,7 @@ def fetch_today_footy_odds_for_league(league_id: int):
         LOGGER.error(f"HTTPError while fetching footy odds: {e.response.content}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy odds: {e}")
-        return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
+        return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
 
 
 def format_fixture_odds(fixtures: List[dict]) -> Optional[str]:
@@ -70,8 +70,8 @@ def format_fixture_odds(fixtures: List[dict]) -> Optional[str]:
             away_team = teams[1]
             odds = fixture["sites"][1]["odds"]["h2h"]
             fixture_odds += f"{home_team}: {odds[0]}\n \
-                                            Draw: {odds[1]}\n \
-                                            {away_team}: {odds[2]}"
+                            Draw: {odds[1]}\n \
+                            {away_team}: {odds[2]}"
         return emojize(f"{fixture_odds}\n\n{fixture_odds}", language="en")
     except Exception as e:
         LOGGER.error(f"Unexpected error while formatting footy odds: {e}")

@@ -1887,7 +1887,7 @@ class RoomManager:
         """
         LOGGER.error(f"Failed to connect to {room.room_name}.")
         self.set_timeout(1200, self.stop)
-        LOGGER.warning(f"Attempting to connect to {room.room_name} again...")
+        LOGGER.info(f"Attempting to connect to {room.room_name} again...")
         self.set_timeout(1200, self.join_room(room.room_name))
 
     def on_disconnect(self, room: Room):
@@ -1945,7 +1945,7 @@ class RoomManager:
         :param Message message: User message that got deleted.
         """
         if user.name.lower() != CHATANGO_USERS.keys():
-            LOGGER.warning(
+            LOGGER.info(
                 f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} had message deleted from {room.room_name}: {message.body}",
             )
 
@@ -1965,7 +1965,7 @@ class RoomManager:
         :param Room room: Chatango room where user was modded.
         :param User user: User promoted to mod.
         """
-        LOGGER.warning(
+        LOGGER.info(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} was modded in {room.room_name}."
         )
 
@@ -1977,7 +1977,7 @@ class RoomManager:
         :param Room room: Chatango room where user was demoted.
         :param User user: User demoted from mod.
         """
-        LOGGER.warning(
+        LOGGER.info(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} was demodded in {room.room_name}.",
         )
 
@@ -2010,7 +2010,7 @@ class RoomManager:
         :param User user: Recently joined user.
         :param str puid: Personal unique id for a user.
         """
-        LOGGER.warning(
+        LOGGER.info(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} joined {room.room_name}.",
         )
 
@@ -2023,7 +2023,7 @@ class RoomManager:
         :param User user: Recently departed user.
         :param str puid: Personal unique id for a user.
         """
-        LOGGER.warning(
+        LOGGER.info(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} left {room.room_name}.",
         )
 
@@ -2063,7 +2063,7 @@ class RoomManager:
         :param User user: Moderator who unbanned user.
         :param User target: User that got unbanned.
         """
-        LOGGER.warning(
+        LOGGER.info(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {target.name} was banned from {room.room_name} by {user.name}.",
         )
 
@@ -2076,7 +2076,7 @@ class RoomManager:
         :param User user: Moderator who unbanned user.
         :param User target: User that got unbanned.
         """
-        LOGGER.warning(
+        LOGGER.info(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {target.name} was unbanned from {room.room_name} by {user.name}.",
         )
 

@@ -508,7 +508,27 @@ FOOTY_XI_LEAGUES = {
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
 }
 
-FOOTY_LIVE_LEAGUES_ODDS_IDS = {":lion: EPL": EPL_LEAGUE_ID, ":trophy: UEFA SUPER CUP": UEFA_SUPER_CUP_ID}
+FOOTY_LIVE_ODDS_LEAGUES = {
+    ":lion: EPL": EPL_LEAGUE_ID,
+    ":blue_circle: UCL": UCL_LEAGUE_ID,
+    ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
+    ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":Germany: BUND": BUND_LEAGUE_ID,
+    ":Italy: Serie A": SERIE_A_LEAGUE_ID,
+    ":France: LIGUE 1": LIGUE_ONE_ID,
+}
+
+FOOTY_LIVE_STATS_LEAGUES = {
+    ":lion: EPL": EPL_LEAGUE_ID,
+    ":blue_circle: UCL": UCL_LEAGUE_ID,
+    ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
+    ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":Germany: BUND": BUND_LEAGUE_ID,
+    ":Italy: Serie A": SERIE_A_LEAGUE_ID,
+    ":France: LIGUE 1": LIGUE_ONE_ID,
+}
 
 # Footy leagues to be considered for "golden shoe" award
 GOLDEN_SHOE_LEAGUES = {

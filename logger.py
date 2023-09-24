@@ -143,6 +143,8 @@ def log_formatter(record: dict) -> str:
         return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #6dac77>{level}</fg #6dac77>: <light-white>{message}</light-white>\n"
     if record["level"].name == "ERROR":
         return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #a35252>{level}</fg #a35252>: <light-white>{message}</light-white>\n"
+    if record["level"].name == "CRITICAL":
+        return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #521010>{level}</fg #521010>: <light-white>{message}</light-white>\n"
     return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #b3cfe7>{level}</fg #b3cfe7>: <light-white>{message}</light-white>\n"
 
 
@@ -152,7 +154,7 @@ def create_logger() -> logger:
     :returns: logger
     """
     logger.remove()
-    logger.add(stdout, colorize=True, catch=True, format=log_formatter)
+    logger.add(stdout, colorize=True, catch=True, format=log_formatter, level="INFO")
     if ENVIRONMENT == "production":
         # Human-readable info logs
         logger.add(
@@ -189,6 +191,7 @@ def create_logger() -> logger:
             format=log_formatter,
             rotation="300 MB",
             compression="zip",
+            level="INFO",
         )
         # Human-readable error logs
         logger.add(
@@ -206,6 +209,7 @@ def create_logger() -> logger:
             format=json_formatter,
             rotation="300 MB",
             compression="zip",
+            level="INFO",
         )
     return logger
 
