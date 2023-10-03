@@ -55,13 +55,13 @@ from broiestbot.commands import (
     wiki_summary,
     # get_psn_online_friends,
     league_table_standings,
-    footy_live_fixture_stats,
     generate_twitter_preview,
     mls_standings,
     get_odds,
     # get_today_footy_odds_for_league,
     bach_gang_counter,
-    get_leaders_per_game,
+    get_live_nfl_game_summaries,
+    footy_stats_for_live_fixtures,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
@@ -174,7 +174,9 @@ class Bot(RoomManager):
         elif cmd_type == "livefixtureswithsubs":
             return footy_live_fixtures(user_name, subs=True)
         elif cmd_type == "livefixturestats":
-            return footy_live_fixture_stats(room.room_name.lower(), user_name)
+            return footy_stats_for_live_fixtures(room.room_name.lower(), user_name)
+        elif cmd_type == "footystats":
+            return footy_stats_for_live_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "todayfixtures":
             return today_upcoming_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "goldenboot":
@@ -204,7 +206,7 @@ class Bot(RoomManager):
         elif cmd_type == "todaynfl":
             return get_today_nfl_games()
         elif cmd_type == "livenfl":
-            return get_leaders_per_game()
+            return get_live_nfl_game_summaries(user_name)
         elif cmd_type == "topcrypto":
             return get_top_crypto()
         elif cmd_type == "define" and args:

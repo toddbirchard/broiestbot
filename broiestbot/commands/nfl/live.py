@@ -1,13 +1,20 @@
 """Live NFL game stats."""
 from datetime import datetime
 import requests
-from config import NFL_LIVE_HTTP_HEADERS, NFL_LIVE_GAMES_URL
+from requests import HTTPError
 from emoji import emojize
 from logger import LOGGER
+from config import NFL_LIVE_HTTP_HEADERS, NFL_LIVE_GAMES_URL
 
 
-def get_leaders_per_game():
-    """Get passing and rushing leaders for live NFL game."""
+def get_live_nfl_game_summaries(username: str) -> str:
+    """
+    Get passing and rushing leaders for live NFL game.
+
+    :param str username: Username of user requesting live NFL game summaries.
+
+    :returns: str
+    """
     try:
         game_summaries = "\n\n\n"
         games = fetch_live_nfl_games()
@@ -17,18 +24,27 @@ def get_leaders_per_game():
                 game_summaries += parse_live_nfl_game_summary(game)
                 game_events = fetch_live_nfl_game_events(game_id)
                 game_summaries += parse_live_nfl_scoring_events(game_events)
-        return game_summaries
+            return game_summaries
+        return emojize(f"tired_face: aw jeez @{username} idt theres any tovalaball on rn tired_face:", language="en")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching live NFL games: {e}")
+        return emojize(f":no_entry: o shit i died: `{e}` :no_entry:", language="en")
 
 
-def fetch_live_nfl_games():
-    """Fetch live NFL games."""
+def fetch_live_nfl_games() -> dict:
+    """
+    Fetch live NFL games.
+
+    :returns: dict
+    """
     try:
         current_year = datetime.now().year
         params = {"league": 1, "season": current_year, "live": "all"}
         resp = requests.get(NFL_LIVE_GAMES_URL, headers=NFL_LIVE_HTTP_HEADERS, params=params, timeout=30)
         return resp.json().get("response")
+    except HTTPError as e:
+        LOGGER.error(f"HTTPError error {resp.status_code} when fetching live NFL games: {e}")
+        raise e
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching live NFL games: {e}")
 
@@ -51,11 +67,12 @@ def parse_live_nfl_game_summary(game: dict) -> str:
         away_team_score = game["scores"]["away"]["total"]
         return emojize(
             f"<b>{away_team_name} ({away_team_score}) @ {home_team_name} ({home_team_score})</b>\n \
-            :stadium: {venue} | <i>({quarter} {game_clock})</i>\n",
+            :stadium: {venue}\n \
+            :eight-thirty: <i>({quarter} {game_clock})</i>\n",
             language="en",
         )
     except Exception as e:
-        LOGGER.error(f"Unexpected error when parsing live NFL game: {e}")
+        raise f"{__name__}: {e}"
 
 
 def fetch_live_nfl_game_events(game_id: int):
