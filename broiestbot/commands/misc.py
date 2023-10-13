@@ -32,7 +32,7 @@ def blaze_time_remaining() -> str:
     pm_time = now.replace(hour=16, minute=20, second=0)
     if am_time <= now < am_time + timedelta(seconds=59) or pm_time <= now < pm_time + timedelta(seconds=59):
         return emojize(
-            f":herb: :fire: HOLY FUCK IT'S EXACTLY 420!!! BLAZE IT BITCHHHHHHHCAWWHHHHHH :cigarette: :kissing_face_with_closed_eyes: :dashing_away:",
+            ":herb: :fire: HOLY FUCK IT'S EXACTLY 420!!! BLAZE IT BITCHHHHHHHCAWWHHHHHH :cigarette: :kissing_face_with_closed_eyes: :dashing_away:",
             language="en",
         )
     elif am_time > now:
@@ -66,12 +66,10 @@ def send_text_message(message: str, user: str, recipient: str) -> Optional[str]:
             phone_number = TWILIO_PHONE_NUMBERS.get(recipient)
             if phone_number:
                 msg = sms.messages.create(
-                    body=f"{user.upper()}: {message}",
-                    from_=TWILIO_SENDER_PHONE,
-                    to=phone_number,
+                    body=f"{user.upper()}: {message}", from_=TWILIO_SENDER_PHONE, to=phone_number, max_price=1
                 )
                 msg_status_emoji = f"{':green_circle:' if msg.status != 'failed' else ':red_circle:'}"
-                msg_status_simplified = f"{'MESSAGE SENT' if msg.status != 'failed' else f'FAILED TO SEND TEXT!'}"
+                msg_status_simplified = f"{'MESSAGE SENT' if msg.status != 'failed' else 'FAILED TO SEND TEXT!'}"
                 msg_status = f"{'sent' if msg_status_emoji == ':green_circle:' else msg.status}"
                 msg_date_sent = datetime.now(pytz.timezone("America/New_York")).strftime("%I:%M %p")
                 LOGGER.success(f"Sent SMS to {recipient} ({msg.to}) from {user}: {msg.body}")
