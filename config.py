@@ -47,10 +47,10 @@ CHATANGO_UNION_ROOM = getenv("CHATANGO_UNION_ROOM")
 # Chatango rooms to be joined by the bot
 CHATANGO_ROOMS = [
     CHATANGO_ACLEE_ROOM,
-    # CHATANGO_SIXERS_ROOM,
+    CHATANGO_SIXERS_ROOM,
     CHATANGO_PHILLIES_ROOM,
     # CHATANGO_FLYERS_ROOM,
-    # CHATANGO_ALT_ROOM,
+    CHATANGO_ALT_ROOM,
     # CHATANGO_NFL_ROOM,
     CHATANGO_OBI_ROOM,
     # CHATANGO_REDZONE_ROOM,
@@ -379,6 +379,7 @@ MLS_LEAGUES_CUP_ID = 772
 US_OPEN_CUP_ID = 257
 EPL_SUMMER_SERIES_LEAGUE_ID = 1022
 OBOS_LIGAEN_ID = 473
+TACA_DE_PORTUGAL_ID = 96
 
 # Footy Leagues, cups and tournaments
 FOOTY_LEAGUES = {
@@ -393,7 +394,7 @@ FOOTY_LEAGUES = {
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
-    ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
+    # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":trophy: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
@@ -405,7 +406,8 @@ FOOTY_LEAGUES = {
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :France: COUPE DE FRANCE": COUPE_DE_FRANCE,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
-    ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
     # ":child_medium-light_skin_tone: :military_medal: U20 ELITE LEAGUE": U20_ELITE_LEAGUE_ID,
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
@@ -413,9 +415,9 @@ FOOTY_LEAGUES = {
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     # ":Norway: OBOS LIGAEN": OBOS_LIGAEN_ID,
-    ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
-    ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
-    ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
+    # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
+    # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
+    # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
     # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
     # ":trophy: WORLD CUP": WORLD_CUP_ID,
@@ -464,9 +466,10 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
+    ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
     # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
-    ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
@@ -500,7 +503,7 @@ FOOTY_XI_LEAGUES = {
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
-    ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
@@ -517,7 +520,8 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     ":France: LIGUE 1": LIGUE_ONE_ID,
-    ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
@@ -529,7 +533,8 @@ FOOTY_LIVE_STATS_LEAGUES = {
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     ":France: LIGUE 1": LIGUE_ONE_ID,
-    ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
 }
 
 # Footy leagues to be considered for "golden shoe" award
