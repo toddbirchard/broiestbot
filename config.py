@@ -7,15 +7,16 @@ from dotenv import load_dotenv
 BASE_DIR = path.abspath(path.dirname(__file__))
 load_dotenv(path.join(BASE_DIR, ".env"))
 
+
 # General
 # -------------------------------------------------
 ENVIRONMENT = getenv("ENVIRONMENT")
 TIMEZONE_US_EASTERN = pytz.timezone("America/New_York")
+HTTP_REQUEST_TIMEOUT = 40
+
 
 # Chatango
 # -------------------------------------------------
-
-# Chatango bot credentials
 CHATANGO_USERS = {
     "BROIESTBOT": {
         "USERNAME": getenv("CHATANGO_BOT_USERNAME"),
@@ -97,18 +98,10 @@ REDIS_PASSWORD = getenv("REDIS_PASSWORD")
 REDIS_PORT = getenv("REDIS_PORT")
 REDIS_DB = getenv("REDIS_DB")
 
-# Datadog
-# -------------------------------------------------
-DDOG_APP_KEY = getenv("DDOG_APP_KEY")
-DDOG_API_KEY = getenv("DDOG_API_KEY")
-
-# Chat Logging
+# Action Log
 # -------------------------------------------------
 PERSIST_USER_DATA = getenv("PERSIST_USER_DATA")
 PERSIST_CHAT_DATA = getenv("PERSIST_CHAT_DATA")
-
-# APIs
-HTTP_REQUEST_TIMEOUT = int(getenv("HTTP_REQUEST_TIMEOUT"))
 
 # Google Cloud
 # -------------------------------------------------
@@ -249,13 +242,6 @@ TWITCH_BROADCASTERS = {
     TWITCH_CUMRAG_USERNAME: TWITCH_CUMRAG_ID,
 }
 
-TWITTER_API_V1_ENDPOINT = "https://api.twitter.com/1.1/statuses/lookup.json"
-TWITTER_CONSUMER_KEY = getenv("TWITTER_API_KEY")
-TWITTER_CONSUMER_SECRET = getenv("TWITTER_API_SECRET")
-TWITTER_BEARER_TOKEN = getenv("TWITTER_BEARER_TOKEN")
-TWITTER_ACCESS_TOKEN = getenv("TWITTER_ACCESS_TOKEN")
-TWITTER_TOKEN_SECRET = getenv("TWITTER_TOKEN_SECRET")
-
 # NFL
 # -------------------------------------------------
 NFL_GAMES_URL = "https://sportspage-feeds.p.rapidapi.com/games"
@@ -264,7 +250,6 @@ NFL_HTTP_HEADERS = {
     "x-rapidapi-key": RAPID_API_KEY,
     "x-rapidapi-host": "sportspage-feeds.p.rapidapi.com",
 }
-
 NFL_LIVE_GAMES_URL = "https://api-american-football.p.rapidapi.com/games"
 NFL_LIVE_HTTP_HEADERS = {
     "content-type": "application/json",
@@ -275,11 +260,9 @@ NFL_LIVE_HTTP_HEADERS = {
 
 # Sports Odds
 # -------------------------------------------------
-
-# API
 ODDS_API_ENDPOINT = "https://pinnacle-odds.p.rapidapi.com/kit/v1/markets"
 
-# Sport IDs
+# Competition IDs
 FOOTY_ODDS_SPORT_ID = 1
 TENNIS_ODDS_SPORT_ID = 2
 NBA_ODDS_SPORT_ID = 3
@@ -287,8 +270,7 @@ HOCKEY_ODDS_SPORT_ID = 4
 HANDEGG_ODDS_SPORT_ID = 7
 MLB_ODDS_SPORT_ID = 9
 
-# League IDs
-## Footy
+# Footy League IDs
 FA_CUP_ODDS_ID = 1979
 EPL_LEAGUE_ODDS_ID = 1980
 UCL_CUP_ODDS_ID = 2627
@@ -300,8 +282,6 @@ LIGUE_1_LEAGUE_ID = 2036
 
 # Footy
 # -------------------------------------------------
-
-# Footy API endpoints, tokens, and headers
 FOOTY_BASE_URL = "https://api-football-v1.p.rapidapi.com/v3"
 FOOTY_FIXTURES_ENDPOINT = f"{FOOTY_BASE_URL}/fixtures"
 FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT = f"{FOOTY_BASE_URL}/fixtures/events"
@@ -569,15 +549,16 @@ BOURNEMOUTH_TEAM_ID = 35
 ENGLAND_INT_TEAM_ID = 10
 WREXHAM_TEAM_ID = 1837
 USA_CONCACAF_TEAM_ID = 2384
-# USA_INT_TEAM_ID = 0
+BENFICA_TEAM_ID = 211
+USA_INT_TEAM_ID = 0
 
 # Specify team IDs to be prioritized whe fetching starting XIs
 FOOTY_TEAMS_PRIORITY = {
     "Pool": LIVERPOOL_TEAM_ID,
     "ManU": MANU_TEAM_ID,
     "England": ENGLAND_INT_TEAM_ID,
-    "Foxes": FOXES_TEAM_ID,
-    # "USMNT": USA_INT_TEAM_ID
+    # "Foxes": FOXES_TEAM_ID,
+    "USMNT": USA_INT_TEAM_ID,
 }
 
 # Footy team IDs for EPL
@@ -638,8 +619,22 @@ WINTER_OLYMPICS_LEADERBOARD_ENDPOINT = "https://www.espn.com/olympics/winter/202
 NBA_BASE_URL = "https://api-basketball.p.rapidapi.com"
 NBA_API_KEY = getenv("NBA_API_KEY")
 NBA_CONFERENCE_NAMES = ["Eastern Conference", "Western Conference"]
-NBA_SEASON_YEAR = "2022-2023"
+NBA_SEASON_YEAR = "2023-2024"
 
 # Playstation PSN
 # -------------------------------------------------
 PLAYSTATION_SSO_TOKEN = getenv("PLAYSTATION_SSO_TOKEN")
+
+# Twitter (Unused)
+# -------------------------------------------------
+TWITTER_API_V1_ENDPOINT = "https://api.twitter.com/1.1/statuses/lookup.json"
+TWITTER_CONSUMER_KEY = getenv("TWITTER_API_KEY")
+TWITTER_CONSUMER_SECRET = getenv("TWITTER_API_SECRET")
+TWITTER_BEARER_TOKEN = getenv("TWITTER_BEARER_TOKEN")
+TWITTER_ACCESS_TOKEN = getenv("TWITTER_ACCESS_TOKEN")
+TWITTER_TOKEN_SECRET = getenv("TWITTER_TOKEN_SECRET")
+
+# Datadog (Unused)
+# -------------------------------------------------
+DDOG_APP_KEY = getenv("DDOG_APP_KEY")
+DDOG_API_KEY = getenv("DDOG_API_KEY")

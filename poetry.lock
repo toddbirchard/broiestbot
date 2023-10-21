@@ -252,13 +252,13 @@ files = [
 
 [[package]]
 name = "botocore"
-version = "1.31.67"
+version = "1.31.68"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.31.67-py3-none-any.whl", hash = "sha256:487fb6ee4a6612613da370599b1a1aca0e159dd9e94b2e8aaa8e6ad9cc546ded"},
-    {file = "botocore-1.31.67.tar.gz", hash = "sha256:ab3b73a2e03efa1c534a94f8db4a5cf45629a53e5478d2d154b0a3e2ffb05249"},
+    {file = "botocore-1.31.68-py3-none-any.whl", hash = "sha256:7b7065c502f5faa6cc2aa4b42b5fa34e5c0cd171e2952d6a9aeb26bfd44a54c3"},
+    {file = "botocore-1.31.68.tar.gz", hash = "sha256:0813f02d00e46051364d9b5d5e697a90e988b336b87e949888c1444a59b8ba59"},
 ]
 
 [package.dependencies]
