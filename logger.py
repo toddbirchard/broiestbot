@@ -161,7 +161,7 @@ def create_logger() -> logger:
             "/var/log/broiestbot/info.log",
             colorize=True,
             catch=True,
-            level=5,
+            level="INFO",
             format=log_formatter,
             rotation="300 MB",
             compression="zip",
@@ -182,7 +182,7 @@ def create_logger() -> logger:
             format=json_formatter,
             rotation="300 MB",
             compression="zip",
-            level=5,
+            level="INFO",
         )
     elif ENVIRONMENT == "development":
         # Human-readable info logs
@@ -190,7 +190,7 @@ def create_logger() -> logger:
             f"{BASE_DIR}/logs/info.log",
             colorize=True,
             catch=True,
-            level=5,
+            level="INFO",
             format=log_formatter,
             rotation="300 MB",
             compression="zip",
@@ -211,7 +211,7 @@ def create_logger() -> logger:
             format=json_formatter,
             rotation="300 MB",
             compression="zip",
-            level=5,
+            level="INFO",
         )
     return logger
 
