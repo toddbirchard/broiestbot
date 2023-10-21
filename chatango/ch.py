@@ -2010,7 +2010,7 @@ class RoomManager:
         :param User user: Recently joined user.
         :param str puid: Personal unique id for a user.
         """
-        LOGGER.info(
+        LOGGER.trace(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} joined {room.room_name}.",
         )
 
@@ -2023,7 +2023,7 @@ class RoomManager:
         :param User user: Recently departed user.
         :param str puid: Personal unique id for a user.
         """
-        LOGGER.info(
+        LOGGER.trace(
             f"[{room.room_name}] [{user.name.lower()}] [no IP address]: {user.name} left {room.room_name}.",
         )
 

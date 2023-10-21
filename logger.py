@@ -161,6 +161,7 @@ def create_logger() -> logger:
             "/var/log/broiestbot/info.log",
             colorize=True,
             catch=True,
+            level=5,
             format=log_formatter,
             rotation="300 MB",
             compression="zip",
@@ -175,12 +176,13 @@ def create_logger() -> logger:
             rotation="300 MB",
             compression="zip",
         )
-        # JSON logs to be consumed by Datadog
+        # Datadog JSON logs
         logger.add(
             "/var/log/broiestbot/info.json",
             format=json_formatter,
             rotation="300 MB",
             compression="zip",
+            level=5,
         )
     elif ENVIRONMENT == "development":
         # Human-readable info logs
@@ -188,10 +190,10 @@ def create_logger() -> logger:
             f"{BASE_DIR}/logs/info.log",
             colorize=True,
             catch=True,
+            level=5,
             format=log_formatter,
             rotation="300 MB",
             compression="zip",
-            level="INFO",
         )
         # Human-readable error logs
         logger.add(
@@ -203,13 +205,13 @@ def create_logger() -> logger:
             rotation="300 MB",
             compression="zip",
         )
-        # JSON logs to be consumed by Datadog
+        # Datadog JSON logs
         logger.add(
             f"{BASE_DIR}/logs/info.json",
             format=json_formatter,
             rotation="300 MB",
             compression="zip",
-            level="INFO",
+            level=5,
         )
     return logger
 

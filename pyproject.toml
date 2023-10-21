@@ -10,6 +10,11 @@ homepage = "https://github.com/toddbirchard/broiestbot/"
 repository = "https://github.com/toddbirchard/broiestbot/"
 documentation = "https://github.com/toddbirchard/broiestbot/blob/master/README.md"
 keywords = ["Chatbot", "Chat", "Chatango", "Bot", "Python"]
+classifiers = [
+    "Programming Language :: Python :: 3.10 ",
+    "Topic :: Communications :: Chat",
+
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
@@ -56,11 +61,11 @@ run = "wsgi:init_bot"
 issues = "https://github.com/toddbirchard/broiestbot/issues"
 
 [tool.poetry.group.dev.dependencies]
-black = { version = "^23.7.0", allow-prereleases = true }
+black = { version = "^23.10.0", allow-prereleases = true }
 
 [build-system]
-requires = ["poetry>=1.5.1"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
