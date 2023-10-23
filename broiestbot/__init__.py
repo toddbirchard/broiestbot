@@ -17,7 +17,7 @@ def start_bot():
         LOGGER.info(f'Joining {", ".join(CHATANGO_ROOMS)}')
         join_rooms(CHATANGO_ROOMS)
     else:
-        LOGGER.info("Starting in dev mode...")
+        LOGGER.trace("Starting in dev mode...")
         join_rooms([CHATANGO_TEST_ROOM])
     return f"Joined {len(CHATANGO_ROOMS)} rooms."
 

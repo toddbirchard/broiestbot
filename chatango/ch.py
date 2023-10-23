@@ -1896,7 +1896,7 @@ class RoomManager:
 
         :param Room room: Chatango room where the event occurred
         """
-        LOGGER.error(f"Disconnected from {room.room_name}.")
+        LOGGER.critical(f"Disconnected from {room.room_name}.")
         self.set_timeout(60, self.stop)
 
     def on_login_fail(self, room: Room):
@@ -1916,7 +1916,7 @@ class RoomManager:
 
         :param Room room: Chatango room where the event occurred
         """
-        LOGGER.error(f"Bot was spam banned from {room.room_name}.")
+        LOGGER.warning(f"Bot was spam banned from {room.room_name}.")
 
     def on_flood_ban_repeat(self, room):
         """
