@@ -387,7 +387,7 @@ FOOTY_LEAGUES = {
     # ":trophy: :France: COUPE DE FRANCE": COUPE_DE_FRANCE,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
-    ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
+    # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
     # ":child_medium-light_skin_tone: :military_medal: U20 ELITE LEAGUE": U20_ELITE_LEAGUE_ID,
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
@@ -446,7 +446,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
-    ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
+    # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
     # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
@@ -501,7 +501,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
-    ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
+    # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
@@ -514,7 +514,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
-    ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
+    # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
 }
 
 # Footy leagues to be considered for "golden shoe" award
