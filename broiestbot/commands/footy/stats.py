@@ -82,13 +82,14 @@ def parse_live_fixture_stats(fixture_stats: dict) -> str:
             red_cards = team_stats.get("Red Cards", 0)
             pass_accuracy = team_stats.get("Passes %", 0)
             xg = team_stats.get("expected_goals")
-            fixture_stats_response += f"<b>{team_name}</b>\n \
-                                            :bar_chart: Possession: {possession}\n \
-                                            :bullseye: Shots: {sog} SOG of {total_shots} total \n \
-                                            :counterclockwise_arrows_button: Pass accuracy: {pass_accuracy}\n \
-                                            :no_entry: Fouls: {fouls} (:yellow_square: {yellow_cards}, :red_square: {red_cards})\n \
-                                            :soccer_ball: xG: {xg} \n"
-            if team_fixture_stats and i < len(team_fixture_stats) - 1 and i % 2 == 0:
+            if team_fixture_stats and i < len(team_fixture_stats) - 1:
+                fixture_stats_response += f"<b>{team_name}</b>\n \
+                                                :bar_chart: Possession: {possession}\n \
+                                                :bullseye: Shots: {sog} SOG of {total_shots} total \n \
+                                                :counterclockwise_arrows_button: Pass accuracy: {pass_accuracy}\n \
+                                                :no_entry: Fouls: {fouls} (:yellow_square: {yellow_cards}, :red_square: {red_cards})\n \
+                                                :soccer_ball: xG: {xg} \n"
+            if i % 2 == 0:
                 fixture_stats_response += "\n-------------------\n\n"
         return fixture_stats_response
     except ValueError as e:
