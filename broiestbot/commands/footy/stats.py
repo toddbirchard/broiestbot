@@ -30,8 +30,7 @@ def footy_stats_for_live_fixtures(room: Room, username: str):
                     if fixture.get("fixture"):
                         fixture_id = fixture["fixture"]["id"]
                         live_fixture_stats = fetch_stats_per_live_fixture(fixture_id)
-                        parsed_live_fixture_stats = parse_live_fixture_stats(live_fixture_stats)
-                live_fixture_stats_response += parsed_live_fixture_stats
+                        live_fixture_stats_response += parse_live_fixture_stats(live_fixture_stats)
         if live_fixture_stats_response != "\n\n\n":
             return emojize(live_fixture_stats_response, language="en")
         return emojize(f":warning: sry @{username} I couldn't find live fixtures bc im gay :warning:", language="en")
@@ -72,10 +71,8 @@ def parse_live_fixture_stats(fixture_stats: dict) -> str:
     """
     try:
         fixture_stats_response = "\n"
-        LOGGER.info(f"fixture_stats: {fixture_stats}")
         for i, team_fixture_stats in enumerate(fixture_stats):
             team_stats = unpack_team_statistics(team_fixture_stats["statistics"])
-            LOGGER.info(f"team_stats: {team_stats}")
             team_name = team_fixture_stats["team"]["name"]
             possession = team_stats.get("Ball Possession", 0)
             sog = team_stats.get("Shots on Goal", 0)
@@ -86,14 +83,14 @@ def parse_live_fixture_stats(fixture_stats: dict) -> str:
             pass_accuracy = team_stats.get("Passes %", 0)
             xg = team_stats.get("expected_goals")
             fixture_stats_response += f"<b>{team_name}</b>\n \
-                                            :soccer_ball: Possession: {possession}\n \
-                                            :bullseye: SOG: {sog} (of {total_shots} total shots) \n \
+                                            :bar_chart: Possession: {possession}\n \
+                                            :bullseye: Shots: {sog} SOG of {total_shots} total \n \
                                             :counterclockwise_arrows_button: Pass accuracy: {pass_accuracy}\n \
                                             :no_entry: Fouls: {fouls} (:yellow_square: {yellow_cards}, :red_square: {red_cards})\n \
                                             :soccer_ball: xG: {xg} \n"
-            if i == 0 and team_fixture_stats:
-                fixture_stats_response += "\n"
-        return f"{fixture_stats_response}\n-------------------\n\n"
+            if team_fixture_stats and i < len(team_fixture_stats) - 1 and i % 1 == 0:
+                fixture_stats_response += "\n-------------------\n\n"
+        return fixture_stats_response
     except ValueError as e:
         LOGGER.error(f"ValueError when parsing live fixture stats: {e}")
     except Exception as e:
@@ -101,7 +98,13 @@ def parse_live_fixture_stats(fixture_stats: dict) -> str:
 
 
 def unpack_team_statistics(team_stats_list: list) -> dict:
-    """Normalize team stat data."""
+    """
+    Normalize team stat data.
+
+    :param list team_stats_list: List of team stats, where each stat is a "pair" of type and value.
+
+    :returns: dict
+    """
     team_stats = {}
     for stat in team_stats_list:
         team_stats[stat["type"]] = stat["value"] if stat["value"] else 0
