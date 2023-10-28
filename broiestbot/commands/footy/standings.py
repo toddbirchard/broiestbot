@@ -43,9 +43,9 @@ def league_table_standings(league_id: int) -> Optional[str]:
                 return standings_table
         return emojize(":warning: Couldn't fetch standings :warning:", language="en")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching {league_id} standings: {e}")
+        LOGGER.exception(f"KeyError while fetching {league_id} standings: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching {league_id} standings: {e}")
+        LOGGER.exception(f"Unexpected error when fetching {league_id} standings: {e}")
 
 
 def fetch_league_table_standings(league_id: int) -> Optional[dict]:
@@ -67,9 +67,9 @@ def fetch_league_table_standings(league_id: int) -> Optional[dict]:
         if resp.status_code == 200:
             return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching {league_id} standings: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching {league_id} standings: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching {league_id} standings: {e}")
+        LOGGER.exception(f"Unexpected error when fetching {league_id} standings: {e}")
 
 
 def mls_standings() -> Optional[str]:
@@ -90,9 +90,9 @@ def mls_standings() -> Optional[str]:
                     return emojize(standings_table, language="en")
         return emojize(":warning: Couldn't fetch standings :warning:", language="en")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching {MLS_LEAGUE_ID} standings: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching {MLS_LEAGUE_ID} standings: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching {MLS_LEAGUE_ID} standings: {e}")
+        LOGGER.exception(f"Unexpected error when fetching {MLS_LEAGUE_ID} standings: {e}")
 
 
 def mls_conference_standings(conference_standings: dict):
@@ -126,6 +126,6 @@ def mls_conference_standings(conference_standings: dict):
         if conference_standings_table != "":
             return f"{conference_standings_table}\n"
     except KeyError as e:
-        LOGGER.error(f"KeyError when parsing MLS conference standings: {e}")
+        LOGGER.exception(f"KeyError when parsing MLS conference standings: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when parsing MLS conference standings: {e}")
+        LOGGER.exception(f"Unexpected error when parsing MLS conference standings: {e}")

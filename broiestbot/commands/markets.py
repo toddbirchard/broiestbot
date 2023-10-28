@@ -19,12 +19,12 @@ def get_crypto_chart(symbol: str) -> str:
     try:
         return cch.get_crypto_chart(symbol)
     except HTTPError as e:
-        LOGGER.error(f"HTTPError {e.response.status_code} while fetching crypto price for `{symbol}`: {e}")
+        LOGGER.exception("HTTPError {e.response.status_code} while fetching crypto price for `{symbol}`: {e}")
         return emojize(f":warning: omg the internet died AAAAA :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while fetching crypto price for `{symbol}`: {e}")
+        LOGGER.exception(f"Unexpected error while fetching crypto price for `{symbol}`: {e}")
         return emojize(
-            f":warning: jfc stop abusing the crypto commands u fgts, you exceeded the API limit :@ :warning:",
+            ":warning: jfc stop abusing the crypto commands u fgts, you exceeded the API limit :@ :warning:",
             language="en",
         )
 
@@ -41,12 +41,12 @@ def get_crypto_price(symbol: str, endpoint) -> str:
     try:
         return cch.get_coin_price(symbol, endpoint)
     except HTTPError as e:
-        LOGGER.error(f"HTTPError {e.response.status_code} while fetching crypto price for `{symbol}`: {e}")
-        return emojize(f":warning: omg the internet died AAAAA :warning:", language="en")
+        LOGGER.exception(f"HTTPError {e.response.status_code} while fetching crypto price for `{symbol}`: {e}")
+        return emojize(":warning: omg the internet died AAAAA :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while fetching crypto price for `{symbol}`: {e}")
+        LOGGER.exception(f"Unexpected error while fetching crypto price for `{symbol}`: {e}")
         return emojize(
-            f":warning: jfc stop abusing the crypto commands u fgts, you exceeded the API limit :@ :warning:",
+            ":warning: jfc stop abusing the crypto commands u fgts, you exceeded the API limit :@ :warning:",
             language="en",
         )
 
@@ -63,11 +63,11 @@ def get_stock(symbol: str) -> str:
         # chart = sch.get_chart(symbol)
         return sch.get_price(symbol)
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching stock price for `{symbol}`: {e}")
-        return emojize(f":warning: ough nough da site i get stocks from died :warning:", language="en")
+        LOGGER.exception(f"HTTPError while fetching stock price for `{symbol}`: {e}")
+        return emojize(":warning: ough nough da site i get stocks from died :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while fetching stock price for `{symbol}`: {e}")
-        return emojize(f":warning: i broke bc im a shitty bot :warning:", language="en")
+        LOGGER.exception(f"Unexpected error while fetching stock price for `{symbol}`: {e}")
+        return emojize(":warning: i broke bc im a shitty bot :warning:", language="en")
 
 
 def get_top_crypto() -> str:
@@ -92,11 +92,11 @@ def get_top_crypto() -> str:
             coins = resp.json().get("data")
             return format_top_crypto_response(coins)
     except HTTPError as e:
-        LOGGER.warning(f"HTTPError while fetching top coins: {e.response.content}")
-        return emojize(f":warning: FUCK the bot broke :warning:", language="en")
+        LOGGER.exception(f"HTTPError while fetching top coins: {e.response.content}")
+        return emojize(":warning: FUCK the bot broke :warning:", language="en")
     except Exception as e:
-        LOGGER.warning(f"Unexpected exception while fetching top coins: {e}")
-        return emojize(f":warning: FUCK the bot broke :warning:", language="en")
+        LOGGER.exception(f"Unexpected exception while fetching top coins: {e}")
+        return emojize(":warning: FUCK the bot broke :warning:", language="en")
 
 
 def format_top_crypto_response(coins: dict):
@@ -117,6 +117,6 @@ def format_top_crypto_response(coins: dict):
                 top_coins += "\n"
         return top_coins
     except KeyError as e:
-        LOGGER.error(f"KeyError while formatting top cryptocurrencies: {e}")
+        LOGGER.exception(f"KeyError while formatting top cryptocurrencies: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected exception while formatting top cryptocurrencies: {e}")
+        LOGGER.exception(f"Unexpected exception while formatting top cryptocurrencies: {e}")

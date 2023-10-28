@@ -40,7 +40,7 @@ def get_english_definition(user_name: str, word: str) -> str:
             )
         return response
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching English definition for `{word}`: {e}")
+        LOGGER.exception(f"Unexpected error when fetching English definition for `{word}`: {e}")
         return emojize(":warning: mfer you broke bot :warning:", language="en")
 
 
@@ -73,13 +73,13 @@ def get_urban_definition(term: str) -> str:
             return f"{word}:\n\n {definition}"
         return emojize(":warning: idk wtf ur trying to search for tbh :warning:", language="en")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while trying to get Urban definition for `{term}`: {e.response.content}")
-        return emojize(f":warning: wtf urban dictionary is down :warning:", language="en")
+        LOGGER.exception(f"HTTPError while trying to get Urban definition for `{term}`: {e.response.content}")
+        return emojize(":warning: wtf urban dictionary is down :warning:", language="en")
     except LookupError as e:
-        LOGGER.error(f"LookupError error when fetching Urban definition for `{term}`: {e}")
+        LOGGER.exception(f"LookupError error when fetching Urban definition for `{term}`: {e}")
         return emojize(":warning: mfer you broke bot :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching Urban definition for `{term}`: {e}")
+        LOGGER.exception(f"Unexpected error when fetching Urban definition for `{term}`: {e}")
         return emojize(":warning: mfer you broke bot :warning:", language="en")
 
 
@@ -102,7 +102,7 @@ def wiki_summary(query: str) -> str:
             return f"\n\n\n\n{title}: {text[0:1500]}\n \n\n {main_category}"
         return emojize(f":warning: bruh i couldnt find shit for `{query}` :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while fetching wiki summary for `{query}`: {e}")
+        LOGGER.exception(f"Unexpected error while fetching wiki summary for `{query}`: {e}")
         return emojize(
             f":warning: BRUH YOU BROKE THE BOT WTF IS `{query}`?! :warning:",
             language="en",
@@ -132,7 +132,7 @@ def get_english_translation(language_symbol: str, language_full_name: str, phras
             "X-RapidAPI-Key": RAPID_API_KEY,
             "X-RapidAPI-Host": "google-translate1.p.rapidapi.com",
         }
-        res = requests.request("POST", url, data=data, headers=headers)
+        res = requests.request("POST", url, data=data, headers=headers, timeout=30)
         if res.status_code == 429:
             return emojize(
                 f":warning: yall translated too much shit this month now google tryna charge me smh :warning:",
@@ -145,11 +145,11 @@ def get_english_translation(language_symbol: str, language_full_name: str, phras
             language="en",
         )
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while translating `{phrase}`: {e.response.content}")
-        return emojize(f":warning: wtf you broke the api? SPEAK ENGLISH :warning:", language="en")
+        LOGGER.exception(f"HTTPError while translating `{phrase}`: {e.response.content}")
+        return emojize(":warning: wtf you broke the api? SPEAK ENGLISH :warning:", language="en")
     except LookupError as e:
-        LOGGER.error(f"LookupError error while translating `{phrase}`: {e}")
+        LOGGER.exception(f"LookupError error while translating `{phrase}`: {e}")
         return emojize(":warning: mfer you broke bot SPEAK ENGLISH :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while translating `{phrase}`: {e}")
+        LOGGER.exception(f"Unexpected error while translating `{phrase}`: {e}")
         return emojize(":warning: mfer you broke bot SPEAK ENGLISH :warning:", language="en")

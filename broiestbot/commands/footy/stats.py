@@ -35,7 +35,7 @@ def footy_stats_for_live_fixtures(room: Room, username: str):
             return emojize(live_fixture_stats_response, language="en")
         return emojize(f":warning: sry @{username} I couldn't find live fixtures bc im gay :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when serving live fixture stats: {e}")
+        LOGGER.exception(f"Unexpected error when serving live fixture stats: {e}")
 
 
 def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[str]:
@@ -56,11 +56,11 @@ def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[str]:
         )
         return resp.json()["response"]
     except requests.HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching live fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching live fixtures: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching live fixtures: {e}")
+        LOGGER.exception(f"KeyError while fetching live fixtures: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching live fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching live fixtures: {e}")
 
 
 def parse_live_fixture_stats(fixture_stats: dict) -> str:
@@ -93,9 +93,9 @@ def parse_live_fixture_stats(fixture_stats: dict) -> str:
                 fixture_stats_response += "\n-------------------\n\n"
         return fixture_stats_response
     except ValueError as e:
-        LOGGER.error(f"ValueError when parsing live fixture stats: {e}")
+        LOGGER.exception(f"ValueError when parsing live fixture stats: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when parsing live fixture stats: {e}")
+        LOGGER.exception(f"Unexpected error when parsing live fixture stats: {e}")
 
 
 def unpack_team_statistics(team_stats_list: list) -> dict:

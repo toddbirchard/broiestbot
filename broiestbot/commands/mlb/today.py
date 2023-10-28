@@ -60,8 +60,8 @@ def get_today_games() -> Optional[dict]:
         if resp.status_code == 200 and resp.json():
             return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching MLB games: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching MLB games: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching MLB games: {e}")
+        LOGGER.exception(f"KeyError while fetching MLB games: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching MLB games: {e}")
+        LOGGER.exception(f"Unexpected error when fetching MLB games: {e}")

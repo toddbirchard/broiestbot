@@ -18,9 +18,9 @@ def parse_mlb_game(game: dict) -> Optional[str]:
         status = game["status"]["long"]
         if status in ("Postponed", "Canceled"):
             return None
-        elif status == "Not Started":
+        if status == "Not Started":
             return parse_upcoming_mlb_game(game)
-        elif "Inning" in status:
+        if "Inning" in status:
             return parse_live_mlb_game(game)
     except Exception as e:
-        LOGGER.error(f"Unexpected error while parsing MLB games: {e}")
+        LOGGER.exception(f"Unexpected error while parsing MLB games: {e}")

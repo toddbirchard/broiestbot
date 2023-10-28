@@ -36,13 +36,13 @@ def change_or_stay_vote(user_name: str, vote: str, room: Room) -> str:
         # redis_scheduler.enqueue_in(timedelta(minutes=1), completed_poll_results, room)
         return poll_announcement(user_name, vote)
     except RedisError as e:
-        LOGGER.error(f"RedisError while saving 'change or stay' vote from @{user_name}: {e}")
+        LOGGER.exception(f"RedisError while saving 'change or stay' vote from @{user_name}: {e}")
         return emojize(
             f":warning: my b @{user_name}, broughbert is strugglin with polls atm :warning:",
             language="en",
         )
     except Exception as e:
-        LOGGER.error(f"Unexpected error while saving 'change or stay' vote from @{user_name}: {e}")
+        LOGGER.exception(f"Unexpected error while saving 'change or stay' vote from @{user_name}: {e}")
         return emojize(
             f":warning: my b @{user_name}, broughbert just broke like a littol BITCH :warning:",
             language="en",

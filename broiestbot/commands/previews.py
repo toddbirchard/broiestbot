@@ -53,13 +53,13 @@ def scrape_metadata_from_url(url: str) -> Optional[str]:
         if page_meta:
             return create_link_preview(page, page_meta, url)
     except HTTPError as e:
-        LOGGER.error(f"Failed to fetch metadata for URL `{url}`: {e}")
+        LOGGER.exception(f"Failed to fetch metadata for URL `{url}`: {e}")
     except RequestException as e:
-        LOGGER.error(f"RequestException error while scraping metadata for URL `{url}`: {e}")
+        LOGGER.exception(f"RequestException error while scraping metadata for URL `{url}`: {e}")
     except InvalidDocument as e:
-        LOGGER.error(f"InvalidDocument encountered while fetching metadata for URL `{url}`: {e}")
+        LOGGER.exception(f"InvalidDocument encountered while fetching metadata for URL `{url}`: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while scraping metadata for URL `{url}`: {e}")
+        LOGGER.exception(f"Unexpected error while scraping metadata for URL `{url}`: {e}")
 
 
 def create_link_preview(page: MetadataParser, page_meta: dict, url: str) -> Optional[str]:
@@ -83,7 +83,7 @@ def create_link_preview(page: MetadataParser, page_meta: dict, url: str) -> Opti
                 preview += f"\n{image}"
             return preview
     except Exception as e:
-        LOGGER.error(f"Unexpected error while generating link preview card: {e}")
+        LOGGER.exception(f"Unexpected error while generating link preview card: {e}")
 
 
 def parse_scraped_metadata(page_meta: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:

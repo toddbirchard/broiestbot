@@ -26,6 +26,7 @@ from .util import (
 )
 
 
+@LOGGER.catch
 def footy_team_lineups(room: str, username: str) -> str:
     """
     Fetch starting lineups by team for immediate or live fixtures.
@@ -62,6 +63,7 @@ def footy_team_lineups(room: str, username: str) -> str:
         LOGGER.error(f"Unexpected error when fetching footy XIs: {e}")
 
 
+@LOGGER.catch
 def fetch_lineups_per_fixture(fixture_id: int) -> List[Optional[dict]]:
     """
     Get team lineup for given fixture.
@@ -122,6 +124,7 @@ def get_fixture_xis(teams: dict) -> str:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
+@LOGGER.catch
 def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
     """
     Get fixtures for a league for the current day (live or upcoming).
@@ -156,6 +159,7 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name: str)
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
+@LOGGER.catch
 def build_fixture_summary(fixture: dict, room: str, username: str) -> str:
     """
     Summarize basic details about a fixture.
@@ -184,6 +188,7 @@ def build_fixture_summary(fixture: dict, room: str, username: str) -> str:
         LOGGER.error(f"Unexpected error when parsing footy fixture summaries for footyXI: {e}")
 
 
+@LOGGER.catch
 def filter_fixtures_with_lineups(fixtures: List[dict], tz_name: str):
     """
     Filter fixtures lacking lineup data.

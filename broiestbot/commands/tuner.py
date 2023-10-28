@@ -53,7 +53,7 @@ def get_channel_number(channel_name: str) -> int:
             err_msg += f"{name['channel']}\n"
         return err_msg
     except Exception as e:
-        LOGGER.error(f"Unexpected error when getting channel number: {e}")
+        LOGGER.exception(f"Unexpected error when getting channel number: {e}")
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
 
 
@@ -93,10 +93,10 @@ def tuner(channel_name: str, username: str, bot_username: str) -> str:
                 return emojize(f":tv: Tuning to {capped}. On now: {on_now}", language="en")
             return emojize(f":warning: u don't have the poughwer to change da channol :warning:", language="en")
     except LookupError as e:
-        LOGGER.error(f"LookupError occurred when fetching tuner channel; defaulting to {channel_name}: {e}")
+        LOGGER.exception(f"LookupError occurred when fetching tuner channel; defaulting to {channel_name}: {e}")
         # return get_channel_number(channel_name)
     except Exception as e:
-        LOGGER.error(f"Unexpected error when changing channel: {e}")
+        LOGGER.exception(f"Unexpected error when changing channel: {e}")
 
 
 def resolve_requested_channel_name(channel_name: str) -> str:
@@ -156,6 +156,6 @@ def get_current_show(detailed: bool, bot_username: str) -> Optional[str]:
                 language="en",
             )
     except LookupError as e:
-        LOGGER.error(f"LookupError error when getting current show info: {e}")
+        LOGGER.exception(f"LookupError error when getting current show info: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when getting current show info: {e}")
+        LOGGER.exception(f"Unexpected error when getting current show info: {e}")

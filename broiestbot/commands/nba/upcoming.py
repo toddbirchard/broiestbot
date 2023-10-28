@@ -30,6 +30,6 @@ def upcoming_nba_games() -> str:
                         games += f"{away_team} @ {home_team} {game_start}\n"
                 return games
     except LookupError as e:
-        LOGGER.error(f"LookupError while fetching NBA games: {e}")
+        LOGGER.exception(f"LookupError while fetching NBA games: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching NBA games: {e}")
+        LOGGER.exception(f"Unexpected error when fetching NBA games: {e}")

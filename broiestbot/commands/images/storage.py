@@ -28,10 +28,10 @@ def fetch_random_image_from_gcs_bucket(subdirectory: str) -> str:
         LOGGER.warning(f"GCS `NotFound` error when fetching image for `{subdirectory}`: {e}")
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except GoogleCloudError as e:
-        LOGGER.warning(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
+        LOGGER.exception(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except Exception as e:
-        LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
+        LOGGER.exception(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
         return emojize(f":warning: o shit i broke im a trash bot :warning:", language="en")
 
 
@@ -80,13 +80,13 @@ def gcs_count_images_in_bucket(subdirectory: str) -> str:
         )
     except GoogleCloudError as e:
         LOGGER.warning(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        return emojize(":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except ValueError as e:
         LOGGER.warning(f"ValueError when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        return emojize(":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except Exception as e:
         LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(f":warning: o shit i broke im a trash bot :warning:", language="en")
+        return emojize(":warning: o shit i broke im a trash bot :warning:", language="en")
 
 
 def fetch_latest_image_from_gcs_bucket(subdirectory: str) -> str:
@@ -106,8 +106,8 @@ def fetch_latest_image_from_gcs_bucket(subdirectory: str) -> str:
             <b>{most_recent_image[0].name.split('/')[1].split('.')[0]}</b>\n \
             <i>(Added on {datetime.date(most_recent_image[1])})</i>"
     except GoogleCloudError as e:
-        LOGGER.warning(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        LOGGER.exception(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
+        return emojize(":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except Exception as e:
-        LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(f":warning: o shit i broke im a trash bot :warning:", language="en")
+        LOGGER.exception(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
+        return emojize(":warning: o shit i broke im a trash bot :warning:", language="en")

@@ -34,7 +34,7 @@ def epl_golden_boot() -> str:
             return "\n".join(top_scorers)
         return emojize(":warning: Couldn't find golden boot leaders; bot is shit tbh :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching golden boot leaders: {e}")
+        LOGGER.exception(f"Unexpected error when fetching golden boot leaders: {e}")
         return emojize(":warning: Couldn't find golden boot leaders; bot is shit tbh :warning:", language="en")
 
 
@@ -56,7 +56,7 @@ def all_leagues_golden_boot() -> str:
             return "\n".join(top_scorers)
         return emojize(":warning: Couldn't find golden boot shoe; bot is shit tbh :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching golden shoe leaders: {e}")
+        LOGGER.exception(f"Unexpected error when fetching golden shoe leaders: {e}")
         return emojize(":warning: Couldn't find golden boot shoe; bot is shit tbh :warning:", language="en")
 
 
@@ -71,9 +71,9 @@ def golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str]]:
         if bool(goal_leaders_by_league):
             return parse_golden_boot_leaders(goal_leaders_by_league)
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching golden boot leaders: {e}")
+        LOGGER.exception(f"KeyError while fetching golden boot leaders: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching golden boot leaders: {e}")
+        LOGGER.exception(f"Unexpected error when fetching golden boot leaders: {e}")
 
 
 def fetch_golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str]]:
@@ -93,9 +93,9 @@ def fetch_golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str]]:
         )
         return req.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching goal leaders for {league}: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching goal leaders for {league}: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while fetching goal leaders for {league}: {e}")
+        LOGGER.exception(f"Unexpected error while fetching goal leaders for {league}: {e}")
 
 
 def parse_golden_boot_leaders(players: dict) -> str:
@@ -127,6 +127,6 @@ def parse_golden_boot_leaders(players: dict) -> str:
                     break
         return top_scorers
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching golden boot leaders: {e}")
+        LOGGER.exception(f"KeyError while fetching golden boot leaders: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching golden boot leaders: {e}")
+        LOGGER.exception(f"Unexpected error when fetching golden boot leaders: {e}")

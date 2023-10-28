@@ -52,7 +52,7 @@ from .tuner import get_current_show, tuner
 # from .video import search_youtube_for_video
 from .video import get_all_live_twitch_streams
 from .weather import get_current_weather
-from .playstation import get_psn_online_friends
+from .playstation import get_psn_online_friends, get_psn_game_trophies, get_titles_with_stats
 from .odds import get_odds
 
 

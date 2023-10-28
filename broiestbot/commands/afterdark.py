@@ -59,11 +59,11 @@ def get_redgifs_gif(query: str, username: str, after_dark_only: bool = False) ->
                     return get_full_gif_metadata(image_json)
                 elif username == "thegreatpizza":
                     return emojize(
-                        f":pizza: *h* wow pizza ur taste in lesbians is so dank that I coughldnt find nething sry :( *h* :pizza:",
+                        ":pizza: *h* wow pizza ur taste in lesbians is so dank that I coughldnt find nething sry :( *h* :pizza:",
                         language="en",
                     )
                 elif username == "broiestbro":
-                    return emojize(f"bro wot r u searching 4 go2bed", language="en")
+                    return emojize("bro wot r u searching 4 go2bed", language="en")
                 else:
                     return emojize(
                         f":warning: wow @{username} u must b a freak tf r u even searching foughr jfc :warning:",
@@ -105,8 +105,8 @@ def get_full_gif_metadata(image: dict) -> str:
             language="en",
         )
     except Exception as e:
-        LOGGER.warning(f"Unexpected error while fetching nsfw image for id `{image['id']}`: {e}")
-        return emojize(f":warning: dude u must b a freak cuz that just broke bot :warning:", language="en")
+        LOGGER.exception(f"Unexpected error while fetching nsfw image for id `{image['id']}`: {e}")
+        return emojize(":warning: dude u must b a freak cuz that just broke bot :warning:", language="en")
 
 
 def redgifs_auth_token() -> Optional[str]:
@@ -125,6 +125,6 @@ def redgifs_auth_token() -> Optional[str]:
         else:
             LOGGER.error(f"Failed to get Redgifs token with status code {resp.status_code}: {resp.json()}")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError when fetching Redgifs auth token: {e.response.content}")
+        LOGGER.exception(f"HTTPError when fetching Redgifs auth token: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching Redgifs auth token: {e}")
+        LOGGER.exception(f"Unexpected error when fetching Redgifs auth token: {e}")

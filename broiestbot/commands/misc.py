@@ -84,7 +84,7 @@ def send_text_message(message: str, user: str, recipient: str) -> Optional[str]:
             return emojize(f":warning: ya uhhh idk who tf that is @{user} :warning:", language="en")
         return emojize(f":warning: @{user} pls, only pizzaough can text brough :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when sending SMS: {e}")
+        LOGGER.exception(f"Unexpected error when sending SMS: {e}")
 
 
 def time_until_wayne(user_name: str) -> str:
@@ -104,10 +104,10 @@ def time_until_wayne(user_name: str) -> str:
             wayne_end_time = wayne_start_time + timedelta(hours=1)
             if wayne_start_time <= now <= wayne_end_time:
                 return emojize(
-                    f":red_exclamation_mark: omfg Wayne is on NOW!!! CHANGE THE CHANNOL!!! :red_exclamation_mark:",
+                    ":red_exclamation_mark: omfg Wayne is on NOW!!! CHANGE THE CHANNOL!!! :red_exclamation_mark:",
                     language="en",
                 )
-            elif wayne_end_time < now:
+            if wayne_end_time < now:
                 return emojize(f":( sry @{user_name}, Wayne is oughver already today :(", language="en")
             else:
                 time_remaining = wayne_start_time - now
@@ -129,7 +129,7 @@ def time_until_wayne(user_name: str) -> str:
             language="en",
         )
     except Exception as e:
-        LOGGER.error(f"Unexpected error while determining time until wayne: {e}")
+        LOGGER.exception(f"Unexpected error while determining time until wayne: {e}")
         return emojize(
             ":warning: idk wtf you did but your lack of wayne knowledge broke bot :warning:",
             language="en",
@@ -163,5 +163,5 @@ def covid_cases_usa() -> str:
         )
         return emojize(covid_summary, language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while retrieving COVID-19 data: {e}")
+        LOGGER.exception(f"Unexpected error while retrieving COVID-19 data: {e}")
         return emojize(f":warning: Unexpected error while retrieving COVID-19 data: {e}", language="en")

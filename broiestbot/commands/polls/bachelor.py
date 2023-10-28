@@ -42,7 +42,7 @@ def bach_gang_counter(user_name: str, phrase: str) -> str:
             language="en",
         )
     except Exception as e:
-        LOGGER.error(f"Unexpected error while saving Tovala streak from @{user_name}: {e}")
+        LOGGER.exception(f"Unexpected error while saving Tovala streak from @{user_name}: {e}")
         return emojize(
             f":warning: my b @{user_name}, broughbert just broke like a littol BITCH :warning:",
             language="en",
@@ -84,7 +84,7 @@ def update_recorded_counts_for_phrase(user_name: str, phrase: str):
             language="en",
         )
     except Exception as e:
-        LOGGER.error(f"Unexpected error while persisting bach word {phrase} from @{user_name}: {e}")
+        LOGGER.exception(f"Unexpected error while persisting bach word {phrase} from @{user_name}: {e}")
         return emojize(
             f":warning: my b @{user_name}, broughbert just broke like a littol BITCH :warning:",
             language="en",
@@ -136,5 +136,5 @@ def is_bachelor_currently_live() -> bool:
             return True
         return False
     except Exception as e:
-        LOGGER.error(f"Unexpected error while determining whether The Bachelor is on: {e}")
+        LOGGER.exception(f"Unexpected error while determining whether The Bachelor is on: {e}")
         return False

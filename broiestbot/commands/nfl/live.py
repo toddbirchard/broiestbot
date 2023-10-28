@@ -88,7 +88,7 @@ def fetch_live_nfl_game_events(game_id: int):
         resp = requests.get(f"{NFL_LIVE_GAMES_URL}/events", headers=NFL_LIVE_HTTP_HEADERS, params=params, timeout=30)
         return resp.json().get("response")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching live NFL games: {e}")
+        LOGGER.exception(f"Unexpected error when fetching live NFL games: {e}")
 
 
 def parse_live_nfl_scoring_events(game_events: dict) -> str:
@@ -107,4 +107,4 @@ def parse_live_nfl_scoring_events(game_events: dict) -> str:
             game_event_summary += f"{game_event_type} {game_event_description}"
         return emojize(game_event_summary, language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when parsing live NFL scoring events: {e}")
+        LOGGER.exception(f"Unexpected error when parsing live NFL scoring events: {e}")

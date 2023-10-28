@@ -39,10 +39,10 @@ def get_all_live_twitch_streams() -> str:
                 return "".join(twitch_streams)
         return emojize(f":frowning: no memers streaming twitch rn :frowning:", language="en")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError error while fetching Twitch streams: {e}")
+        LOGGER.exception(f"HTTPError error while fetching Twitch streams: {e}")
         return emojize(f":frowning: twitch is down or something idk :frowning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching Twitch streams: {e}")
+        LOGGER.exception(f"Unexpected error when fetching Twitch streams: {e}")
         return emojize(f":frowning: fmga bot died trying to get meme streamers :frowning:", language="en")
 
 
@@ -69,11 +69,11 @@ def get_live_twitch_stream(broadcaster_id: str, token: str) -> Optional[str]:
             return format_twitch_response(resp[0])
         return None
     except HTTPError as e:
-        LOGGER.error(f"HTTPError when fetching Twitch channel: {e.response.content}")
+        LOGGER.exception(f"HTTPError when fetching Twitch channel: {e.response.content}")
     except IndexError as e:
-        LOGGER.error(f"IndexError when fetching Twitch channel: {e}")
+        LOGGER.exception(f"IndexError when fetching Twitch channel: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching Twitch channel: {e}")
+        LOGGER.exception(f"Unexpected error when fetching Twitch channel: {e}")
 
 
 def format_twitch_response(stream: dict) -> str:
@@ -111,9 +111,9 @@ def get_twitch_auth_token() -> Optional[str]:
         resp = requests.post(endpoint, params=params, timeout=HTTP_REQUEST_TIMEOUT)
         return resp.json().get("access_token")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError {resp.status_code} when fetching Twitch auth token: {e.response.content}")
+        LOGGER.exception(f"HTTPError {resp.status_code} when fetching Twitch auth token: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching Twitch auth token: {e}")
+        LOGGER.exception(f"Unexpected error when fetching Twitch auth token: {e}")
 
 
 '''def create_youtube_video_preview(video_url: str) -> str:

@@ -96,9 +96,9 @@ def footy_upcoming_fixtures_per_league(
                         upcoming_fixtures += upcoming_fixture
             return upcoming_fixtures
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
+        LOGGER.exception(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
 
 
 def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> Optional[List[dict]]:
@@ -120,7 +120,7 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> 
         }
         return fetch_upcoming_fixtures_by_league(params)
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
 
 
 def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
@@ -141,9 +141,9 @@ def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
         if resp.status_code == 200:
             return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError {resp.status_code} while fetching footy fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError {resp.status_code} while fetching footy fixtures: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
 
 
 def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str) -> str:
@@ -200,8 +200,8 @@ def fetch_fox_fixtures(room: str, username: str) -> str:
             return emojize(upcoming_foxtures, language="en")
         return emojize(":warning: Couldn't find fixtures, has season started yet? :warning:", language="en")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching fox fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching fox fixtures: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching fox fixtures: {e}")
+        LOGGER.exception(f"KeyError while fetching fox fixtures: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching fox fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching fox fixtures: {e}")

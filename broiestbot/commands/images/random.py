@@ -20,8 +20,8 @@ def random_image(message: str) -> str:
         random_pic = image_list[randint(0, len(image_list) - 1)]
         return random_pic
     except ValueError as e:
-        LOGGER.warning(f"ValueError when fetching random image for `{message}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        LOGGER.exception(f"ValueError when fetching random image for `{message}`: {e}")
+        return emojize(":warning: omfg bot just broke wtf did u do :warning:", language="en")
     except Exception as e:
-        LOGGER.warning(f"Unexpected error when fetching random image for `{message}`: {e}")
-        return emojize(f":warning: o shit i broke im a trash bot :warning:", language="en")
+        LOGGER.exception(f"Unexpected error when fetching random image for `{message}`: {e}")
+        return emojize(":warning: o shit i broke im a trash bot :warning:", language="en")

@@ -27,6 +27,7 @@ from config import (
     REDIS_PORT,
     TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN,
+    PLAYSTATION_SSO_TOKEN,
 )
 
 from .crypto import CryptoChartHandler
@@ -80,4 +81,4 @@ r = Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, db=REDIS_DB
 redis_scheduler = Scheduler(connection=r)
 
 # Playstation
-# psn = PlaystationClient(token=PLAYSTATION_SSO_TOKEN)
+psn = PlaystationClient(PLAYSTATION_SSO_TOKEN)

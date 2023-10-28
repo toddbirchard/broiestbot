@@ -37,15 +37,15 @@ def live_nba_games() -> str:
                 return games
             elif len(resp.json().get("response")) > 0:
                 upcoming_games = upcoming_nba_games()
-                games += f"No live NBA games. Upcoming games today:\n"
+                games += "No live NBA games. Upcoming games today:\n"
                 games += upcoming_games
                 return games
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching NBA games: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching NBA games: {e.response.content}")
     except LookupError as e:
-        LOGGER.error(f"LookupError while fetching NBA games: {e}")
+        LOGGER.exception(f"LookupError while fetching NBA games: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching NBA games: {e}")
+        LOGGER.exception(f"Unexpected error when fetching NBA games: {e}")
 
 
 """def live_nba_games() -> str:

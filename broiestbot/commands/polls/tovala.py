@@ -30,13 +30,13 @@ def tovala_counter(user_name: str) -> str:
             language="en",
         )
     except RedisError as e:
-        LOGGER.error(f"RedisError while saving Tovala streak from @{user_name}: {e}")
+        LOGGER.exception(f"RedisError while saving Tovala streak from @{user_name}: {e}")
         return emojize(
             f":warning: my b @{user_name}, broughbert just broke like a littol BITCH :warning:",
             language="en",
         )
     except Exception as e:
-        LOGGER.error(f"Unexpected error while saving Tovala streak from @{user_name}: {e}")
+        LOGGER.exception(f"Unexpected error while saving Tovala streak from @{user_name}: {e}")
         return emojize(
             f":warning: my b @{user_name}, broughbert just broke like a littol BITCH :warning:",
             language="en",
@@ -83,8 +83,8 @@ def get_current_total() -> int:
             return total_count.count
         return 0
     except SQLAlchemyError as e:
-        LOGGER.error(f"SQLAlchemyError while fetching Tovala total count: {e}")
+        LOGGER.exception(f"SQLAlchemyError while fetching Tovala total count: {e}")
         return 0
     except Exception as e:
-        LOGGER.error(f"Unexpected exception while fetching Tovala total count: {e}")
+        LOGGER.exception(f"Unexpected exception while fetching Tovala total count: {e}")
         return 0

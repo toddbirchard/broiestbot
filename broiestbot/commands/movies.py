@@ -64,10 +64,10 @@ def find_imdb_movie(movie_title: str) -> str:
                 return emojize(f"\n\n\n{response}", language="en")
             return emojize(f":warning: wtf kind of movie is {movie} :warning:", language="en")
     except IMDbError as e:
-        LOGGER.warning(f"IMDB failed to find `{movie_title}`: {e}")
+        LOGGER.exception(f"IMDB failed to find `{movie_title}`: {e}")
         return emojize(f":warning: wtf kind of movie is {movie_title} :warning:", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while fetching IMDB movie `{movie_title}`: {e}")
+        LOGGER.exception(f"Unexpected error while fetching IMDB movie `{movie_title}`: {e}")
         return emojize(":warning: omfg u broke me with ur shit movie :warning:", language="en")
 
 

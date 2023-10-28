@@ -4,7 +4,7 @@ import requests
 from emoji import emojize
 from requests.exceptions import HTTPError
 
-from config import RAPID_API_KEY, HTTP_REQUEST_TIMEOUT, FOOTY_ODDS_ENDPOINT
+from config import RAPID_API_KEY, HTTP_REQUEST_TIMEOUT, FOOTY_ODDS_ENDPOINT_2
 from logger import LOGGER
 
 
@@ -23,8 +23,8 @@ def get_today_footy_odds_for_league(league_id: int):
         if odds_response.get("success"):
             all_fixture_odds = +fixtures_odds
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching footy odds: {e}")
-        return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
+        LOGGER.exception(f"Unexpected error when fetching footy odds: {e}")
+        return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
 
 
 @DeprecationWarning
@@ -52,9 +52,9 @@ def fetch_today_footy_odds_for_league(league_id: int):
         resp = requests.get(url, headers=headers, params=querystring, timeout=HTTP_REQUEST_TIMEOUT)
         return resp.json()
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy odds: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching footy odds: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching footy odds: {e}")
+        LOGGER.exception(f"Unexpected error when fetching footy odds: {e}")
         return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
 
 
@@ -74,5 +74,5 @@ def format_fixture_odds(fixtures: List[dict]) -> Optional[str]:
                             {away_team}: {odds[2]}"
         return emojize(f"{fixture_odds}\n\n{fixture_odds}", language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while formatting footy odds: {e}")
-        return emojize(f":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
+        LOGGER.exception(f"Unexpected error while formatting footy odds: {e}")
+        return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")

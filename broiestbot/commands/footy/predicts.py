@@ -48,11 +48,11 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
             language="en",
         )
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching today's footy predicts: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching today's footy predicts: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching today's footy predicts: {e}")
+        LOGGER.exception(f"KeyError while fetching today's footy predicts: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching today's footy predicts: {e}")
+        LOGGER.exception(f"Unexpected error when fetching today's footy predicts: {e}")
 
 
 def _fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> List[Optional[dict]]:
@@ -81,11 +81,11 @@ def _fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> 
         )
         return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching footy fixtures: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
+        LOGGER.exception(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
 
 
 def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) -> Optional[dict]:
@@ -113,11 +113,11 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) 
         )
         return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching today's footy fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching today's footy fixtures: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching today's footy fixtures: {e}")
+        LOGGER.exception(f"KeyError while fetching today's footy fixtures: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching today's footy fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching today's footy fixtures: {e}")
 
 
 def parse_fixture_odds(league_name: str, fixtures: dict, fixtures_odds: dict, room: str, username: str) -> str:
@@ -148,4 +148,4 @@ def parse_fixture_odds(league_name: str, fixtures: dict, fixtures_odds: dict, ro
             fixtures_odds_response += fixture_odds_summary
         return emojize(fixtures_odds_response, language="en")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when parsing today's footy odds: {e}")
+        LOGGER.exception(f"Unexpected error when parsing today's footy odds: {e}")

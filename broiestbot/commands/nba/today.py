@@ -30,8 +30,8 @@ def today_nba_games() -> Response:
         }
         return requests.get(endpoint, headers=headers, params=params, timeout=HTTP_REQUEST_TIMEOUT)
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching today's NBA games: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching today's NBA games: {e.response.content}")
     except LookupError as e:
-        LOGGER.error(f"LookupError while fetching today's NBA games: {e}")
+        LOGGER.exception(f"LookupError while fetching today's NBA games: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching today's NBA games: {e}")
+        LOGGER.exception(f"Unexpected error when fetching today's NBA games: {e}")

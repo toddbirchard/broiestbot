@@ -31,7 +31,7 @@ def generate_twitter_preview(message: str) -> Optional[str]:
                     return parse_tweet_preview(tweet_data)
         return None
     except Exception as e:
-        LOGGER.error(f"Unexpected error while creating Twitter embed: {e}")
+        LOGGER.exception(f"Unexpected error while creating Twitter embed: {e}")
 
 
 def fetch_tweet_by_id(tweet_id: str) -> Optional[dict]:
@@ -43,23 +43,22 @@ def fetch_tweet_by_id(tweet_id: str) -> Optional[dict]:
     :returns: Optional[dict]
     """
     try:
-        LOGGER.warning(f"Fetching Tweet by ID: {tweet_id}")
         endpoint = TWITTER_API_V1_ENDPOINT
         params = {
             "id": tweet_id,
             "include_entities": "true",
         }
         headers = {"Authorization": f"Bearer {TWITTER_BEARER_TOKEN}"}
-        resp = requests.get(endpoint, headers=headers, params=params)
+        resp = requests.get(endpoint, headers=headers, params=params, timeout=30)
         if resp.status_code == 200:
             return resp.json()[0]
         LOGGER.warning(
             f"Got unexpected status code while fetching Tweet by ID `{tweet_id}`: {resp.status_code}, {resp.content}"
         )
     except HTTPError as e:
-        LOGGER.error(f"HTTPError error while fetching Tweet by ID `{tweet_id}`: {e}")
+        LOGGER.exception(f"HTTPError error while fetching Tweet by ID `{tweet_id}`: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while fetching Tweet by ID `{tweet_id}`: {e}")
+        LOGGER.exception(f"Unexpected error while fetching Tweet by ID `{tweet_id}`: {e}")
 
 
 def parse_tweet_preview(tweet: dict) -> Optional[str]:
@@ -102,9 +101,9 @@ def parse_tweet_preview(tweet: dict) -> Optional[str]:
                 language="en",
             )
     except KeyError as e:
-        LOGGER.error(f"KeyError while parsing Tweet: {e}")
+        LOGGER.exception(f"KeyError while parsing Tweet: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while parsing Tweet: {e}")
+        LOGGER.exception(f"Unexpected error while parsing Tweet: {e}")
 
 
 def parse_tweet_thumbnails(tweet: dict) -> Optional[str]:
@@ -164,9 +163,9 @@ def create_instagram_preview(url: str) -> Optional[str]:
             return f"{img} {description}"
         return None
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching Instagram URL `{url}`: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching Instagram URL `{url}`: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while creating Instagram embed: {e}")
+        LOGGER.exception(f"Unexpected error while creating Instagram embed: {e}")
 
 
 def get_instagram_token() -> Optional[Response]:
@@ -179,8 +178,8 @@ def get_instagram_token() -> Optional[Response]:
         params = {
             "client_id": INSTAGRAM_APP_ID,
         }
-        return requests.post(f"https://www.facebook.com/x/oauth/status", params=params, timeout=HTTP_REQUEST_TIMEOUT)
+        return requests.post("https://www.facebook.com/x/oauth/status", params=params, timeout=HTTP_REQUEST_TIMEOUT)
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching Instagram token: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching Instagram token: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching Instagram token: {e}")
+        LOGGER.exception(f"Unexpected error when fetching Instagram token: {e}")

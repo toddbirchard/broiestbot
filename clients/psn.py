@@ -1,13 +1,19 @@
 """PSN account API client."""
-from typing import Optional, List
+from typing import Iterator, Optional, List
 from psnawp_api import PSNAWP
 from psnawp_api.models.user import User
 from psnawp_api.models.client import Client
+from psnawp_api.models.trophies.trophy import Trophy
+
+from config import PLAYSTATION_EAFC_2024_ID
 
 
 class PlaystationClient:
+    """Playstation client for a logged-in PSN user."""
+
     def __init__(self, token: str):
         self.psn = PSNAWP(token)
+        self.eafc = PLAYSTATION_EAFC_2024_ID
 
     @property
     def account(self) -> Client:
@@ -39,3 +45,18 @@ class PlaystationClient:
         :returns: Optional[User]
         """
         return self.psn.user(online_id=online_id)
+
+    '''def get_earned_trophies_for_game(self, game_id) -> Iterator[Trophy]:
+        """
+        Fetch game details by PS5 ID.
+
+        :param str game_id: PS5 game ID.
+
+        :returns: Iterator[Trophy]
+        """
+        trophies_per_game = self.account.trophies(np_communication_id=game_id, platform=["PS5"])
+        trophy_breakdown = [trophy for trophy in trophies_per_game.from_trophy_dict["trophies"] if trophy["earned"]]
+        print(f"trophy_breakdown = {trophy_breakdown}")
+        return trophy_breakdown'''
+
+

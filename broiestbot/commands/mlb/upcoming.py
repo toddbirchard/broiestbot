@@ -34,9 +34,9 @@ def parse_upcoming_mlb_game(game: dict) -> Optional[str]:
             language="en",
         )
     except ValueError as e:
-        LOGGER.error(f"ValueError while parsing upcoming Phillies game: {e}")
+        LOGGER.exception(f"ValueError while parsing upcoming Phillies game: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while parsing upcoming Phillies game: {e}")
+        LOGGER.exception(f"Unexpected error while parsing upcoming Phillies game: {e}")
 
 
 def get_team_stats(game: dict) -> Tuple[str, str]:
@@ -80,8 +80,8 @@ def fetch_team_statistics(team_id: str) -> Optional[dict]:
         if resp.status_code == 200 and resp.json():
             return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching MLB team stats: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching MLB team stats: {e.response.content}")
     except ValueError as e:
-        LOGGER.error(f"ValueError while fetching MLB team stats: {e}")
+        LOGGER.exception(f"ValueError while fetching MLB team stats: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching MLB team stats: {e}")
+        LOGGER.exception(f"Unexpected error when fetching MLB team stats: {e}")

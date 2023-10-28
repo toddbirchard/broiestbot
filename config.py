@@ -624,6 +624,7 @@ NBA_SEASON_YEAR = "2023-2024"
 # Playstation PSN
 # -------------------------------------------------
 PLAYSTATION_SSO_TOKEN = getenv("PLAYSTATION_SSO_TOKEN")
+PLAYSTATION_EAFC_2024_ID = "PPSA13393_00"
 
 # Twitter (Unused)
 # -------------------------------------------------

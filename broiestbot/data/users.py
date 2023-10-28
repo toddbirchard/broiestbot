@@ -74,11 +74,11 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
                     )
                     # fmt: on
     except IntegrityError as e:
-        LOGGER.error(f"Failed to save duplicate entry for {user.name}: {e}")
+        LOGGER.exception(f"Failed to save duplicate entry for {user.name}: {e}")
     except SQLAlchemyError as e:
-        LOGGER.warning(f"SQLAlchemyError while persisting data for user {user.name}: {e}")
+        LOGGER.exception(f"SQLAlchemyError while persisting data for user {user.name}: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while attempting to save data for {user.name}: {e}")
+        LOGGER.exception(f"Unexpected error while attempting to save data for {user.name}: {e}")
 
 
 def fetch_existing_user(room_name: str, user: User, message: Message) -> Optional[ChatangoUser]:
@@ -103,6 +103,6 @@ def fetch_existing_user(room_name: str, user: User, message: Message) -> Optiona
                 .first()
             )
     except SQLAlchemyError as e:
-        LOGGER.warning(f"SQLAlchemyError occurred while fetching metadata for {user.name}: {e}")
+        LOGGER.exception(f"SQLAlchemyError occurred while fetching metadata for {user.name}: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while attempting to save data for {user.name}: {e}")
+        LOGGER.exception(f"Unexpected error while attempting to save data for {user.name}: {e}")

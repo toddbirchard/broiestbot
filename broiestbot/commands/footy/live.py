@@ -72,11 +72,11 @@ def footy_live_fixtures_per_league(league_id: int, league_name: str, username: s
                 return live_fixtures
         return None
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching live fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching live fixtures: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching live fixtures: {e}")
+        LOGGER.exception(f"KeyError while fetching live fixtures: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching live fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching live fixtures: {e}")
 
 
 def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
@@ -99,11 +99,11 @@ def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
         if resp.status_code == 200:
             return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching footy fixtures: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
+        LOGGER.exception(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+        LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
 
 
 def fetch_events_per_live_fixture(fixture_id: int) -> Optional[str]:
@@ -124,11 +124,11 @@ def fetch_events_per_live_fixture(fixture_id: int) -> Optional[str]:
         )
         return req.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while compiling events in live fixture: {e.response.content}")
+        LOGGER.exception(f"HTTPError while compiling events in live fixture: {e.response.content}")
     except KeyError as e:
-        LOGGER.error(f"KeyError while compiling events in live fixture: {e}")
+        LOGGER.exception(f"KeyError while compiling events in live fixture: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while compiling events in live fixture: {e}")
+        LOGGER.exception(f"Unexpected error while compiling events in live fixture: {e}")
 
 
 def parse_events_per_live_fixture(events: dict, subs=False) -> str:
@@ -196,9 +196,9 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
                     )
         return event_log
     except LookupError as e:
-        LOGGER.error(f"LookupError while compiling events in live fixture: {e}")
+        LOGGER.exception(f"LookupError while compiling events in live fixture: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error while compiling events in live fixture: {e}")
+        LOGGER.exception(f"Unexpected error while compiling events in live fixture: {e}")
 
 
 '''

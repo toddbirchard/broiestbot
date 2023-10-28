@@ -1,10 +1,10 @@
 """Chatango bot."""
 import re
 from typing import Optional, Tuple
+from emoji import emojize
 
 from database import session
 from database.models import Command, Phrase
-from emoji import emojize
 
 from broiestbot.commands import (
     all_leagues_golden_boot,
@@ -62,6 +62,8 @@ from broiestbot.commands import (
     bach_gang_counter,
     get_live_nfl_game_summaries,
     footy_stats_for_live_fixtures,
+    get_psn_game_trophies,
+    get_titles_with_stats,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
@@ -241,6 +243,10 @@ class Bot(RoomManager):
             return bach_gang_counter(user_name, args)
         elif cmd_type == "latestimage":
             return fetch_latest_image_from_gcs_bucket(content)
+        elif cmd_type == "psntrophies":
+            return get_psn_game_trophies()
+        elif cmd_type == "brogrind":
+            return get_titles_with_stats()
         # elif cmd_type == "cryptochart" and args:
         #     return get_crypto_chart(args)
         # elif cmd_type == "lesbians":

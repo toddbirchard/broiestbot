@@ -28,9 +28,9 @@ def get_today_nfl_games() -> str:
             language="en",
         )
     except KeyError as e:
-        LOGGER.error(f"KeyError while fetching live NFL games: {e}")
+        LOGGER.exception(f"KeyError while fetching live NFL games: {e}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching live NFL games: {e}")
+        LOGGER.exception(f"Unexpected error when fetching live NFL games: {e}")
 
 
 def fetch_today_nfl_games() -> Optional[dict]:
@@ -45,9 +45,9 @@ def fetch_today_nfl_games() -> Optional[dict]:
         resp = requests.get(NFL_GAMES_URL, headers=NFL_HTTP_HEADERS, params=params, timeout=HTTP_REQUEST_TIMEOUT)
         return resp.json().get("results")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching NFL games: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching NFL games: {e.response.content}")
     except Exception as e:
-        LOGGER.error(f"Unexpected error when fetching NFL games: {e}")
+        LOGGER.exception(f"Unexpected error when fetching NFL games: {e}")
 
 
 def format_nfl_game(game: dict) -> str:

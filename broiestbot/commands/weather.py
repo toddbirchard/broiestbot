@@ -34,7 +34,7 @@ def get_current_weather(location: str, room: str, user: str) -> str:
         if weather_response.get("current"):
             return parse_weather_response(weather_response, measurement_units)
     except Exception as e:
-        LOGGER.error(f"Failed to fetch & parse weather for `{location}`: {e}")
+        LOGGER.exception(f"Failed to fetch & parse weather for `{location}`: {e}")
         return emojize(
             ":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
             language="en",
@@ -70,7 +70,7 @@ def fetch_current_weather_by_location(location: str, measurement_units: str) -> 
             language="en",
         )
     except Exception as e:
-        LOGGER.error(f"Failed to get weather for `{location}`: {e}")
+        LOGGER.exception(f"Failed to get weather for `{location}`: {e}")
         return emojize(
             ":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
             language="en",
@@ -114,7 +114,7 @@ def parse_weather_response(weather: dict, measurement_units: str) -> str:
         response = emojize(response, language="en")
         return response
     except Exception as e:
-        LOGGER.error(f"Failed to parse weather response: {e}")
+        LOGGER.exception(f"Failed to parse weather response: {e}")
         return emojize(
             ":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
             language="en",

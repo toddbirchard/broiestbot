@@ -39,9 +39,9 @@ def join_rooms(rooms: List[str]):
             broiestbot.main()
         except KeyboardInterrupt as e:
             broiestbot.stop()
-            print(f"KeyboardInterrupt while joining Chatango room: {e}")
+            LOGGER.info(f"KeyboardInterrupt while joining Chatango room: {e}")
             break
         except Exception as e:
             broiestbot.stop()
-            print(f"Unexpected exception while joining Chatango room: {e}")
+            LOGGER.exception(f"Unexpected exception while joining Chatango room: {e}")
             break
