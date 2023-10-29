@@ -1,12 +1,10 @@
 """PSN Commands"""
 from typing import List, Optional
-from datetime import time
+from math import floor
 from psnawp_api.models.user import User
 from emoji import emojize
 
 from clients import psn
-from psnawp_api.models.title_stats import TitleStatsListing
-
 
 from config import PLAYSTATION_EAFC_2024_ID
 
@@ -93,7 +91,7 @@ def get_psn_game_trophies():
 
 def get_titles_with_stats():
     """Get games and associated playing time"""
-    raw_games_with_stats = psn.account.title_stats(limit=3)
+    raw_games_with_stats = psn.account.title_stats(limit=4)
     games_with_stats = parse_title_stats(raw_games_with_stats)
     print(f"titles_with_stats = {games_with_stats}")
     return games_with_stats
@@ -105,12 +103,15 @@ def parse_title_stats(titles) -> str:
     i = 0
     for title in titles:
         i += 1
+        hours_played = floor(round(title.play_duration.total_seconds(), 0) / 60 / 60)
         title_response += f"\n<b>{title.name}</b>\n"
         title_response += f":chart_increasing: Times played: {title.play_count}\n"
-        title_response += f":calendar: First played: {title.first_played_date_time.date()}\n"
-        title_response += f":tear-off_calendar: Last Played: {title.last_played_date_time.date()}\n"
-        title_response += f":hourglass_not_done: Time played:  {int(title.play_duration.total_seconds() / 60)} hours \n"
+        title_response += f":calendar: First played: {title.first_played_date_time.date().strftime('%b %e, %Y')}\n"
+        title_response += (
+            f":tear-off_calendar: Last Played: {title.last_played_date_time.date().strftime('%b %e, %Y')}\n"
+        )
+        title_response += f":hourglass_not_done: Time played:  {'{:,}'.format(hours_played)} hours \n"
         title_response += f"{title.image_url}"
-        if i < len(titles) - 1:
+        if i < 4:
             title_response += "\n\n-------------------\n"
     return emojize(title_response, language="en")

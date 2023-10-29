@@ -245,7 +245,7 @@ class Bot(RoomManager):
             return fetch_latest_image_from_gcs_bucket(content)
         elif cmd_type == "psntrophies":
             return get_psn_game_trophies()
-        elif cmd_type == "brogrind":
+        elif cmd_type == "bropsn":
             return get_titles_with_stats()
         # elif cmd_type == "cryptochart" and args:
         #     return get_crypto_chart(args)

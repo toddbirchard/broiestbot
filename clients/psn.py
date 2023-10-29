@@ -58,5 +58,3 @@ class PlaystationClient:
         trophy_breakdown = [trophy for trophy in trophies_per_game.from_trophy_dict["trophies"] if trophy["earned"]]
         print(f"trophy_breakdown = {trophy_breakdown}")
         return trophy_breakdown'''
-
-
