@@ -2,6 +2,8 @@
 from typing import List, Optional
 from math import floor
 from psnawp_api.models.user import User
+from psnawp_api.models.trophies.trophy_titles import TrophyTitles
+from psnawp_api.utils import request_builder
 from emoji import emojize
 
 from clients import psn
@@ -80,13 +82,19 @@ def create_active_psn_user_response(active_friend: User) -> str:
 def get_psn_game_trophies():
     """List all game trophies earned by user."""
     try:
-        trophies = psn.account.trophies()
+        trophies = psn.account.trophies(
+            np_communication_id=PLAYSTATION_EAFC_2024_ID, platform=["PS5", "PS4"], limit=100, include_metadata=True
+        )
         for trophy in trophies:
             LOGGER.info(trophy)
         # trophies = [trophy["trophyName"] for trophy in trophies if trophy["earned"]]
         return trophies
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching PSN trophies: {e}")
+
+
+def get_trophy_titles():
+    get_trophy_titles
 
 
 def get_titles_with_stats():

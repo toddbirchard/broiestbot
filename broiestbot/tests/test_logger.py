@@ -14,42 +14,34 @@ def log_local_directory() -> str:
 
 
 @pytest.fixture
-def error_log_filepath() -> str:
-    """Local filepath to error log file."""
-    return f"{BASE_DIR}/logs/error.log"
-
-
-@pytest.fixture
-def error_log_filepath() -> str:
-    """Local filepath to error log file."""
-    return f"{BASE_DIR}/logs/error.log"
+def info_log_filepath() -> str:
+    """Local filepath to INFO `.log` file."""
+    return f"{BASE_DIR}/logs/info.log"
 
 
 @pytest.fixture
 def error_json_filepath() -> str:
     """Local filepath to error json file."""
-    return f"{BASE_DIR}/logs/error.json"
+    return f"{BASE_DIR}/logs/errors.json"
 
 
-def test_sms_logger(log_local_directory: str, error_log_filepath: str, error_json_filepath: str):
+def test_sms_logger(log_local_directory: str, info_log_filepath: str):
     """
     Create local directory to store logs in development.
 
-    :param str log_local_directory: Local directory where error logs are saved.
-    :param str error_log_filepath: Local filepath to error log.
-    :param str error_json_filepath: Local filepath to error json.
+    :param str log_local_directory: Local directory where `INFO` logs are saved.
+    :param str info_log_filepath: Local filepath to `INFO` log.
 
     :returns: str
     """
     log_creation_helper(log_local_directory)
     LOGGER.error("This is a TEST_ERROR log from Broiestbot")
     assert path.exists(log_local_directory)
-    assert path.exists(error_log_filepath)
-    assert path.exists(error_json_filepath)
-    with open(error_log_filepath, "r") as f:
+    assert path.isfile(info_log_filepath)
+    with open(info_log_filepath, "r", encoding="utf-8") as f:
         last_line = f.readlines()[-1]
         assert "TEST_ERROR" in last_line
-    with open(error_json_filepath, "r") as f:
+    with open(error_json_filepath, "r", encoding="utf-8") as f:
         last_line = f.readlines()[-1]
         assert "TEST_ERROR" in last_line
 

@@ -35,9 +35,10 @@ def json_formatter(record: dict) -> str:
         try:
             chat_data = re.search(r"(?P<room>\[\S+]) (?P<user>\[\S+]) (?P<ip>\[\S+])", log.get("message"))
             if chat_data and log.get("message"):
+                message = log["message"].split(": ", 1)[1].replace("\n", "\t")
                 subset = {
                     "time": log["time"],
-                    "message": log["message"].split(": ", 1)[1],
+                    "message": message,
                     "level": log["level"].name,
                     "room": chat_data["room"].replace("[", "").replace("]", ""),
                     "user": chat_data["user"].replace("[", "").replace("]", ""),
