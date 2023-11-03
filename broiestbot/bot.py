@@ -55,7 +55,6 @@ from broiestbot.commands import (
     wiki_summary,
     # get_psn_online_friends,
     league_table_standings,
-    generate_twitter_preview,
     mls_standings,
     get_odds,
     # get_today_footy_odds_for_league,
@@ -283,33 +282,12 @@ class Bot(RoomManager):
         self._log_message(room, user, message)
         persist_user_data(room_name, user, message, bot_username)
         persist_chat_logs(user_name, room_name, chat_message, bot_username)
-        if "https://twitter.com/" in chat_message:
-            self._create_twitter_preview(room, chat_message)
         # if "youtube" in chat_message or "youtu.be" in chat_message:
         # self.create_link_preview(user_name, message.body, room, message)
-        if chat_message.startswith("!"):
-            self._process_command(chat_message, room, user_name, message)
+        self._process_command(chat_message, room, user_name, message)
         # elif message.body.startswith("http"):
         # elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:
         # ban_word(room, message, user_name, silent=False)
-        elif chat_message == "image not found :(":
-            ban_word(room, message, user_name, silent=True)
-        else:
-            self._process_phrase(chat_message, room, user_name, message, bot_username)
-
-    @staticmethod
-    def _create_twitter_preview(room: Room, chat_message: str):
-        """
-        Generate preview for Twitter links.
-
-        :param Room room: Current Chatango room object.
-        :param str message:Chat message text submitted by a user.
-
-        :returns: None
-        """
-        twitter_preview = generate_twitter_preview(chat_message)
-        if twitter_preview:
-            room.message(twitter_preview, html=True)
 
     @staticmethod
     def _log_message(room: Room, user: User, message: Message):
@@ -340,7 +318,7 @@ class Bot(RoomManager):
         """
         if user_name in CHATANGO_IGNORED_USERS or message.ip in CHATANGO_IGNORED_IPS:
             return ignored_user(user_name, message.ip)
-        if chat_message == "!!":
+        if chat_message.replace("!", "") == "":
             pass
         if re.match(r"^!!.+$", chat_message):
             return self._giphy_fallback(chat_message[2::], room)
@@ -348,10 +326,16 @@ class Bot(RoomManager):
             return self._respond_if_bot_command("!ein", room, user_name)
         if re.match(r"^!\S+", chat_message):
             return self._respond_if_bot_command(chat_message, room, user_name)
+        if re.search(r"(![\S]+)", chat_message):
+            command = re.fullmatch(r"(![\w]+)", chat_message)
+            LOGGER.info(f"command = {command}")
+            return self._respond_with_bot_command(command, room, user_name)
+        if chat_message == "image not found :(":
+            ban_word(room, message, user_name, silent=True)
+        else:
+            self._process_phrase(chat_message, room, user_name, message)
 
-    def _process_phrase(
-        self, chat_message: str, room: Room, user_name: str, message: Message, bot_username: str
-    ) -> None:
+    def _process_phrase(self, chat_message: str, room: Room, user_name: str, message: Message) -> None:
         """
         Search database for non-command phrases which elicit a response.
 
@@ -359,10 +343,10 @@ class Bot(RoomManager):
         :param Room room: Current Chatango room object.
         :param str user_name: User responsible for triggering command.
         :param Message message: Chatango message object to be parsed.
-        :param str bot_username: Username of the currently-running bot.
 
         :returns: None
         """
+        bot_username = self.bot_username
         if f"@{bot_username}" in chat_message and "*waves*" in chat_message:
             self._wave_back(room, user_name, bot_username)
         # elif "petition" in chat_message and "competition" not in chat_message:
@@ -376,22 +360,6 @@ class Bot(RoomManager):
             if fetched_phrase is not None:
                 room.message(fetched_phrase.response, html=True)
 
-    @staticmethod
-    def _parse_command(user_msg: str) -> Tuple[str, Optional[str]]:
-        """
-        Parse user message into command & arguments.
-
-        :param str user_msg: Raw chat message submitted by a user.
-
-        :returns: Tuple[str, Optional[str]]
-        """
-        user_msg = user_msg.strip()
-        if " " in user_msg:
-            cmd = user_msg.split(" ", 1)[0].lower()
-            args = user_msg.split(" ", 1)[1]
-            return cmd, args
-        return user_msg, None
-
     def _respond_if_bot_command(self, chat_message: str, room: Room, user_name: str):
         """
         Fetch response from database to send to chat.
@@ -400,8 +368,10 @@ class Bot(RoomManager):
         :param Room room: Current Chatango room object.
         :param str user_name: User responsible for triggering command.
         """
-        cmd, args = self._parse_command(chat_message[1::].strip())
+        cmd, args = self._parse_command_with_args(chat_message[1::].strip())
+        LOGGER.info(f"cmd, args = {cmd}, {args}")
         command = session.query(Command).filter(Command.command == cmd).first()
+        LOGGER.info(f"command from database = {command}")
         if command is not None and command.type != "reserved":
             response = self.create_message(
                 command.type,
@@ -415,6 +385,48 @@ class Bot(RoomManager):
                 room.message(response, html=True)
         else:
             self._giphy_fallback(chat_message, room)
+
+    def _respond_with_bot_command(self, command: str, room: Room, user_name: str):
+        """
+        Fetch response from database to send to chat.
+
+        :param str chat_message: Command found in user message via regex search.
+        :param Room room: Current Chatango room object.
+        :param str user_name: User responsible for triggering command.
+        """
+        cmd = command.replace("!", "").lower().strip()
+        LOGGER.info(f"cmd = {cmd}")
+        cmd = session.query(Command).filter(Command.command == cmd).first()
+        LOGGER.info(f"command from database = {command}")
+        if command is not None and command.type != "reserved":
+            response = self.create_message(
+                command.type,
+                command.response,
+                command=cmd,
+                args=None,
+                room=room,
+                user_name=user_name,
+            )
+            if response:
+                room.message(response, html=True)
+        else:
+            self._giphy_fallback(command, room)
+
+    @staticmethod
+    def _parse_command_with_args(user_msg: str) -> Tuple[str, Optional[str]]:
+        """
+        Parse user message into command & arguments.
+
+        :param str user_msg: Raw chat message submitted by a user.
+
+        :returns: Tuple[str, Optional[str]]
+        """
+        user_msg = user_msg.strip()
+        if " " in user_msg:
+            cmd = user_msg.split(" ", 1)[0].lower()
+            args = user_msg.split(" ", 1)[1]
+            return cmd, args
+        return user_msg, None
 
     @staticmethod
     def _wave_back(room: Room, user_name: str, bot_username) -> None:
