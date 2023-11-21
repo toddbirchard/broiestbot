@@ -14,8 +14,6 @@ from config import (
 )
 from logger import LOGGER
 
-from .util import get_preferred_timezone
-
 
 def footy_live_fixtures(username: str, subs=False) -> str:
     """
@@ -55,12 +53,12 @@ def footy_live_fixtures_per_league(league_id: int, league_name: str, username: s
         if fixtures:
             live_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             for i, fixture in enumerate(fixtures):
-                home_team = fixture["teams"]["home"]["name"]
-                away_team = fixture["teams"]["away"]["name"]
-                home_score = fixture["goals"]["home"]
-                away_score = fixture["goals"]["away"]
-                elapsed = fixture["fixture"]["status"]["elapsed"]
-                venue = fixture["fixture"]["venue"]["name"]
+                home_team = fixture["teams"]["home"].get("name", "")
+                away_team = fixture["teams"]["away"].get("name", "")
+                home_score = fixture["goals"].get("home", "")
+                away_score = fixture["goals"].get("away", "")
+                elapsed = fixture["fixture"]["status"].get("elapsed", "")
+                venue = fixture["fixture"]["venue"].get("name", "")
                 live_fixture = f'<b>{away_team} {away_score} @ {home_team} {home_score}</b>\n<i>{venue}, {elapsed}"</i>'
                 live_fixtures += live_fixture
                 fixture_events_response = fetch_events_per_live_fixture(fixture["fixture"]["id"])
@@ -147,7 +145,7 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
             player_name = event["player"].get("name")
             assisting_player = event.get("assist") if event.get("assist") is not None else ""
             event_comments = f" <i>({event['comments']})</i>" if event.get("comments") is not None else ""
-            event_type = event.get("type")
+            event_type = event.get("type", "")
             event_detail = event.get("detail", "")
             if time_elapsed:
                 time_elapsed = f'{time_elapsed}"'
@@ -161,17 +159,17 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
                     )
                 elif event_detail == "Yellow Card":
                     event_log += emojize(
-                        f":yellow_square: {player_name}{event_comments}, {time_elapsed}\n",
+                        f":yellow_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Second Yellow card":
                     event_log += emojize(
-                        f":yellow_square::red_square: {player_name}{event_comments}, {time_elapsed}\n",
+                        f":yellow_square::red_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Red Card" and player_name:
                     event_log += emojize(
-                        f":red_square: {player_name}{event_comments}, {time_elapsed}\n",
+                        f":red_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Normal Goal":
