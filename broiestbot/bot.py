@@ -1,10 +1,12 @@
 """Chatango bot."""
 import re
 from typing import Optional, Tuple
+from datetime import timedelta
 from emoji import emojize
 
 from database import session
 from database.models import Command, Phrase
+from clients import r, redis_queue
 
 from broiestbot.commands import (
     all_leagues_golden_boot,
@@ -64,6 +66,7 @@ from broiestbot.commands import (
     footy_stats_for_live_fixtures,
     get_psn_game_trophies,
     get_titles_with_stats,
+    completed_poll_results,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
@@ -234,7 +237,13 @@ class Bot(RoomManager):
         elif cmd_type == "imagecount":
             return gcs_count_images_in_bucket(content)
         elif cmd_type == "changeorstayvote":
-            return change_or_stay_vote(user_name, content, room)
+            poll_results = r.hgetall("changeorstay")
+            LOGGER.info(f"change or stay poll results: {poll_results}")
+            if bool(poll_results) is False:
+                job = redis_queue.enqueue_in(timedelta(seconds=3), completed_poll_results)
+                job.perform()
+                LOGGER.info(f"enqueued completed poll results: {job}")
+            return change_or_stay_vote(user_name, content)
         elif cmd_type == "changeorstay":
             return get_live_poll_results(user_name)
         elif cmd_type == "odds":

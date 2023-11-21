@@ -1,25 +1,22 @@
 """Conduct a chat poll whether to 'change or stay'."""
-from typing import Tuple, Optional, List, Union
-from datetime import timedelta
+from typing import Tuple, Optional, List
 
 from emoji import emojize
 from redis.exceptions import RedisError
-from chatango.ch import Room
 
-from clients import r, redis_scheduler
+from clients import r
 from logger import LOGGER
 
 from config import CHATANGO_SPECIAL_USERS
 
 
-def change_or_stay_vote(user_name: str, vote: str, room: Room) -> str:
+def change_or_stay_vote(user_name: str, vote: str) -> str:
     """
     Conduct chat-wide vote whether to 'change or stay'.
     Each user may cast a single vote, with the results revealed after a fixed time period.
 
     :param str user_name: Name of user submitting a vote.
     :param str vote: User's submitted vote (either 'change' or 'stay').
-    :param Room room: Chatango chat room.
 
     :returns: str
     """
@@ -141,25 +138,30 @@ def poll_announcement(user_name: str, vote: str) -> str:
     return emojize(response, language="en")
 
 
-def completed_poll_results(room: Room):
+def completed_poll_results() -> Optional[str]:
     """
     Post `change or stay` poll results.
 
-    :param Room room: Chatango chat room.
-
-    :returns: str
+    :returns: Optional[str]
     """
-    response = f"\n\n<b>:television: <b>CHANGE OR STAY RESULTS!!!</b>\n"
-    change_votes, stay_votes = live_poll_results()
-    num_change_votes = len(change_votes) if change_votes else 0
-    num_stay_votes = len(stay_votes) if stay_votes else 0
-    if num_change_votes > num_stay_votes:
-        response += f"Chat has voted to <b>CHANGE!</b> {'@ '.join(CHATANGO_SPECIAL_USERS)}\n"
-    elif num_change_votes < num_stay_votes:
-        response += f"Chat has voted to <b>STAY!</b> Don't touch that dial!\n"
-    elif num_change_votes == num_stay_votes:
-        response += f"Poll ended in a <i>STALEMATE!</i>\n \
-                    AAAAAA IDK HOW TO HANDOL THIS!!\n"
-    response += f":shuffle_tracks_button: !CHANGE: <b>{num_change_votes} votes</b>: ({', '.join(change_votes)})\n \
-                  :stop_button: !STAY <b>{num_stay_votes} votes</b>: ({', '.join(stay_votes)})"
-    room.message(emojize(response, language="en"))
+    try:
+        LOGGER.info("`completed_poll_results` function called")
+        response = "\n\n<b>:television: <b>CHANGE OR STAY RESULTS!!!</b>\n"
+        change_votes, stay_votes = live_poll_results()
+        num_change_votes = len(change_votes) if change_votes else 0
+        num_stay_votes = len(stay_votes) if stay_votes else 0
+        if num_change_votes > num_stay_votes:
+            response += f"Chat has voted to <b>CHANGE!</b> Somebody change NOW! {'@ '.join(CHATANGO_SPECIAL_USERS)}\n"
+        elif num_change_votes < num_stay_votes:
+            response += "Chat has voted to <b>STAY!</b> Don't touch that dial!\n"
+        elif num_change_votes == num_stay_votes:
+            response += f"Poll ended in a <i>STALEMATE!</i>\n \
+                        AAAAAA IDK HOW TO HANDOL THIS!!\n"
+        response += f":shuffle_tracks_button: !CHANGE: <b>{num_change_votes} votes</b>: ({', '.join(change_votes)})\n \
+                    :stop_button: !STAY <b>{num_stay_votes} votes</b>: ({', '.join(stay_votes)})"
+        LOGGER.info(f"Posting `change or stay` results: {response}")
+        return emojize(response, language="en")
+    except RedisError as e:
+        LOGGER.exception(f"RedisError while posting a `change or stay` result: {e}")
+    except Exception as e:
+        LOGGER.exception(f"Unexpected error while posting a `change or stay` result: {e}")
