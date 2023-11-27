@@ -113,7 +113,7 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> 
     """
     try:
         params = {
-            "next": 6 if "EPL" in league_name or "UCL" in league_name or "UEFA" in league_name else 3,
+            "next": 8 if "EPL" in league_name or "UCL" in league_name or "UEFA" in league_name else 3,
             "league": league_id,
             "status": "NS-1H-2H",
             "timezone": tz_name,
@@ -162,7 +162,7 @@ def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str
     display_date, tz = get_preferred_time_format(date, room, username)
     display_date = check_fixture_start_date(date, tz, display_date)
     matchup = f"{away_team} @ {home_team}"
-    return f"{matchup:<40} | <i>{display_date}</i>\n"
+    return f"{matchup:<40}  (<i>{display_date}</i>)\n"
 
 
 def fetch_fox_fixtures(room: str, username: str) -> str:

@@ -35,6 +35,7 @@ from config import (
     EUROS_QUALIFIERS_ID,
     U20_ELITE_LEAGUE_ID,
     OBOS_LIGAEN_ID,
+    BOSNIA_HERZEGOVINA_PREMIJER_LIGA_ID,
 )
 
 
@@ -144,6 +145,7 @@ def abbreviate_team_name(team_name: str) -> str:
         .replace("Los Angeles", "LA")
         .replace("New York City FC", "NYCFC")
         .replace("New York", "NY")
+        .replace("Sporting Kansas City", "Sporting KC")
     )
 
 
@@ -180,12 +182,12 @@ def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str
     display_date, tz = get_preferred_time_format(date, room, username)
     display_date = check_fixture_start_date(date, tz, display_date)
     matchup = f"{away_team} @ {home_team}"
-    return f"{matchup:<30} | <i>{display_date}</i>\n"
+    return f"{matchup:<40}  (<i>{display_date}</i>)\n"
 
 
 def get_season_year(league_id: int) -> Optional[int]:
     """
-    Determine `season` year — based on month for domestic leagues, or year for international leagues.
+    Determine `season` year; based on month for domestic leagues, or year for international leagues.
 
     :param int league_id: ID of league to determine season year for.
 
@@ -200,10 +202,6 @@ def get_season_year(league_id: int) -> Optional[int]:
         CONCACAF_GOLD_CUP_ID,
         COPA_DEL_REY,
         COUPE_DE_FRANCE_ID,
-        WC_QUALIFIERS_CONCACAF_ID,
-        WC_QUALIFIERS_EUROPE_ID,
-        WC_QUALIFIERS_SOUTHAMERICA_ID,
-        WC_QUALIFIERS_AFRICA_ID,
         AFCON_CUP_ID,
         AFCON_QUALIFIERS_ID,
         EUROS_LEAGUE_ID,
@@ -219,11 +217,20 @@ def get_season_year(league_id: int) -> Optional[int]:
         U20_ELITE_LEAGUE_ID,
         CONCACAF_NATIONS_LEAGUE_ID,
         OBOS_LIGAEN_ID,
+        BOSNIA_HERZEGOVINA_PREMIJER_LIGA_ID,
     ):
         return current_year
+    # Leagues, qualifiers and cups which occur every 4 years.
+    if league_id in (
+        WC_QUALIFIERS_CONCACAF_ID,
+        WC_QUALIFIERS_EUROPE_ID,
+        WC_QUALIFIERS_SOUTHAMERICA_ID,
+        WC_QUALIFIERS_AFRICA_ID,
+    ):
+        return datetime(year=2026)
     # Exception for leagues that have a nonsensical `season` year.
     # if league_id == CONCACAF_NATIONS_LEAGUE_ID:
-    # return current_year - 1
+    # return current_year - 1 
     # Domestic leagues that begin in the summer and end in the spring.
     if current_month >= 8:
         return current_year

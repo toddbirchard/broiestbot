@@ -148,51 +148,27 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
             event_type = event.get("type", "")
             event_detail = event.get("detail", "")
             if time_elapsed:
-                time_elapsed = f'{time_elapsed}"'
+                time_elapsed = f'<i>{time_elapsed}"</i>'
             if assisting_player is not None:
                 assisting_player = assisting_player.get("name")
-            if player_name and time_elapsed:
+            if player_name and time_elapsed and event_detail:
                 if "Goal" in event_detail and event_type == "Var":
-                    event_log += emojize(
-                        f":cross_mark: :soccer_ball: {player_name} <i>({event_detail}), {time_elapsed}</i>",
-                        language="en",
-                    )
+                    event_log += f":cross_mark: :soccer_ball: {player_name} <i>({event_detail})</i>, {time_elapsed}"
                 elif event_detail == "Yellow Card":
-                    event_log += emojize(
-                        f":yellow_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
-                        language="en",
-                    )
+                    event_log += f":yellow_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n"
                 elif event_detail == "Second Yellow card":
-                    event_log += emojize(
-                        f":yellow_square::red_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
-                        language="en",
-                    )
+                    event_log += f":yellow_square::red_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n"
                 elif event_detail == "Red Card" and player_name:
-                    event_log += emojize(
-                        f":red_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
-                        language="en",
-                    )
+                    event_log += f":red_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n"
                 elif event_detail == "Normal Goal":
-                    event_log += emojize(
-                        f":soccer_ball: {event_type}, {player_name}, {time_elapsed}\n",
-                        language="en",
-                    )
+                    event_log += f":soccer_ball: {event_type}, {player_name}, {time_elapsed}\n"
                 elif event_detail == "Penalty":
-                    event_log += emojize(
-                        f":goal_net: :soccer_ball: (PEN), {player_name}, {time_elapsed}\n",
-                        language="en",
-                    )
+                    event_log += f":goal_net: :soccer_ball: (PEN), {player_name}, {time_elapsed}\n"
                 elif event_detail == "Own Goal":
-                    event_log += emojize(
-                        f':skull: :soccer_ball: {player_name} {"(via" + assisting_player if not None else ""}), {time_elapsed}\n',
-                        language="en",
-                    )
+                    event_log += f':skull: :soccer_ball: {player_name} {"(via" + assisting_player if not None else ""}), {time_elapsed}\n'
                 elif event_type == "subst" and assisting_player and subs is True:
-                    event_log += emojize(
-                        f":red_triangle_pointed_down: {assisting_player} :evergreen_tree: {player_name}, {time_elapsed}\n",
-                        language="en",
-                    )
-        return event_log
+                    event_log += f":red_triangle_pointed_down: {assisting_player} :evergreen_tree: {player_name}, {time_elapsed}\n"
+        return emojize(event_log, language="en")
     except LookupError as e:
         LOGGER.exception(f"LookupError while compiling events in live fixture: {e}")
     except Exception as e:

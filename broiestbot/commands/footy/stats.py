@@ -82,7 +82,7 @@ def parse_live_fixture_stats(fixture_stats: dict) -> str:
             red_cards = team_stats.get("Red Cards", 0)
             pass_accuracy = team_stats.get("Passes %", 0)
             xg = team_stats.get("expected_goals")
-            if team_fixture_stats and i < len(team_fixture_stats) - 1:
+            if team_fixture_stats:
                 fixture_stats_response += f"<b>{team_name}</b>\n \
                                                 :bar_chart: Possession: {possession}\n \
                                                 :bullseye: Shots: {sog} SOG of {total_shots} total \n \
