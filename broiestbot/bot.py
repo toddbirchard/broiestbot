@@ -65,7 +65,7 @@ from broiestbot.commands import (
     get_psn_game_trophies,
     get_titles_with_stats,
 )
-from chatango.ch import Message, Room, RoomManager, User
+from ch import Message, Room, RoomManager, User
 from config import (
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
@@ -92,13 +92,6 @@ class Bot(RoomManager):
     def __init__(self, name=None, password=None):
         super().__init__(name, password)
         self.bot_username = name
-
-    def on_init(self):
-        """Initialize bot."""
-        self.set_name_color("000000")
-        self.set_font_color("000000")
-        self.set_font_face("Arial")
-        self.set_font_size(11)
 
     def create_message(
         self,

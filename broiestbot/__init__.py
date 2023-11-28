@@ -13,35 +13,18 @@ from logger import LOGGER
 
 def start_bot():
     """Initialize bot depending on environment."""
-    if ENVIRONMENT == "production":
-        LOGGER.info(f'Joining {", ".join(CHATANGO_ROOMS)}')
-        join_rooms(CHATANGO_ROOMS)
-    else:
-        LOGGER.trace("Starting in dev mode...")
-        join_rooms([CHATANGO_TEST_ROOM])
-    return f"Joined {len(CHATANGO_ROOMS)} rooms."
-
-
-def join_rooms(rooms: List[str]):
-    """
-    Create bot instance for single Chatango room.
-
-    :param List[str] rooms: Chatango rooms to join.
-    """
-    while True:
-        broiestbot = Bot(
-            CHATANGO_USERS["BROIESTBRO"]["USERNAME"],
-            CHATANGO_USERS["BROIESTBRO"]["PASSWORD"],
-        )
-        try:
-            for room in rooms:
-                broiestbot.join_room(room)
-            broiestbot.main()
-        except KeyboardInterrupt as e:
-            broiestbot.stop()
-            LOGGER.info(f"KeyboardInterrupt while joining Chatango room: {e}")
-            break
-        except Exception as e:
-            broiestbot.stop()
-            LOGGER.exception(f"Unexpected exception while joining Chatango room: {e}")
-            break
+    try:
+        username = CHATANGO_USERS["BROIESTBRO"]["USERNAME"]
+        password = CHATANGO_USERS["BROIESTBRO"]["PASSWORD"]
+        if ENVIRONMENT == "production":
+            rooms = ", ".join(CHATANGO_ROOMS)
+            Bot.easy_start(rooms, username, password)
+            LOGGER.info(f'Joining {", ".join(CHATANGO_ROOMS)}')
+        else:
+            rooms = [CHATANGO_TEST_ROOM]
+            Bot.easy_start(rooms, username, password)
+            LOGGER.info(f'Joining {", ".join(CHATANGO_ROOMS)} in dev mode...')
+    except KeyboardInterrupt as e:
+        LOGGER.warning(f"KeyboardInterrupt while joining Chatango room: {e}")
+    except Exception as e:
+        LOGGER.exception(f"Unexpected exception while joining Chatango room: {e}")

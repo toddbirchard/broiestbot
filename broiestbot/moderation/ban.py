@@ -1,5 +1,5 @@
 """Ban a user from a room and delete their chat history."""
-from chatango.ch import Message, Room
+from ch import Message, Room
 from logger import LOGGER
 
 

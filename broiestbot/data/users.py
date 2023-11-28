@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from database import session
 from database.models import ChatangoUser
 
-from chatango.ch import Message, User
+from ch import Message, User
 from clients import geo
 from config import PERSIST_USER_DATA
 from logger import LOGGER
