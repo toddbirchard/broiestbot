@@ -1,4 +1,5 @@
 """Bot configuration variables."""
+
 from os import environ, getenv, path
 
 import pytz
@@ -373,7 +374,7 @@ FOOTY_LEAGUES = {
     # ":England: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    ":United_States: MLS": MLS_LEAGUE_ID,
+    # ":United_States: MLS": MLS_LEAGUE_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
@@ -384,7 +385,7 @@ FOOTY_LEAGUES = {
     # ":trophy: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":Portugal: PRIMEIRA LIGA": PRIMEIRA_LIGA_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
-    ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
+    # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :France: COUPE DE FRANCE": COUPE_DE_FRANCE,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
@@ -436,13 +437,13 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     ":France: LIGUE 1": LIGUE_ONE_ID,
-    ":United_States: MLS": MLS_LEAGUE_ID,
+    # ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
-    ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
+    # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
@@ -481,8 +482,8 @@ FOOTY_XI_LEAGUES = {
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
-    ":United_States: MLS": MLS_LEAGUE_ID,
-    ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
+    # n":United_States: MLS": MLS_LEAGUE_ID,
+    # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
@@ -526,9 +527,9 @@ FOOTY_LIVE_STATS_LEAGUES = {
     ":Germany: BUND": BUND_LEAGUE_ID,
     ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     ":France: LIGUE 1": LIGUE_ONE_ID,
-    ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
+    # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
-    ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
+    # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
 }
 

@@ -53,7 +53,7 @@ pylint = "*"
 rq = "*"
 rq-scheduler = "*"
 nflgame = "*"
-coverage = "^7.3.2"
+coverage = "*"
 
 [tool.poetry.scripts]
 run = "wsgi:init_bot"
