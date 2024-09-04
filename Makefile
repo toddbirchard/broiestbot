@@ -1,6 +1,6 @@
 PROJECT_NAME := $(shell basename $CURDIR)
 VIRTUAL_ENVIRONMENT := $(CURDIR)/.venv
-LOCAL_PYTHON := $(VIRTUAL_ENVIRONMENT)/bin/python3
+LOCAL_PYTHON := $(VIRTUAL_ENVIRONMENT)/bin/python
 LOCAL_PYTHON_ACTIVATE := $(VIRTUAL_ENVIRONMENT)/bin/activate
 
 define HELP
@@ -28,7 +28,7 @@ env: $(VIRTUAL_ENVIRONMENT)
 $(VIRTUAL_ENVIRONMENT):
 	if [ ! -d $(VIRTUAL_ENVIRONMENT) ]; then \
 		echo "Creating Python virtual environment..."; \
-		python3 -m venv $(VIRTUAL_ENVIRONMENT); \
+		python -m venv $(VIRTUAL_ENVIRONMENT); \
 	fi
 
 .PHONY: run

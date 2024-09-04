@@ -2,8 +2,6 @@
 from typing import List, Optional
 from math import floor
 from psnawp_api.models.user import User
-from psnawp_api.models.trophies.trophy_titles import TrophyTitles
-from psnawp_api.utils import request_builder
 from emoji import emojize
 
 from clients import psn
@@ -46,12 +44,11 @@ def get_active_friends(online_friends: List[User]) -> List[Optional[User]]:
     ]
 
 
-def create_psn_response(active_friends: List[User], online_friends: List[User]) -> str:
+def create_psn_response(active_friends: List[User]) -> str:
     """
     Construct chat response of active PSN friends.
 
-    :param str user: PSN User ID.
-    :param List[User] friends: List of PSN friends.
+    :param List[User] active_friends: PSN friends who are online.
 
     :returns: str
     """
@@ -91,10 +88,6 @@ def get_psn_game_trophies():
         return trophies
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching PSN trophies: {e}")
-
-
-def get_trophy_titles():
-    get_trophy_titles
 
 
 def get_titles_with_stats():
