@@ -1,4 +1,5 @@
 """Track number of cliche phrases uttered on The Bachelor."""
+
 from datetime import datetime, timedelta
 from config import TIMEZONE_US_EASTERN
 from database import session

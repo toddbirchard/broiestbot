@@ -1,4 +1,5 @@
 """Top scorers for a given league."""
+
 from typing import List, Tuple
 
 import requests

@@ -1,4 +1,5 @@
 """Extract URL from user chat message."""
+
 import re
 from typing import Optional, Tuple
 

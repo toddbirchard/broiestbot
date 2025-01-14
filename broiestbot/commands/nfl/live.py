@@ -1,4 +1,5 @@
 """Live NFL game stats."""
+
 from datetime import datetime
 import requests
 from requests import HTTPError

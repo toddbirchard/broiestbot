@@ -1,4 +1,5 @@
 """Parse live NBA scores, or fallback to upcoming games."""
+
 from emoji import emojize
 from requests.exceptions import HTTPError
 

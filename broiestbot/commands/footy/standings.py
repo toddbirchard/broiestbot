@@ -1,4 +1,5 @@
 """Get team standings for a given league."""
+
 from typing import Optional
 
 import requests

@@ -1,4 +1,5 @@
 """Persist user metadata."""
+
 from typing import Optional
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError

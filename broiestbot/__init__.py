@@ -1,4 +1,5 @@
 """Initialize bot."""
+
 from typing import List
 
 from broiestbot.bot import Bot

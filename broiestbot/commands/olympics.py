@@ -1,4 +1,5 @@
 """2020/2022 Olympics medal leaders"""
+
 import pandas as pd
 from emoji import emojize
 from pandas import Series

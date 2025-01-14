@@ -1,4 +1,5 @@
 """Fetch all (live & upcoming) NBA games for today."""
+
 from datetime import datetime
 
 import pytz

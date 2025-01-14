@@ -1,4 +1,5 @@
 """Lookup definitions via Wikipedia, Urban Dictionary, etc"""
+
 import requests
 from emoji import emojize
 from PyMultiDictionary import MultiDictionary

@@ -1,4 +1,5 @@
 """Construct responses to bot commands from third-party APIs."""
+
 from .afterdark import get_redgifs_gif
 from .definitions import (
     get_english_definition,

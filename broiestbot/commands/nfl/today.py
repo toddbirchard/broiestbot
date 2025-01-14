@@ -1,4 +1,5 @@
 """NFL games scheduled for today with scores & odds."""
+
 from datetime import datetime, timedelta
 from typing import Optional
 import requests

@@ -1,4 +1,5 @@
 """Generate link previews from URLs."""
+
 from typing import Optional
 
 import requests

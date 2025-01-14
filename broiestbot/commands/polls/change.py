@@ -1,4 +1,5 @@
 """Conduct a chat poll whether to 'change or stay'."""
+
 from typing import Tuple, Optional, List, Union
 from datetime import timedelta
 

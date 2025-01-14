@@ -1,4 +1,5 @@
 """Lookup movie information via IMDB API."""
+
 from typing import Optional
 
 from emoji import emojize

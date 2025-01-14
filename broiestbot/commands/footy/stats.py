@@ -1,4 +1,5 @@
 """Get general fixture stats for live fixtures."""
+
 from typing import Optional
 import requests
 from emoji import emojize

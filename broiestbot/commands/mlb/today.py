@@ -1,4 +1,5 @@
 """Fetch Phillies MLB game summaries for the current date."""
+
 from datetime import datetime
 from typing import Optional
 

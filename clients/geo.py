@@ -1,4 +1,5 @@
 """User geo data client to identify bad actors."""
+
 from typing import Union
 
 import pandas as pd

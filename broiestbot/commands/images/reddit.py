@@ -1,4 +1,5 @@
 """Fetch random trending image from a given subreddit."""
+
 from emoji import emojize
 from praw.exceptions import RedditAPIException
 

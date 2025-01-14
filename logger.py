@@ -1,4 +1,5 @@
 """Custom logger and error notifications."""
+
 import json
 import re
 from datetime import datetime

@@ -1,4 +1,5 @@
 """Fetch or parse scheduled Phillies games."""
+
 from datetime import datetime
 from typing import Optional, Tuple
 

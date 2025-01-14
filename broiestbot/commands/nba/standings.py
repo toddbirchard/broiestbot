@@ -1,4 +1,5 @@
 """Fetch NBA team standings."""
+
 import requests
 from requests.exceptions import HTTPError
 

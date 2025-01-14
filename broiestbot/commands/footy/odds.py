@@ -22,6 +22,7 @@ def get_today_footy_odds_for_league(league_id: int):
         fixtures_odds = odds_response.get("data")[::5]
         if odds_response.get("success"):
             all_fixture_odds = +fixtures_odds
+        return all_fixture_odds
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching footy odds: {e}")
         return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")

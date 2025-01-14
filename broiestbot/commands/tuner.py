@@ -1,4 +1,5 @@
 """Channel tuner/remote."""
+
 import json
 import time
 from typing import Optional

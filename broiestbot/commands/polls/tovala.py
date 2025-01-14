@@ -1,4 +1,5 @@
 """Allow users to track consecutive Tovala streaks via Redis cache."""
+
 from database import session
 from database.models import PollResult
 from emoji import emojize

@@ -1,4 +1,5 @@
 """PSN Commands"""
+
 from typing import List, Optional
 from math import floor
 from psnawp_api.models.user import User

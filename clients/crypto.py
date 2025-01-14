@@ -1,4 +1,5 @@
 """Create cloud-hosted Candlestick charts of company stock data."""
+
 from datetime import datetime
 from typing import Optional
 
@@ -85,7 +86,7 @@ class CryptoChartHandler:
         :returns: Optional[dict]
         """
         try:
-            resp = requests.get(url=endpoint)
+            resp = requests.get(url=endpoint, timeout=20)
             if resp.status_code == 429:
                 return emojize(f":warning: jfc you exceeded the crypto API limit :@ :warning:", language="en")
             if resp.status_code == 200:

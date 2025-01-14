@@ -1,4 +1,5 @@
 """Parse live MLB game summary."""
+
 from typing import Optional
 
 from logger import LOGGER

@@ -1,4 +1,5 @@
 """Fetch scheduled fixtures across leagues for today only."""
+
 from datetime import datetime
 from typing import List, Optional
 

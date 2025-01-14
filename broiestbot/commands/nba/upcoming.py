@@ -1,4 +1,5 @@
 """Parse schedule of today's upcoming NBA games."""
+
 from datetime import datetime
 
 from emoji import emojize

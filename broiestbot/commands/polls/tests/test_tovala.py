@@ -1,4 +1,5 @@
 """Allow users to track consecutive Tovala streaks via Redis cache."""
+
 from typing import Dict
 
 from emoji import emojize

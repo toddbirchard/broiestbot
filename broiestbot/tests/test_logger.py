@@ -1,4 +1,5 @@
 """Test persisting of error logs."""
+
 from os import mkdir, path
 
 import pytest

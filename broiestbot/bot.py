@@ -1,4 +1,5 @@
 """Chatango bot."""
+
 import re
 from typing import Optional, Tuple
 from emoji import emojize
@@ -458,20 +459,3 @@ class Bot(RoomManager):
         """
         message.delete()
         room.message("™")
-
-    '''@staticmethod
-    def create_link_preview(user_name: str, chat_message: str, room: Room, message: Message) -> None:
-        """
-        Generate link preview for URL.
-
-        :param Room room: Current Chatango room object.
-        :param str chat_message: URL to generate a link preview for.
-        :param Message message: Chatango message object.
-
-        :returns: None
-        """
-        youtube_matcher = re.match(r"^(http)s?:\/\/(www.)?youtube.com||^(http)s?://youtu.be", chat_message)
-        if youtube_matcher:
-            video_preview = create_youtube_video_preview(chat_message)
-            if user_name.upper() not in CHATANGO_BOTS:
-                room.message(video_preview, html=True)'''

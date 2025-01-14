@@ -1,4 +1,5 @@
 """Fetch scheduled fixtures across leagues."""
+
 from datetime import datetime, timedelta
 from typing import List, Optional
 
@@ -195,8 +196,7 @@ def fetch_fox_fixtures(room: str, username: str) -> str:
                 display_date = check_fixture_start_date(date, tz, display_date)
                 if room == CHATANGO_OBI_ROOM:
                     display_date, tz = get_preferred_time_format(date, room, username)
-                    matchup = f"{away_team} @ {home_team}"
-                upcoming_foxtures = upcoming_foxtures + f"{matchup} | <i>{display_date}</i>\n"
+                upcoming_foxtures = upcoming_foxtures + f"{away_team} @ {home_team} | <i>{display_date}</i>\n"
             return emojize(upcoming_foxtures, language="en")
         return emojize(":warning: Couldn't find fixtures, has season started yet? :warning:", language="en")
     except HTTPError as e:

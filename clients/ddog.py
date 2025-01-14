@@ -1,4 +1,5 @@
 """Datadog APM trace"""
+
 from typing import Callable
 from ddtrace import config, patch_all
 from config import ENVIRONMENT

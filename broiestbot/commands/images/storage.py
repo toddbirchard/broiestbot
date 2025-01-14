@@ -1,4 +1,5 @@
 """Fetch randomly selected meme image(s) from storage bucket."""
+
 from random import randint
 from datetime import datetime
 

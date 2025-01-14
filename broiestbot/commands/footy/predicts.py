@@ -1,4 +1,5 @@
 """NMatch predictions for fixtures occurring today."""
+
 from datetime import datetime
 from typing import List, Optional
 

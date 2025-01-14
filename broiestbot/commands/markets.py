@@ -1,4 +1,5 @@
 """Fetch crypto or stock market data."""
+
 import requests
 from emoji import emojize
 from requests.exceptions import HTTPError

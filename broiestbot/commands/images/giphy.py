@@ -1,4 +1,5 @@
 """Perform Giphy query to fetch randomized top trending image."""
+
 from random import randint
 from typing import Optional
 

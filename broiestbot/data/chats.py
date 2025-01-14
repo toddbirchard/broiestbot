@@ -1,4 +1,5 @@
 """Persist chat logs."""
+
 from database import session
 from database.models import Chat
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError

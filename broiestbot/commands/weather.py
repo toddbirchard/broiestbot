@@ -1,4 +1,5 @@
 """Fetch weather for a given location."""
+
 from typing import Optional
 from datetime import datetime
 

@@ -1,4 +1,5 @@
 """Commands only available from 12am to 5am EST."""
+
 from datetime import datetime
 from random import randint
 from typing import Optional
