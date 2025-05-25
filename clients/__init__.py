@@ -22,7 +22,7 @@ from config import (
     REDDIT_CLIENT_SECRET,
     REDDIT_PASSWORD,
     REDDIT_USERNAME,
-    REDIS_DB,
+    REDIS_USERNAME,
     REDIS_HOST,
     REDIS_PASSWORD,
     REDIS_PORT,
@@ -78,7 +78,7 @@ genius = lyricsgenius.Genius()
 genius.remove_section_headers = True
 
 # Redis
-r = Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, db=REDIS_DB, decode_responses=True)
+r = Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True, password=REDIS_PASSWORD)
 redis_scheduler = Scheduler(connection=r)
 
 # Playstation

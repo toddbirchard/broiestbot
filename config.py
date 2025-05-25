@@ -61,7 +61,6 @@ CHATANGO_ROOMS = [
     CHATANGO_UFC_ROOM,
     # CHATANGO_UNION_ROOM,
 ]
-CHATANGO_ROOMS_STRING = ";".join(CHATANGO_ROOMS)
 
 # List of Chatango users with privileges to special commands
 CHATANGO_SPECIAL_USERS = getenv("CHATANGO_SPECIAL_USERS")
