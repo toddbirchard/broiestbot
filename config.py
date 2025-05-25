@@ -362,7 +362,7 @@ MLS_ALL_STAR_ID = 866
 MLS_LEAGUES_CUP_ID = 772
 US_OPEN_CUP_ID = 257
 EPL_SUMMER_SERIES_LEAGUE_ID = 1022
-OBOS_LIGAEN_ID = 473
+OBOS_LIGAEN_ID = 104
 TACA_DE_PORTUGAL_ID = 96
 
 # Footy Leagues, cups and tournaments
@@ -398,7 +398,7 @@ FOOTY_LEAGUES = {
     # ":trophy: UEFA SUPER CUP": UEFA_SUPER_CUP_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
-    ":Norway: OBOS LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
@@ -478,7 +478,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
 
 # Footy leagues with "lineups" enabled
 FOOTY_XI_LEAGUES = {
-    ":lion: EPL": EPL_LEAGUE_ID,
+    # ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
@@ -486,9 +486,9 @@ FOOTY_XI_LEAGUES = {
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: :keycap_2: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
     # ":trophy: :England: FA CUP": FA_CUP_ID,
-    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
-    ":Germany: BUND": BUND_LEAGUE_ID,
+    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    # ":Germany: BUND": BUND_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
@@ -504,17 +504,18 @@ FOOTY_XI_LEAGUES = {
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
+     ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
 }
 
 FOOTY_LIVE_ODDS_LEAGUES = {
-    ":lion: EPL": EPL_LEAGUE_ID,
+    # ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
-    ":Germany: BUND": BUND_LEAGUE_ID,
+    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
@@ -526,20 +527,22 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
+     ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
-    ":lion: EPL": EPL_LEAGUE_ID,
+    # ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
-    ":Germany: BUND": BUND_LEAGUE_ID,
+    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
+     ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
     ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
@@ -581,12 +584,14 @@ WREXHAM_TEAM_ID = 1837
 USA_CONCACAF_TEAM_ID = 2384
 BENFICA_TEAM_ID = 211
 USA_INT_TEAM_ID = 0
+AALESUND_TEAM_ID = 757
 
 # Specify team IDs to be prioritized whe fetching starting XIs
 FOOTY_TEAMS_PRIORITY = {
     "Pool": LIVERPOOL_TEAM_ID,
     "ManU": MANU_TEAM_ID,
     "England": ENGLAND_INT_TEAM_ID,
+    "Aalesund": AALESUND_TEAM_ID,
     # "Foxes": FOXES_TEAM_ID,
     "USMNT": USA_INT_TEAM_ID,
 }
