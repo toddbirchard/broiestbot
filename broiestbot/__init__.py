@@ -25,7 +25,7 @@ def start_bot():
 
 def join_rooms(rooms: List[str]):
     """
-    Create bot instance for single Chatango room.
+    Connect bot for each Chatango room.
 
     :param List[str] rooms: Chatango rooms to join.
     """
@@ -39,10 +39,9 @@ def join_rooms(rooms: List[str]):
                 broiestbot.join_room(room)
             broiestbot.main()
         except KeyboardInterrupt as e:
-            broiestbot.stop()
             LOGGER.info(f"KeyboardInterrupt while joining Chatango room: {e}")
-            break
-        except Exception as e:
             broiestbot.stop()
-            LOGGER.exception(f"Unexpected exception while joining Chatango room: {e}")
-            break
+        except Exception as e:
+            LOGGER.exception(f"Unexpected exception while joining Chatango room: {e}; trying to reconnect...")
+            broiestbot.stop()
+            broiestbot.join_room(room)

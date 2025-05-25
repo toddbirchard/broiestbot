@@ -61,6 +61,7 @@ CHATANGO_ROOMS = [
     CHATANGO_UFC_ROOM,
     # CHATANGO_UNION_ROOM,
 ]
+CHATANGO_ROOMS_STRING = ";".join(CHATANGO_ROOMS)
 
 # List of Chatango users with privileges to special commands
 CHATANGO_SPECIAL_USERS = getenv("CHATANGO_SPECIAL_USERS")
@@ -504,7 +505,7 @@ FOOTY_XI_LEAGUES = {
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
-     ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
 }
 
 FOOTY_LIVE_ODDS_LEAGUES = {
@@ -527,7 +528,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
-     ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
@@ -542,7 +543,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
-     ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
     ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,

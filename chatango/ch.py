@@ -237,7 +237,7 @@ def _strip_html(msg):
     if len(li) == 1:
         return li[0]
     else:
-        ret = list()
+        ret = []
         for data in li:
             data = data.split(">", 1)
             if len(data) == 1:
@@ -292,11 +292,11 @@ class _ANON_PM_OBJECT:
         self._connected = False
         self._mgr = mgr
         self._wlock = False
-        self._firstCommand = True
+        self._first_command = True
         self._wbuf = b""
         self._wlockbuf = b""
         self._rbuf = b""
-        self._pingTask = None
+        self._ping_task = None
         self._name = name
         self._sock = None
 
@@ -406,9 +406,9 @@ class _ANON_PM_OBJECT:
         :type args: [str, str, ...]
         :param args: command and list of arguments
         """
-        if self._firstCommand:
+        if self._first_command:
             terminator = b"\x00"
-            self._firstCommand = False
+            self._first_command = False
         else:
             terminator = b"\r\n\x00"
         self._write(":".join(args).encode() + terminator)
@@ -423,10 +423,10 @@ class ANON_PM:
     def __init__(self, mgr):
         self._mgr = mgr
         self._wlock = False
-        self._firstCommand = True
-        self._persons = dict()
+        self._first_command = True
+        self._persons = {}
         self._wlockbuf = b""
-        self._pingTask = None
+        self._ping_task = None
 
     ####
     # Connections
@@ -439,7 +439,7 @@ class ANON_PM:
         self._persons[name]._sock = sock
         if not self._persons[name]._auth():
             return
-        self._persons[name]._pingTask = self._mgr.set_internal(self._mgr._ping_delay, self._persons[name].ping)
+        self._persons[name]._ping_task = self._mgr.set_internal(self._mgr._ping_delay, self._persons[name].ping)
         self._persons[name]._connected = True
 
     def message(self, user, msg):
@@ -468,13 +468,13 @@ class PM:
         self._auid = None
         self._blocklist = set()
         self._contacts = set()
-        self._status = dict()
+        self._status = {}
         self._wlock = False
-        self._firstCommand = True
+        self._first_command = True
         self._wbuf = b""
         self._wlockbuf = b""
         self._rbuf = b""
-        self._pingTask = None
+        self._ping_task = None
         self._connect()
 
     ####
@@ -485,20 +485,18 @@ class PM:
         self._sock = socket.socket()
         self._sock.connect((self._mgr._pm_host, self._mgr._pm_port))
         self._sock.setblocking(False)
-        self._firstCommand = True
+        self._first_command = True
         if not self._auth():
             return
-        self._pingTask = self.mgr.set_internal(self._mgr._ping_delay, self.ping)
+        self._ping_task = self.mgr.set_internal(self._mgr._ping_delay, self.ping)
         self._connected = True
 
     def _get_auth(self, name, password):
         """
         Request an auid using name and password.
 
-        :type name: str
-        :param name: name
-        :type password: str
-        :param password: password
+        :param str name: Chatango username
+        :param str password: Chatango User password
 
         @rtype: str
         @return: auid
@@ -778,9 +776,9 @@ class PM:
         :type args: [str, str, ...]
         :param args: command and list of arguments
         """
-        if self._firstCommand:
+        if self._first_command:
             terminator = b"\x00"
-            self._firstCommand = False
+            self._first_command = False
         else:
             terminator = b"\r\n\x00"
         self._write(":".join(args).encode() + terminator)
@@ -817,23 +815,23 @@ class Room:
         self._wlockbuf = b""
         self._owner = None
         self._mods = set()
-        self._mqueue = dict()
-        self._uqueue = dict()
-        self._history = list()
-        self._userlist = list()
-        self._firstCommand = True
+        self._mqueue = {}
+        self._uqueue = {}
+        self._history = []
+        self._userlist = []
+        self._first_command = True
         self._connectAmmount = 0
         self._premium = False
         self._userCount = 0
-        self._pingTask = None
+        self._ping_task = None
         self._botname = None
         self._currentname = None
-        self._users = dict()
-        self._msgs = dict()
+        self._users = {}
+        self._msgs = {}
         self._wlock = False
         self._silent = False
-        self._ban_list = dict()
-        self._unban_list = dict()
+        self._ban_list = {}
+        self._unban_list = {}
         self._headers_parsed = False
 
         # Inited vars
@@ -848,15 +846,15 @@ class Room:
         self._sock = socket.socket()
         self._sock.connect((self._server, self._port))
         self._sock.setblocking(False)
-        self._firstCommand = True
-        self._pingTask = self.mgr.set_internal(self.mgr._ping_delay, self.ping)
+        self._first_command = True
+        self._ping_task = self.mgr.set_internal(self.mgr._ping_delay, self.ping)
         if not self._reconnecting:
             self.connected = True
         self._headers_parsed = False
         if Use_WebSocket:
             self._wbuf = (
                 b"GET / HTTP/1.1\r\n"
-                + "Host: {}:{}\r\n".format(self._server, self._port).encode()
+                + f"Host: {self._server}:{self._port}\r\n".encode()
                 + b"Origin: http://st.chatango.com\r\n"
                 b"Connection: Upgrade\r\n"
                 b"Upgrade: websocket\r\n"
@@ -892,8 +890,8 @@ class Room:
             self.connected = False
         for user in self._userlist:
             user.clear_session_ids(self)
-        self._userlist = list()
-        self._pingTask.cancel()
+        self._userlist = []
+        self._ping_task.cancel()
         self._sock.close()
         if not self._reconnecting:
             del self.mgr._rooms[self.room_name]
@@ -1083,7 +1081,7 @@ class Room:
         self._uid = args[1]
         self._aid = args[1][4:8]
         self._mods = set(map(lambda x: get_user(x.split(",")[0]), args[6].split(";")))
-        self._i_log = list()
+        self._i_log = []
 
     def _rcmd_denied(self, args):
         self._disconnect()
@@ -1305,7 +1303,7 @@ class Room:
         self._call_event("on_user_count_change")
 
     def _rcmd_blocklist(self, args):
-        self._ban_list = dict()
+        self._ban_list = {}
         sections = ":".join(args).split(";")
         for section in sections:
             params = section.split(":")
@@ -1324,7 +1322,7 @@ class Room:
         self._call_event("on_ban_list_update")
 
     def _rcmd_unblocklist(self, args):
-        self._unban_list = dict()
+        self._unban_list = {}
         sections = ":".join(args).split(";")
         for section in sections:
             params = section.split(":")
@@ -1653,9 +1651,9 @@ class Room:
 
         :param List[str] args: Command & list of arguments
         """
-        if self._firstCommand:
+        if self._first_command:
             terminator = "\0"
-            self._firstCommand = False
+            self._first_command = False
         else:
             terminator = "\r\n\0"
         payload = ":".join(args) + terminator
@@ -1758,7 +1756,7 @@ class RoomManager:
         self._password = password
         self._running = False
         self._tasks = set()
-        self._rooms = dict()
+        self._rooms = {}
         self._rooms_queue = queue.Queue()
         self._rooms_lock = threading.Lock()
         if pm:
@@ -2252,6 +2250,15 @@ class RoomManager:
     ####
     class _Task:
 
+        def __init__(self):
+            self.mgr = self
+            self.target = None
+            self.timeout = None
+            self.func = None
+            self.is_interval = False
+            self.args = []
+            self.kw = {}
+
         def cancel(self):
             """Sugar for remove_task."""
             self.mgr.remove_task(self)
@@ -2323,6 +2330,7 @@ class RoomManager:
         room._wbuf += data
 
     def get_connections(self):
+        """Return all connections to Rooms and PMs."""
         li = list(self._rooms.values())
         if self._pm:
             li.extend(self._pm.get_connections())
@@ -2465,10 +2473,11 @@ class RoomManager:
 ################################################################
 # User class (well, yeah, I lied, it's actually User)
 ################################################################
-_users = dict()
+_users = {}
 
 
 def get_user(name, *args, **kw):
+    """Return existing or new User."""
     if name is None:
         name = ""
     name = name.lower()
@@ -2484,8 +2493,8 @@ class User:
 
     def __init__(self, name, **kw):
         self._name = name.lower()
-        self._sids = dict()
-        self._msgs = list()
+        self._sids = {}
+        self._msgs = []
         self._name_color = "000"
         self._font_size = 12
         self._font_face = "0"
@@ -2506,8 +2515,7 @@ class User:
     def _get_session_ids(self, room=None):
         if room:
             return self._sids.get(room, set())
-        else:
-            return set.union(*self._sids.values())
+        return set.union(*self._sids.values())
 
     def _get_rooms(self):
         return self._sids.keys()
@@ -2540,11 +2548,13 @@ class User:
     # Util
     ####
     def add_session_id(self, room, sid):
+        """Add Room connection session ID(s) to a User."""
         if room not in self._sids:
             self._sids[room] = set()
         self._sids[room].add(sid)
 
     def remove_session_id(self, room, sid):
+        """Remove Room connection session ID(s) to a User."""
         try:
             self._sids[room].remove(sid)
             if len(self._sids[room]) == 0:
@@ -2553,12 +2563,14 @@ class User:
             pass
 
     def clear_session_ids(self, room):
+        """Clear all Room connection session ID(s) from User."""
         try:
             del self._sids[room]
         except KeyError:
             pass
 
     def has_session_id(self, room, sid):
+        """Check if User has session ID belonging to a Room."""
         try:
             if sid in self._sids[room]:
                 return True

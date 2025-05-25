@@ -15,7 +15,7 @@ proc_name = "broiestbot"
 wsgi_app = "wsgi:app"
 bind = "unix:broiestbot.sock"
 threads = 8
-workers = 4
+workers = 1
 
 if ENVIRONMENT == "development" or ENVIRONMENT is None:
     reload = True
