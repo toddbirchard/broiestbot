@@ -2739,17 +2739,6 @@ socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
-name = "uwsgi"
-version = "2.0.29"
-description = "The uWSGI server"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "uwsgi-2.0.29.tar.gz", hash = "sha256:6bd150ae60d0d9947429ea7dc8e5f868de027e5eb38355fb613b9413732c432f"},
-]
-
-[[package]]
 name = "webencodings"
 version = "0.5.1"
 description = "Character encoding aliases for legacy web content"
@@ -2930,4 +2919,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "5f4721e8da351beb77b1216eb283975aafa86c99ab50aaffae5259e48579c26c"
+content-hash = "ace3dba43cb42004468d908bdeccb83242b6c2e833f9b92d0bd9b5bb0d286e27"

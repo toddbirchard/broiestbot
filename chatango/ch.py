@@ -1,4 +1,5 @@
 """Fork of ch.py"""
+
 import html
 import queue
 import random
@@ -1858,9 +1859,9 @@ class RoomManager:
                 print(text)
                 break
             except UnicodeDecodeError as ex:
-                text = text[0: ex.start] + "(unicode)" + text[ex.end:]
+                text = text[0 : ex.start] + "(unicode)" + text[ex.end :]
             except UnicodeEncodeError as ex:
-                text = text[0: ex.start] + "(unicode)" + text[ex.end:]
+                text = text[0 : ex.start] + "(unicode)" + text[ex.end :]
 
     def on_connect(self, room: Room):
         """
