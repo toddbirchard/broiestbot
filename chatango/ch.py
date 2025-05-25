@@ -1,3 +1,4 @@
+"""Fork of ch.py"""
 import html
 import queue
 import random
@@ -1684,10 +1685,7 @@ class Room:
             except IndexError:
                 return None
         else:
-            try:
-                return self._hiraw_banstory[-1]
-            except IndexError:
-                return None
+            return None
 
     def find_user(self, name):
         """
@@ -1859,8 +1857,10 @@ class RoomManager:
             try:
                 print(text)
                 break
-            except UnicodeError as ex:
-                text = text[0 : ex.start] + "(unicode)" + text[ex.end :]
+            except UnicodeDecodeError as ex:
+                text = text[0: ex.start] + "(unicode)" + text[ex.end:]
+            except UnicodeEncodeError as ex:
+                text = text[0: ex.start] + "(unicode)" + text[ex.end:]
 
     def on_connect(self, room: Room):
         """
@@ -2250,6 +2250,7 @@ class RoomManager:
     # Scheduling
     ####
     class _Task:
+
         def cancel(self):
             """Sugar for remove_task."""
             self.mgr.remove_task(self)
@@ -2259,7 +2260,7 @@ class RoomManager:
         for task in set(self._tasks):
             if task.target <= now:
                 task.func(*task.args, **task.kw)
-                if task.isInterval:
+                if task.is_interval:
                     task.target = now + task.timeout
                 else:
                     self._tasks.remove(task)
@@ -2279,7 +2280,7 @@ class RoomManager:
         task.target = time.time() + timeout
         task.timeout = timeout
         task.func = func
-        task.isInterval = False
+        task.is_interval = False
         task.args = args
         task.kw = kw
         self._tasks.add(task)
@@ -2300,7 +2301,7 @@ class RoomManager:
         task.target = time.time() + timeout
         task.timeout = timeout
         task.func = func
-        task.isInterval = True
+        task.is_interval = True
         task.args = args
         task.kw = kw
         self._tasks.add(task)
@@ -2566,7 +2567,7 @@ class User:
             return False
 
     def __repr__(self):
-        return "<User: %s>" % self.name
+        return f"<User: {self.name}>"
 
 
 ################################################################
@@ -2597,6 +2598,9 @@ class Message:
             self._msgid = None
 
     def delete(self):
+        """
+        Delete user message from a room. (Moderator only).
+        """
         self._room.delete_message(self)
 
     ####
