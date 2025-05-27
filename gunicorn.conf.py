@@ -14,11 +14,11 @@ ENVIRONMENT = environ.get("ENVIRONMENT")
 proc_name = "broiestbot"
 wsgi_app = "wsgi:app"
 bind = "unix:broiestbot.sock"
-threads = 8
+reload = True
+threads = 1
 workers = 1
 
 if ENVIRONMENT == "development" or ENVIRONMENT is None:
-    reload = True
     workers = 1
     threads = 1
     bind = ["127.0.0.1:8005"]

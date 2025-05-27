@@ -29,19 +29,18 @@ def join_rooms(rooms: List[str]):
 
     :param List[str] rooms: Chatango rooms to join.
     """
-    while True:
-        broiestbot = Bot(
-            CHATANGO_USERS["BROIESTBRO"]["USERNAME"],
-            CHATANGO_USERS["BROIESTBRO"]["PASSWORD"],
-        )
-        try:
-            for room in rooms:
-                broiestbot.join_room(room)
-            broiestbot.main()
-        except KeyboardInterrupt as e:
-            LOGGER.info(f"KeyboardInterrupt while joining Chatango room: {e}")
-            broiestbot.stop()
-        except Exception as e:
-            LOGGER.exception(f"Unexpected exception while joining Chatango room: {e}; trying to reconnect...")
-            broiestbot.stop()
+    broiestbot = Bot(
+        CHATANGO_USERS["BROIESTBRO"]["USERNAME"],
+        CHATANGO_USERS["BROIESTBRO"]["PASSWORD"],
+    )
+    try:
+        for room in rooms:
             broiestbot.join_room(room)
+            broiestbot.main()
+    except KeyboardInterrupt as e:
+        LOGGER.info(f"KeyboardInterrupt while joining Chatango room: {e}")
+        broiestbot.stop()
+    except Exception as e:
+        LOGGER.exception(f"Unexpected exception while joining Chatango room: {e}; trying to reconnect...")
+        broiestbot.stop()
+        broiestbot.join_room(room)
