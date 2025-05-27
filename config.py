@@ -239,7 +239,6 @@ TWITCH_MILNER_ID = getenv("TWITCH_MILNER_ID")
 TWITCH_NEPHEW_USERNAME = getenv("TWITCH_NEPHEW_USERNAME")
 TWITCH_NEPHEW_ID = getenv("TWITCH_NEPHEW_ID")
 
-
 TWITCH_BROADCASTERS = {
     TWITCH_BRO_USERNAME: TWITCH_BRO_ID,
     TWITCH_ATLAS_USERNAME: TWITCH_ATLAS_ID,
@@ -661,7 +660,7 @@ WINTER_OLYMPICS_LEADERBOARD_ENDPOINT = "https://www.espn.com/olympics/winter/202
 NBA_BASE_URL = "https://api-basketball.p.rapidapi.com"
 NBA_API_KEY = getenv("NBA_API_KEY")
 NBA_CONFERENCE_NAMES = ["Eastern Conference", "Western Conference"]
-NBA_SEASON_YEAR = "2023-2024"
+NBA_SEASON_YEAR = "2024-2025"
 
 # Playstation PSN
 # -------------------------------------------------
