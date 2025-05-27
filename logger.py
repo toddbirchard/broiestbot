@@ -155,11 +155,8 @@ def log_formatter(record: dict) -> str:
     return "<fg #5278a3>{time:MM-DD-YYYY HH:mm:ss}</fg #5278a3> | <fg #98bedf>{level}</fg #98bedf>: <light-white>{message}</light-white>\n"
 
 
-def create_logger() -> logger:
-    """
-    Configure custom logger.
-    :returns: logger
-    """
+def create_logger():
+    """Configure custom logger."""
     logger.remove()
     logger.add(stdout, colorize=True, catch=True, format=log_formatter, level="TRACE")
     if ENVIRONMENT == "production":
