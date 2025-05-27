@@ -49,16 +49,16 @@ CHATANGO_UNION_ROOM = getenv("CHATANGO_UNION_ROOM")
 # Chatango rooms to be joined by the bot
 CHATANGO_ROOMS = [
     CHATANGO_ACLEE_ROOM,
-    CHATANGO_SIXERS_ROOM,
-    CHATANGO_PHILLIES_ROOM,
-    CHATANGO_FLYERS_ROOM,
-    CHATANGO_ALT_ROOM,
+    # CHATANGO_SIXERS_ROOM,
+    # CHATANGO_PHILLIES_ROOM,
+    # CHATANGO_FLYERS_ROOM,
+    # CHATANGO_ALT_ROOM,
     # CHATANGO_NFL_ROOM,
     # CHATANGO_OBI_ROOM,
     # CHATANGO_TEST_ROOM,
     # CHATANGO_REDZONE_ROOM,
     # CHATANGO_PATREON_ROOM,
-    CHATANGO_UFC_ROOM,
+    # CHATANGO_UFC_ROOM,
     # CHATANGO_UNION_ROOM,
 ]
 
@@ -75,14 +75,14 @@ CHATANGO_EGGSER_USERNAME_WHITELIST = getenv("CHATANGO_EGGSER_USERNAME_WHITELIST"
 CHATANGO_BLACKLISTED_USERS = getenv("CHATANGO_BLACKLISTED_USERS")
 CHATANGO_BLACKLIST_ROOMS = [
     CHATANGO_ACLEE_ROOM,
-    CHATANGO_SIXERS_ROOM,
-    CHATANGO_PHILLIES_ROOM,
+    # CHATANGO_SIXERS_ROOM,
+    # CHATANGO_PHILLIES_ROOM,
     # CHATANGO_FLYERS_ROOM,
     # CHATANGO_ALT_ROOM,
     # CHATANGO_NFL_ROOM,
     # CHATANGO_REDZONE_ROOM,
     # CHATANGO_PATREON_ROOM,
-    CHATANGO_UFC_ROOM,
+    # CHATANGO_UFC_ROOM,
     # CHATANGO_UNION_ROOM,
 ]
 
@@ -172,7 +172,6 @@ TWILIO_PHONE_NUMBERS = {
     "baleswb": TWILIO_BALES_PHONE_NUMBER,
     "findanewslant": TWILIO_SLANT_PHONE_NUMBER,
     "thegreatpizza": TWILIO_PIZZA_PHONE_NUMBER,
-    "mrsaclee": TWILIO_MRSACLEE_PHONE_NUMBER,
 }
 
 # Reddit
@@ -403,7 +402,7 @@ FOOTY_LEAGUES = {
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
-    # ":United_States: :woman_medium_skin_tone: NSWL": NWSL_LEAGUE_ID,
+    ":United_States: :woman_medium_skin_tone: NSWL": NWSL_LEAGUE_ID,
     # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
     # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
     # ":trophy: WORLD CUP": WORLD_CUP_ID,
@@ -457,7 +456,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
-    # ":United_States: :woman_medium_skin_tone: NWSL": NWSL_LEAGUE_ID,
+    ":United_States: :woman_medium_skin_tone: NWSL": NWSL_LEAGUE_ID,
     # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
     # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
@@ -491,10 +490,10 @@ FOOTY_XI_LEAGUES = {
     # ":Germany: BUND": BUND_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
-    # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
+    ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
-    # ":United_States: :woman_medium_skin_tone: NWSL": NWSL_LEAGUE_ID,
+    ":United_States: :woman_medium_skin_tone: NWSL": NWSL_LEAGUE_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
@@ -592,7 +591,6 @@ FOOTY_TEAMS_PRIORITY = {
     "ManU": MANU_TEAM_ID,
     "England": ENGLAND_INT_TEAM_ID,
     "Aalesund": AALESUND_TEAM_ID,
-    # "Foxes": FOXES_TEAM_ID,
     "USMNT": USA_INT_TEAM_ID,
 }
 
@@ -607,7 +605,6 @@ EPL_TEAM_IDS = [
     ARSENAL_TEAM_ID,
     TOTTENHAM_TEAM_ID,
     EVERTON_TEAM_ID,
-    FOXES_TEAM_ID,
     VILLA_TEAM_ID,
     LEEDS_TEAM_ID,
     CRYSTAL_TEAM_ID,
