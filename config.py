@@ -324,6 +324,7 @@ EUROPA_LEAGUE_ID = 2777
 UEFA_EUROPA_ID = 3
 UEFA_CONFERENCE_LEAGUE = 848
 UEFA_NATIONS_LEAGUE_ID = 5
+UEFA_WOMENS_NATIONS_LEAGUE_ID = 1040
 UEFA_U17_QUALIFIERS_ID = 886
 UEFA_U21_QUALIFIERS_ID = 38
 UEFA_SUPER_CUP_ID = 531
@@ -382,16 +383,17 @@ FOOTY_LEAGUES = {
     # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
-    ":trophy: :England: FA CUP": FA_CUP_ID,
+    # ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
-    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
-    ":Germany: BUND": BUND_LEAGUE_ID,
+    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
+    ":European_Union: :trophy: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":trophy: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":Portugal: PRIMEIRA LIGA": PRIMEIRA_LIGA_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
@@ -435,7 +437,7 @@ FOOTY_LEAGUES = {
 # Footy leagues with "live scoring" enabled
 FOOTY_LIVE_SCORED_LEAGUES = {
     # ":trophy: WORLD CUP": WORLD_CUP_ID,
-    ":lion: EPL": EPL_LEAGUE_ID,
+    # ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
@@ -444,15 +446,16 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: :keycap_2: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
-    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
-    ":Germany: BUND": BUND_LEAGUE_ID,
-    ":Italy: Serie A": SERIE_A_LEAGUE_ID,
+    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    # ":Germany: BUND": BUND_LEAGUE_ID,
+    # ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
+    ":European_Union: :trophy: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
@@ -475,7 +478,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":child_medium-light_skin_tone: :military_medal: U20 ELITE LEAGUE": U20_ELITE_LEAGUE_ID,
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
-    # ":Norway: OBOS LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: OBOS LIGAEN": OBOS_LIGAEN_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF CHAMPIONS": CONCACAF_CHAMPIONS_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
@@ -504,6 +507,7 @@ FOOTY_XI_LEAGUES = {
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     ":United_States: :woman_medium_skin_tone: NWSL": NWSL_LEAGUE_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
+    ":European_Union: :trophy: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
@@ -535,6 +539,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
+    ":European_Union: :trophy: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
 }
 
@@ -554,6 +559,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    ":European_Union: :trophy: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
 }
