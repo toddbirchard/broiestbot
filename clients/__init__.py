@@ -8,6 +8,7 @@ from rq_scheduler import Scheduler
 
 from imdb import Cinemagoer
 from twilio.rest import Client
+from clients.red import NSFWRedGifs
 
 from config import (
     ALPHA_VANTAGE_API_KEY,
@@ -83,3 +84,6 @@ redis_scheduler = Scheduler(connection=r)
 
 # Playstation
 psn = PlaystationClient(PLAYSTATION_SSO_TOKEN)
+
+# RedGifs
+rgifs = NSFWRedGifs()

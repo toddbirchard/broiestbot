@@ -31,6 +31,7 @@ from .images import (
     giphy_image_search,
     random_image,
     subreddit_image,
+    fetch_nsfw_gif,
 )
 from .lyrics import get_song_lyrics
 from .markets import get_crypto_chart, get_crypto_price, get_stock, get_top_crypto

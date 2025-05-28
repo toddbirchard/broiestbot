@@ -1,6 +1,7 @@
 from .giphy import giphy_image_search
 from .random import random_image
 from .reddit import subreddit_image
+from .nsfw import fetch_nsfw_gif
 from .storage import (
     fetch_random_image_from_gcs_bucket,
     gcs_count_images_in_bucket,

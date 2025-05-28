@@ -34,7 +34,7 @@ from broiestbot.commands import (
     get_english_definition,
     get_english_translation,
     get_today_nfl_games,
-    # get_redgifs_gif,
+    fetch_nsfw_gif,
     get_song_lyrics,
     get_stock,
     get_summer_olympic_medals,
@@ -252,8 +252,8 @@ class Bot(RoomManager):
         #     return get_crypto_chart(args)
         # elif cmd_type == "lesbians":
         #     return get_redgifs_gif("lesbians", user_name)
-        # elif cmd_type == "nsfw" and args:
-        #     return get_redgifs_gif(args, user_name, after_dark_only=True)
+        elif cmd_type == "nsfw" and args:
+            return fetch_nsfw_gif(args, user_name)
         # elif cmd_type == "psn":
         #     return get_psn_online_friends()
         # elif cmd_type == "philliesgames":

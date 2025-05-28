@@ -1,4 +1,4 @@
-"""PSN Commands"""
+"""PSN Commands."""
 
 from typing import List, Optional
 from math import floor
