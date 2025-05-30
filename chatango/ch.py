@@ -308,6 +308,7 @@ class _ANON_PM_OBJECT:
     def disconnect(self):
         """Disconnect the bot from PM"""
         self._disconnect()
+        
         self._call_event("on_anon_pm_disconnect", get_user(self._name))
 
     def _disconnect(self):
@@ -1785,11 +1786,15 @@ class RoomManager:
 
         :returns: True or None depending on if Room is joined
         """
-        if room not in self._rooms:
-            self._rooms_queue.put(room)
-            LOGGER.success(f"Joined Chatango room {room}.")
-            return True
-        return None
+        try:
+            if room not in self._rooms:
+                self._rooms_queue.put(room)
+                LOGGER.success(f"Joined Chatango room {room}.")
+                return True
+            return None
+        except Exception as e:
+            LOGGER.error(f"Failed to join room {room}: {e}")
+            return None
 
     def leave_room(self, room):
         """
@@ -1867,7 +1872,7 @@ class RoomManager:
 
         :param Room room: Chatango room recently joined by bot.
         """
-        room.message("Beep boop I'm dead inside 🤖")
+        # room.message("Beep boop I'm dead inside 🤖")
         LOGGER.success(f"[{room.room_name}] [{self.user.name}]: Successfully connected to {room.room_name}")
 
     def on_reconnect(self, room: Room):
@@ -1885,9 +1890,10 @@ class RoomManager:
         :param Room room: Chatango room where the event occurred
         """
         LOGGER.error(f"Failed to connect to {room.room_name}.")
-        self.set_timeout(1200, self.stop)
+        self.set_timeout(1000, self.stop)
         LOGGER.info(f"Attempting to connect to {room.room_name} again...")
         self.set_timeout(1200, self.join_room(room.room_name))
+        self.set_timeout(1200, self.main())
 
     def on_disconnect(self, room: Room):
         """
