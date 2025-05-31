@@ -363,6 +363,7 @@ CONMEBOL_LIBERTADORES_ID = 13
 CONMEBOL_SUDAMERICANA_ID = 11
 CONMEBOL_RECOUPA_ID = 541
 WOMENS_WORLD_CUP_ID = 8
+WOMENS_INT_FRIENDLIES_ID = 666
 NWSL_LEAGUE_ID = 254
 U20_WORLD_CUP_ID = 490
 USL_LEAGUE_1_ID = 255
@@ -416,6 +417,7 @@ FOOTY_LEAGUES = {
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
     ":United_States: :woman_medium_skin_tone: NSWL": NWSL_LEAGUE_ID,
+    ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
     # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
     # ":trophy: WORLD CUP": WORLD_CUP_ID,
@@ -471,6 +473,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
     ":United_States: :woman_medium_skin_tone: NWSL": NWSL_LEAGUE_ID,
+    ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
     # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
@@ -545,6 +548,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
     ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
+    ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
 }
 
@@ -566,6 +570,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
+    ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
