@@ -411,7 +411,7 @@ FOOTY_LEAGUES = {
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     ":globe_showing_Americas: :thumbs_down: FIFA CLUB WORLD CUP (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
-    ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
