@@ -1,7 +1,8 @@
 """Fetch sports betting markets."""
 
-from config import RAPID_API_KEY, ODDS_API_ENDPOINT
 import requests
+
+from config import RAPID_API_KEY, ODDS_API_ENDPOINT
 from logger import LOGGER
 
 
@@ -51,5 +52,6 @@ def fetch_odds_for_sport(sport_id: str) -> dict:
     url = ODDS_API_ENDPOINT
     params = {"sport_id": sport_id, "league_ids": "2635", "event_type": "live", "is_have_odds": "true"}
     headers = {"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": "pinnacle-odds.p.rapidapi.com"}
-    resp = requests.get(url, headers=headers, params=params)
+    resp = requests.get(url, headers=headers, params=params, timeout=20)
+    LOGGER.info(f"Response from odds API: {resp.status_code} {resp.reason} {resp.text}")
     return resp.json().get("events")

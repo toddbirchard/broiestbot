@@ -87,6 +87,13 @@ def json_formatter(record: dict) -> str:
                 "message": log["message"],
             }
             return json.dumps(subset)
+        elif not log.get("message"):
+            subset = {
+                "time": log["time"],
+                "level": log["level"].name,
+                "message": "(No message provided)",
+            }
+            return json.dumps(subset)
 
     if record["level"].name == "INFO":
         record["extra"]["serialized"] = serialize_as_admin(record)
@@ -98,8 +105,6 @@ def json_formatter(record: dict) -> str:
         record["extra"]["serialized"] = serialize_error(record)
         sms_error_handler(record)
         return "{extra[serialized]},\n"
-    record["extra"]["serialized"] = serialize_error(record)
-    return "{extra[serialized]},\n"
 
 
 def construct_json_from_corrupted_log(log: str) -> str:

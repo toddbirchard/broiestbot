@@ -308,7 +308,7 @@ class _ANON_PM_OBJECT:
     def disconnect(self):
         """Disconnect the bot from PM"""
         self._disconnect()
-        
+
         self._call_event("on_anon_pm_disconnect", get_user(self._name))
 
     def _disconnect(self):

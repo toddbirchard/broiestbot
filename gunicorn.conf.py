@@ -13,21 +13,21 @@ ENVIRONMENT = environ.get("ENVIRONMENT")
 
 proc_name = "broiestbot"
 wsgi_app = "wsgi:app"
-bind = "unix:broiestbot.sock"
+bind = ["127.0.0.1:8005"]
+loglevel = "trace"
 reload = True
 threads = 1
 workers = 1
 
 if ENVIRONMENT == "development" or ENVIRONMENT is None:
-    workers = 1
-    threads = 1
-    bind = ["127.0.0.1:8005"]
+    errorlog = "logs/gunicorn_errors.log"
+    capture_output = False
 elif ENVIRONMENT == "production":
-    access_log_format = "%(h)s %(l)s %(u)s %(t)s %(r)s %(s)s %(b)s %(f)s %(a)s"
     daemon = True
-    accesslog = "/var/log/broiestbot/info.json"
-    errorlog = "/var/log/broiestbot/error.json"
-    loglevel = "trace"
+    accesslog = f"/var/log/{proc_name}/access.log"
+    errorlog = f"/var/log/{proc_name}/gunicorn_errors.log"
+    capture_output = True
+    ca_certs = "creds/ca-certificate.crt"
     dogstatsd_tags = "env:production,service:broiest,language:python"
 else:
     raise ValueError(f"Unknown environment provided: `{ENVIRONMENT}`. Must be `development` or `production`.")
