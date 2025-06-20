@@ -90,7 +90,6 @@ def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> L
         params = {
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
-            "status": "NS",
             "season": get_season_year(league_id),
             "timezone": tz_name,
         }
@@ -99,6 +98,9 @@ def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> L
             headers=FOOTY_HTTP_HEADERS,
             params=params,
             timeout=HTTP_REQUEST_TIMEOUT,
+        )
+        LOGGER.info(
+            f"Fetching footy fixtures for league {league_id} and day {today.strftime('%Y-%m-%d')}: {resp.json()}"
         )
         return resp.json().get("response")
     except HTTPError as e:
