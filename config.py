@@ -208,6 +208,10 @@ GENIUS_ACCESS_TOKEN = getenv("GENIUS_KEY_SECRET")
 # -------------------------------------------------
 YOUTUBE_API_KEY = getenv("YOUTUBE_API_KEY")
 
+# Anthropic
+# -------------------------------------------------
+ANTHROPIC_API_KEY = getenv("ANTHROPIC_API_KEY")
+
 # Twitch
 # -------------------------------------------------
 
@@ -542,7 +546,6 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     ":United_States: MLS": MLS_LEAGUE_ID,
     ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
-    ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
