@@ -7,7 +7,7 @@ from psnawp_api.models.client import Client
 
 # from psnawp_api.models.trophies.trophy import Trophy
 
-from config import PLAYSTATION_EAFC_2024_ID
+from config import PLAYSTATION_EAFC_2025_ID
 
 
 class PlaystationClient:
@@ -15,7 +15,7 @@ class PlaystationClient:
 
     def __init__(self, token: str):
         self.psn = PSNAWP(token)
-        self.eafc = PLAYSTATION_EAFC_2024_ID
+        self.eafc = PLAYSTATION_EAFC_2025_ID
 
     @property
     def account(self) -> Client:

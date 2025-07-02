@@ -54,7 +54,7 @@ from broiestbot.commands import (
     upcoming_nba_games,
     get_current_weather,
     wiki_summary,
-    # get_psn_online_friends,
+    get_psn_online_friends,
     league_table_standings,
     generate_twitter_preview,
     mls_standings,
@@ -254,8 +254,8 @@ class Bot(RoomManager):
         #     return get_redgifs_gif("lesbians", user_name)
         # elif cmd_type == "nsfw" and args:
         #     return get_redgifs_gif(args, user_name, after_dark_only=True)
-        # elif cmd_type == "psn":
-        #     return get_psn_online_friends()
+        elif cmd_type == "psn":
+            return get_psn_online_friends()
         # elif cmd_type == "philliesgames":
         #    return today_phillies_games(
         # elif cmd_type == "youtube" and args:

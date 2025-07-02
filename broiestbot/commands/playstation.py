@@ -7,7 +7,7 @@ from emoji import emojize
 
 from clients import psn
 
-from config import PLAYSTATION_EAFC_2024_ID
+from config import PLAYSTATION_EAFC_2025_ID
 
 from logger import LOGGER
 
@@ -24,7 +24,7 @@ def get_psn_online_friends() -> str:
         if bool(online_friends):
             active_friends = get_active_friends(online_friends)
             if active_friends or online_friends:
-                return create_psn_response(active_friends, online_friends)
+                return create_psn_response(active_friends)
         return emojize(f"\n\n:video_game: <b>{psn_account}</b> has no friends.", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching PSN friends: {e}")
@@ -81,7 +81,7 @@ def get_psn_game_trophies():
     """List all game trophies earned by user."""
     try:
         trophies = psn.account.trophies(
-            np_communication_id=PLAYSTATION_EAFC_2024_ID, platform=["PS5", "PS4"], limit=100, include_metadata=True
+            np_communication_id=PLAYSTATION_EAFC_2025_ID, platform=["PS5", "PS4"], limit=100
         )
         for trophy in trophies:
             LOGGER.info(trophy)

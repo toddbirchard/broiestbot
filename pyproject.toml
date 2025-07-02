@@ -56,7 +56,6 @@ rq = "*"
 rq-scheduler = "*"
 nflgame = "*"
 coverage = "*"
-anthropic = "*"
 gunicorn = ">=23.0.0"
 
 [tool.poetry.scripts]
