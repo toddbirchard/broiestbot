@@ -37,6 +37,7 @@ from config import (
     U20_ELITE_LEAGUE_ID,
     OBOS_LIGAEN_ID,
     CLUB_WORLD_CUP_LEAGUE_ID,
+    WEUROS_LEAGUE_ID,
 )
 
 
@@ -225,6 +226,7 @@ def get_season_year(league_id: int) -> Optional[int]:
         CONCACAF_NATIONS_LEAGUE_ID,
         OBOS_LIGAEN_ID,
         CLUB_WORLD_CUP_LEAGUE_ID,
+        WEUROS_LEAGUE_ID,
     ):
         return current_year
     # Exception for leagues that have a nonsensical `season` year.

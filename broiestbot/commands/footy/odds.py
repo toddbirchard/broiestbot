@@ -55,13 +55,12 @@ def fetch_today_footy_odds_for_league(league_id: int):
             "x-rapidapi-key": RAPID_API_KEY,
         }
         resp = requests.get(url, headers=headers, params=querystring, timeout=HTTP_REQUEST_TIMEOUT)
-        LOGGER.info(f"Response from footy odds API: {resp.status_code} {resp.reason} {resp.text}")
         return resp.json()
     except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching footy odds: {e.response.content}")
+        LOGGER.error(f"HTTPError while fetching footy odds: {e.response.content}")
         return emojize(":yellow_square: trash API couldnt find footy odds smdh :yellow_square:", language="en")
     except Exception as e:
-        LOGGER.exception(f"Unexpected error when fetching footy odds: {e}")
+        LOGGER.error(f"Unexpected error when fetching footy odds: {e}")
         return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
 
 
@@ -83,5 +82,5 @@ def format_fixture_odds(fixtures: List[dict]) -> Optional[str]:
             return emojize(f"{fixture_odds}\n\n{fixture_odds}", language="en")
         return emojize(":yellow_square: trash API couldnt find footy odds smdh :yellow_square:", language="en")
     except Exception as e:
-        LOGGER.exception(f"Unexpected error while formatting footy odds: {e}")
+        LOGGER.error(f"Unexpected error while formatting footy odds: {e}")
         return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
