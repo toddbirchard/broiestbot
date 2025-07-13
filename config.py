@@ -163,6 +163,7 @@ TWILIO_ACLEE_PHONE_NUMBER = getenv("TWILIO_ACLEE_PHONE_NUMBER")
 TWILIO_BALES_PHONE_NUMBER = getenv("TWILIO_BALES_PHONE_NUMBER")
 TWILIO_SLANT_PHONE_NUMBER = getenv("TWILIO_SLANT_PHONE_NUMBER")
 TWILIO_PIZZA_PHONE_NUMBER = getenv("TWILIO_PIZZA_PHONE_NUMBER")
+TWILIO_HURTS_PHONE_NUMBER = getenv("TWILIO_HURTS_PHONE_NUMBER")
 TWILIO_MRSACLEE_PHONE_NUMBER = getenv("TWILIO_MRSACLEE_PHONE_NUMBER")
 TWILIO_AUTH_TOKEN = getenv("TWILIO_AUTH_TOKEN")
 TWILIO_ACCOUNT_SID = getenv("TWILIO_ACCOUNT_SID")
@@ -172,6 +173,7 @@ TWILIO_PHONE_NUMBERS = {
     "baleswb": TWILIO_BALES_PHONE_NUMBER,
     "findanewslant": TWILIO_SLANT_PHONE_NUMBER,
     "thegreatpizza": TWILIO_PIZZA_PHONE_NUMBER,
+    "hurtsmeplenty": TWILIO_HURTS_PHONE_NUMBER,
 }
 
 # Reddit
@@ -429,7 +431,7 @@ FOOTY_LEAGUES = {
     # ":trophy: WORLD CUP": WORLD_CUP_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
@@ -476,7 +478,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
@@ -514,7 +516,7 @@ FOOTY_XI_LEAGUES = {
     # ":Germany: BUND": BUND_LEAGUE_ID,
     ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
-    ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
+    # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
@@ -532,6 +534,7 @@ FOOTY_XI_LEAGUES = {
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 FOOTY_LIVE_ODDS_LEAGUES = {
@@ -561,6 +564,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
@@ -587,6 +591,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 # Footy leagues to be considered for "golden shoe" award
