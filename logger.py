@@ -172,7 +172,7 @@ def create_logger():
             catch=True,
             level="TRACE",
             format=log_formatter,
-            rotation="300 MB",
+            rotation="10 MB",
             compression="zip",
         )
         # Human-readable error logs
@@ -182,14 +182,14 @@ def create_logger():
             catch=True,
             level="ERROR",
             format=log_formatter,
-            rotation="300 MB",
+            rotation="10 MB",
             compression="zip",
         )
         # Datadog JSON logs
         logger.add(
             "/var/log/broiestbot/info.json",
             format=json_formatter,
-            rotation="300 MB",
+            rotation="10 MB",
             compression="zip",
             level="TRACE",
         )
@@ -201,7 +201,7 @@ def create_logger():
             catch=True,
             level="TRACE",
             format=log_formatter,
-            rotation="300 MB",
+            rotation="10 MB",
             compression="zip",
         )
         # Human-readable error logs
@@ -211,14 +211,14 @@ def create_logger():
             catch=True,
             level="ERROR",
             format=log_formatter,
-            rotation="300 MB",
+            rotation="10 MB",
             compression="zip",
         )
         # Datadog JSON logs
         logger.add(
             f"{BASE_DIR}/logs/info.json",
             format=json_formatter,
-            rotation="300 MB",
+            rotation="10 MB",
             compression="zip",
             level="TRACE",
         )

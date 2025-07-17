@@ -2,6 +2,8 @@
 
 import re
 from typing import Optional, Tuple
+from datetime import timedelta
+import sched, time
 from emoji import emojize
 
 from database import session
@@ -12,10 +14,12 @@ from broiestbot.commands import (
     basic_message,
     blaze_time_remaining,
     change_or_stay_vote,
+    is_poll_active,
     get_live_poll_results,
     covid_cases_usa,
     epl_golden_boot,
     # extract_url,
+    completed_poll_results,
     fetch_fox_fixtures,
     fetch_random_image_from_gcs_bucket,
     find_imdb_movie,
@@ -93,6 +97,7 @@ class Bot(RoomManager):
     def __init__(self, name=None, password=None):
         super().__init__(name, password)
         self.bot_username = name
+        self.s = sched.scheduler(time.time, time.sleep)
 
     def on_init(self):
         """Initialize bot."""
@@ -234,8 +239,10 @@ class Bot(RoomManager):
             return tovala_counter(user_name)
         elif cmd_type == "imagecount":
             return gcs_count_images_in_bucket(content)
-        elif cmd_type == "changeorstayvote":
-            return change_or_stay_vote(user_name, content, room)
+        # elif cmd_type == "changeorstayvote":
+            # return change_or_stay_vote(user_name, content)
+        elif cmd_type == "pollresults":
+            return completed_poll_results()
         elif cmd_type == "changeorstay":
             return get_live_poll_results(user_name)
         elif cmd_type == "odds":
@@ -404,6 +411,8 @@ class Bot(RoomManager):
         cmd, args = self._parse_command(chat_message[1::].strip())
         command = session.query(Command).filter(Command.command == cmd).first()
         if command is not None and command.type != "reserved":
+            if command.type == "changeorstayvote":
+                self._poll_started(room, user_name, command.response)
             response = self.create_message(
                 command.type,
                 command.response,
@@ -459,3 +468,28 @@ class Bot(RoomManager):
         """
         message.delete()
         room.message("™")
+
+    def _poll_started(self, room: Room, user_name: str, vote: str):
+        """
+        Acknowledge the initiation of a poll & schedule results to be posted.
+
+        :param Room room: Current Chatango room object.
+        :param str user_name: User who initiated the poll.
+        :param str vote: The user's vote (either 'change' or 'stay').
+
+        :returns: None
+        """
+        if not is_poll_active():
+            poll_message = change_or_stay_vote(user_name, vote)
+            LOGGER.info(f"Poll started by @{user_name} with vote: {vote}")
+            room.message(poll_message, html=True)
+            self.s.enter(10, 1, self.create_message, argument=("pollresults", completed_poll_results()))
+            '''redis_scheduler.enqueue_in(
+                timedelta(seconds=5),
+                self.create_message,
+                args=["pollresults", vote]
+            )'''
+            LOGGER.info("No poll currently active, starting a new one.")
+        else:
+            room.message(change_or_stay_vote(user_name, vote), html=True)
+
