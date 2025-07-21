@@ -265,14 +265,14 @@ files = [
 
 [[package]]
 name = "botocore"
-version = "1.39.7"
+version = "1.39.9"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.39.7-py3-none-any.whl", hash = "sha256:1d11ba9f3cb46856bb541ed010db160093201a224d21ef854249513ae3af7e77"},
-    {file = "botocore-1.39.7.tar.gz", hash = "sha256:431e342ef97ecb387cea9df1ae8c4e0edc1b0c9c50d2e121cca77699f24f8dc1"},
+    {file = "botocore-1.39.9-py3-none-any.whl", hash = "sha256:a9691cbe03a3bc8b2720b3c36e5c5a2eecace6acd72bfb1107f00e75edaec4f3"},
+    {file = "botocore-1.39.9.tar.gz", hash = "sha256:02f141c2849e4589a79feea245ce4ecc478d48b7865572445af8aae3b041772d"},
 ]
 
 [package.dependencies]
@@ -1123,14 +1123,14 @@ pyparsing = {version = ">=2.4.2,<3.0.0 || >3.0.0,<3.0.1 || >3.0.1,<3.0.2 || >3.0
 
 [[package]]
 name = "hypothesis"
-version = "6.135.32"
+version = "6.136.1"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "hypothesis-6.135.32-py3-none-any.whl", hash = "sha256:d0f2bf93863f19a7af2510685dde2b89efb94eaebd3ca0b86c548cd8daa33ab0"},
-    {file = "hypothesis-6.135.32.tar.gz", hash = "sha256:b74019dc58065d806abea6292008a392bc9326b88d6a46c8cce51c9cd485af42"},
+    {file = "hypothesis-6.136.1-py3-none-any.whl", hash = "sha256:2585c89cf69a14a4b67dbc4e68a0bc3c321d34b12ced612aec383ad0112de44e"},
+    {file = "hypothesis-6.136.1.tar.gz", hash = "sha256:ddceffdf0f489439d47ec032b23bf696c1c82600b9e675e60260ab23b55aa958"},
 ]
 
 [package.dependencies]
@@ -1206,14 +1206,14 @@ rich = "*"
 
 [[package]]
 name = "iso639-lang"
-version = "2.6.1"
+version = "2.6.2"
 description = "A fast, comprehensive, ISO 639 library."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "iso639_lang-2.6.1-py3-none-any.whl", hash = "sha256:6f41183aafc84716c3d559f57c036b04c3262899b89f7eadd68c397cce1ab572"},
-    {file = "iso639_lang-2.6.1.tar.gz", hash = "sha256:5e960467cd95b7e4417d48792745a51457be0346417a3cde40a75cfc142e1a37"},
+    {file = "iso639_lang-2.6.2-py3-none-any.whl", hash = "sha256:fedac2b04ea928b0ac0219ad15ce04dfcadba651dc0e38f101adf4a5c2e41a61"},
+    {file = "iso639_lang-2.6.2.tar.gz", hash = "sha256:f451fce6598bdabba04b4bcf330695444f2d687bd1e341f4870792cf6031c658"},
 ]
 
 [[package]]
@@ -1596,14 +1596,14 @@ files = [
 
 [[package]]
 name = "narwhals"
-version = "1.47.1"
+version = "1.48.0"
 description = "Extremely lightweight compatibility layer between dataframe libraries"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "narwhals-1.47.1-py3-none-any.whl", hash = "sha256:b9f2b2557aba054231361a00f6fcabc5017e338575e810e82155eb34e38ace93"},
-    {file = "narwhals-1.47.1.tar.gz", hash = "sha256:3e477a54984a141b500ebd65d0b946b7a991080939b4a3321a6b01ea97258c9a"},
+    {file = "narwhals-1.48.0-py3-none-any.whl", hash = "sha256:2bbddc3adeed0c5b15ead8fe61f1d5e459f00c1d2fa60921e52a0f9bdc06077d"},
+    {file = "narwhals-1.48.0.tar.gz", hash = "sha256:7243b456cbdb60edb148731a8f9b203f473a373a249ad66c699362508730e63f"},
 ]
 
 [package.extras]
@@ -2254,14 +2254,14 @@ files = [
 
 [[package]]
 name = "pyrate-limiter"
-version = "3.7.1"
+version = "3.8.0"
 description = "Python Rate-Limiter using Leaky-Bucket Algorithm"
 optional = false
 python-versions = "<4.0,>=3.8"
 groups = ["main"]
 files = [
-    {file = "pyrate_limiter-3.7.1-py3-none-any.whl", hash = "sha256:ecb7ca6ab94a509c72fed1ce4f710c1eb3c716ba7b4fb32c0f9edf39d4beb5f6"},
-    {file = "pyrate_limiter-3.7.1.tar.gz", hash = "sha256:b268cc0b2c9f85175dbfe49ce765659a41db24d165da45395853602e5cf85819"},
+    {file = "pyrate_limiter-3.8.0-py3-none-any.whl", hash = "sha256:7561949310751fc609ec079e81151e41baac04795b3239715cf29a884a043029"},
+    {file = "pyrate_limiter-3.8.0.tar.gz", hash = "sha256:b8970968b80b8828f3c08d337987c3d65d8259bd77aa9b471f20ac1e82a0118d"},
 ]
 
 [package.extras]
@@ -2388,14 +2388,14 @@ requests = ">=2.0.1,<3.0.0"
 
 [[package]]
 name = "retrying"
-version = "1.4.0"
+version = "1.4.1"
 description = "Retrying"
 optional = false
 python-versions = ">=3.6"
 groups = ["main"]
 files = [
-    {file = "retrying-1.4.0-py3-none-any.whl", hash = "sha256:6509d829c70271937605bce361c8f76e91f9123d355d14df7dc6972b1518064a"},
-    {file = "retrying-1.4.0.tar.gz", hash = "sha256:efa99c78bf4fbdbe6f0cba4101470fbc684b93d30ca45ffa1288443a9805172f"},
+    {file = "retrying-1.4.1-py3-none-any.whl", hash = "sha256:d736050c1adfc0a71fa022d9198ee130b0e66be318678a3fdd8b1b8872dc0997"},
+    {file = "retrying-1.4.1.tar.gz", hash = "sha256:4d206e0ed2aff5ef2f3cd867abb9511e9e8f31127c5aca20f1d5246e476903b0"},
 ]
 
 [[package]]
@@ -2419,19 +2419,19 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "rq"
-version = "2.4.0"
+version = "2.4.1"
 description = "RQ is a simple, lightweight, library for creating background jobs, and processing them."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "rq-2.4.0-py3-none-any.whl", hash = "sha256:4b854d27ad0d9687b9e6f686e001a3043807694ace5340a3f9697b42c6a9c65a"},
-    {file = "rq-2.4.0.tar.gz", hash = "sha256:750bab5dbb7cf1ec8a0aa2ebe8949472fa58fc121afd446c7bf5f7797f5e0655"},
+    {file = "rq-2.4.1-py3-none-any.whl", hash = "sha256:a3a0839ba3213a9be013b398670caf71d9360a0c8525f343687cf2c2199e5ec8"},
+    {file = "rq-2.4.1.tar.gz", hash = "sha256:40ba01af3edacc008ab376009a3a547278d2bfe02a77cd4434adc0b01788239f"},
 ]
 
 [package.dependencies]
 click = ">=5"
-redis = ">=3.5,<6.0.0 || >6.0.0"
+redis = ">=3.5,<6 || >6"
 
 [[package]]
 name = "rq-scheduler"
