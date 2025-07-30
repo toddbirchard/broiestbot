@@ -155,7 +155,7 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
             if player_name and time_elapsed:
                 if "Goal" in event_detail and event_type == "Var":
                     event_log += emojize(
-                        f":cross_mark: :soccer_ball: {player_name} <i>({event_detail}), {time_elapsed}</i>\n",
+                        f":cross_mark: :soccer_ball: {player_name} <i>({event_detail})</i>, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Yellow Card":
@@ -190,7 +190,7 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
                     )
                 elif event_type == "subst" and assisting_player and subs is True:
                     event_log += emojize(
-                        f":red_triangle_pointed_down: {assisting_player} :evergreen_tree: {player_name}, {time_elapsed}\n",
+                        f":red_triangle_pointed_down: {player_name} :evergreen_tree: {assisting_player}, {time_elapsed}\n",
                         language="en",
                     )
         return event_log
