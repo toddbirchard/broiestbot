@@ -41,7 +41,7 @@ from .misc import (
     time_until_wayne,
 )
 from .mlb import today_phillies_games
-from .movies import find_imdb_movie, streaming_service_show
+from .movies import find_imdb_movie, find_movie, streaming_service_show
 from .nba import live_nba_games, nba_standings, upcoming_nba_games
 from .nfl import get_today_nfl_games, get_live_nfl_game_summaries
 from .olympics import get_summer_olympic_medals, get_winter_olympic_medals

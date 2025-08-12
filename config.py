@@ -709,6 +709,11 @@ PLAYSTATION_EAFC_2025_ID = "PPSA20049_00"
 STREAMING_SERVICE_ENDPOINT = "https://streaming-availability.p.rapidapi.com/shows/search/title"
 STREAMING_SERVICE_HEADER = "streaming-availability.p.rapidapi.com"
 
+# OMDb
+# -------------------------------------------------
+OMDB_ENDPOINT = "http://www.omdbapi.com/"
+OMDB_API_KEY = getenv("OMDB_API_KEY")
+
 # Twitter (Unused)
 # -------------------------------------------------
 TWITTER_API_V1_ENDPOINT = "https://api.twitter.com/1.1/statuses/lookup.json"

@@ -11,7 +11,91 @@ from imdb.Movie import Movie
 from clients import ia
 from logger import LOGGER
 
-from config import STREAMING_SERVICE_ENDPOINT, STREAMING_SERVICE_HEADER, RAPID_API_KEY, HTTP_REQUEST_TIMEOUT
+from config import (
+    STREAMING_SERVICE_ENDPOINT,
+    STREAMING_SERVICE_HEADER,
+    RAPID_API_KEY,
+    HTTP_REQUEST_TIMEOUT,
+    OMDB_ENDPOINT,
+    OMDB_API_KEY,
+)
+
+
+def find_movie(movie_title: str) -> str:
+    """
+    Get movie metadata from OMDb.
+
+    :param str movie_title: Movie to fetch OMDb info for.
+
+    :returns: str
+    """
+    try:
+        resp = requests.get(
+            OMDB_ENDPOINT,
+            params={"t": movie_title, "apikey": OMDB_API_KEY},
+            timeout=HTTP_REQUEST_TIMEOUT,
+        )
+        if resp.status_code == 200:
+            movie = resp.json()
+            title = f"<b>{movie.get('Title').upper()}</b>"
+            year = movie.get("Year")
+            rated = movie.get("Rated")
+            ratings = movie.get("Ratings")
+            cast = movie.get("Actors")
+            director = movie.get("Director")
+            genres = movie.get("Genre")
+            poster = movie.get("Poster")
+            plot = movie.get("Plot")
+            awards = movie.get("Awards")
+            box_office = movie.get("BoxOffice")
+            imdb_url = movie.get("imdbID")
+            if title and year:
+                title = f"{title}, {year} <i>({rated})</i>"
+            if ratings:
+                ratings = [rating for rating in ratings if rating.get("Source") == "Rotten Tomatoes"]
+                rating = ratings[0].get("Value")
+                rating = f"🍅 <b>Rotten Tomatos</b>: {rating}"
+            if cast:
+                cast = f":people_hugging: <b>Starring</b>: {cast}"
+            if director:
+                director = f":clapper_board: <b>Directed by</b>: {director}"
+            if genres:
+                genres = f":movie_camera: <b>Genres</b>: {genres}"
+            if awards:
+                awards = f":trophy: <b>Awards</b>: {awards}"
+            if plot:
+                plot = f":speech_balloon: <b>Plot</b>: <i>{plot}</i>"
+            if box_office:
+                box_office = f":money_bag: <b>Box Office</b>: {box_office}"
+            if poster:
+                poster = f"\n\n {poster} \n"
+            if imdb_url:
+                imdb_url = f"\n\n https://www.imdb.com/title/{imdb_url}/"
+            response = "\n".join(
+                filter(
+                    None,
+                    [
+                        title,
+                        plot,
+                        rating,
+                        genres,
+                        cast,
+                        director,
+                        awards,
+                        box_office,
+                        poster,
+                        imdb_url,
+                    ],
+                )
+            )
+            return emojize(f"\n\n\n{response}", language="en")
+        return emojize(f":warning: wtf kind of movie is {movie_title} :warning:", language="en")
+    except HTTPError as e:
+        LOGGER.exception(f"OMDb failed to find `{movie_title}`: {e}")
+        return emojize(f":warning: wtf kind of movie is {movie_title} :warning:", language="en")
+    except Exception as e:
+        LOGGER.exception(f"Unexpected error while fetching OMDb movie `{movie_title}`: {e}")
+        return emojize(":warning: omfg u broke me with ur shit movie :warning:", language="en")
 
 
 def find_imdb_movie(movie_title: str) -> str:
@@ -28,13 +112,15 @@ def find_imdb_movie(movie_title: str) -> str:
             movie_id = movies[0].getID()
             movie = ia.get_movie(movie_id)
             if movie:
+                LOGGER.info(f"IMDB found movie: `{movie.keys()}`")
+                LOGGER.info(f"IMDB found movie data: `{movie.data.keys()}`")
                 title = f"<b>{movie.data.get('title').upper()}</b>"
                 cast = movie.data.get("cast")
                 director = movie.data.get("director")
                 year = movie.data.get("year")
                 genres = movie.data.get("genres")
                 rating = movie.data.get("rating")
-                art = movie.data.get("cover url")
+                art = movie.data.get("full-size cover url")
                 box_office = get_box_office_data(movie)
                 synopsis = movie.data.get("synopsis")
                 if title and year:

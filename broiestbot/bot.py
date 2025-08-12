@@ -19,6 +19,7 @@ from broiestbot.commands import (
     fetch_fox_fixtures,
     fetch_random_image_from_gcs_bucket,
     find_imdb_movie,
+    find_movie,
     streaming_service_show,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
@@ -142,7 +143,7 @@ class Bot(RoomManager):
         elif cmd_type == "wiki" and args:
             return wiki_summary(args)
         elif cmd_type == "imdb" and args:
-            return find_imdb_movie(args)
+            return find_movie(args)
         elif cmd_type == "streamingshow" and args:
             return streaming_service_show(args)
         elif cmd_type == "urban" and args:
