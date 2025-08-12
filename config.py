@@ -704,6 +704,11 @@ PLAYSTATION_SSO_TOKEN = getenv("PLAYSTATION_SSO_TOKEN")
 PLAYSTATION_EAFC_2024_ID = "PPSA13393_00"
 PLAYSTATION_EAFC_2025_ID = "PPSA20049_00"
 
+# Streaming Services
+# -------------------------------------------------
+STREAMING_SERVICE_ENDPOINT = "https://streaming-availability.p.rapidapi.com/shows/search/title"
+STREAMING_SERVICE_HEADER = "streaming-availability.p.rapidapi.com"
+
 # Twitter (Unused)
 # -------------------------------------------------
 TWITTER_API_V1_ENDPOINT = "https://api.twitter.com/1.1/statuses/lookup.json"

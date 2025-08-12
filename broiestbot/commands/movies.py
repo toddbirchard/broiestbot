@@ -2,12 +2,16 @@
 
 from typing import Optional
 
+import requests
+from requests.exceptions import HTTPError
 from emoji import emojize
 from imdb import IMDbError
 from imdb.Movie import Movie
 
 from clients import ia
 from logger import LOGGER
+
+from config import STREAMING_SERVICE_ENDPOINT, STREAMING_SERVICE_HEADER, RAPID_API_KEY, HTTP_REQUEST_TIMEOUT
 
 
 def find_imdb_movie(movie_title: str) -> str:
@@ -98,3 +102,78 @@ def get_box_office_data(movie: Movie) -> Optional[str]:
         LOGGER.warning(f"KeyError when fetching box office info for `{movie}`: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching box office info for `{movie}`: {e}")
+
+
+def streaming_service_show(tv_show_name: str) -> str:
+    """
+    Placeholder for future streaming service availability feature.
+
+    :param str query: TV show to search for.
+
+    :returns: str
+    """
+    try:
+        params = {"title": tv_show_name, "country": "us", "output_language": "en", "show_type": "series"}
+        headers = {"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": STREAMING_SERVICE_HEADER}
+        resp = requests.get(STREAMING_SERVICE_ENDPOINT, headers=headers, params=params, timeout=HTTP_REQUEST_TIMEOUT)
+        if resp.status_code == 200:
+            show = resp.json()[0]
+            response = ""
+            response += streaming_service_show_description(show)
+            return emojize(response, language="en")
+    except HTTPError as e:
+        LOGGER.exception(f"Streaming-availability API failed to find `{tv_show_name}`: {e}")
+        return emojize(f":warning: wtf kind of show is {tv_show_name} :warning:", language="en")
+    except Exception as e:
+        LOGGER.exception(f"Unexpected error while fetching show availability `{tv_show_name}`: {e}")
+        return emojize(f":warning: wtf kind of show is {tv_show_name} :warning:", language="en")
+
+
+def streaming_service_movie(movie_name: str) -> str:
+    """
+    Placeholder for future streaming service availability feature.
+
+    :param str query: Movie to search for.
+
+    :returns: str
+    """
+    pass
+
+
+def streaming_service_show_description(result: dict) -> str:
+    """
+    Placeholder for future streaming service availability feature.
+
+    :returns: str
+    """
+    # LOGGER.info(f"Streaming-availability API found: `{result}`")
+    streaming_options = result.get("streamingOptions")
+    streaming_options_us = streaming_options.get("us")
+    if streaming_options is not None and streaming_options_us is not None:
+        title = result.get("title", "Unknown Title")
+        overview = result.get("overview", "No overview available.")
+        first_air_date = result.get("firstAirYear", "Unknown release date")
+        last_air_date = result.get("lastAirYear", "Unknown last air date")
+        rating = result.get("rating", "No rating available")
+        season_count = result.get("seasonCount", "Unknown number of seasons")
+        episode_count = result.get("episodeCount", "Unknown number of episodes")
+        image_set = result.get("imageSet")
+        series_overview = f'\n\n\n<b>{title}</b> ({first_air_date} - {last_air_date})\n \
+            <i>"{overview}"</i>\n \
+            ⭐️ {rating} / 100\n \
+            #️⃣ Seasons: {season_count}, Episodes: {episode_count}'
+        if image_set is not None:
+            horizontal_images = image_set.get("horizontalPoster")
+            if horizontal_images is not None:
+                image = horizontal_images.get("w360")
+                if image is not None:
+                    series_overview += f"\n\n {image} \n"
+        service_dict = {}
+        for service in streaming_options_us:
+            if service["service"].get("name") and service.get("link"):
+                service_name = service["service"]["name"]
+                service_dict[service_name] = service["link"]
+        for k, v in service_dict.items():
+            series_overview += f"\n- {k}: {v}"
+        return series_overview
+    return ":warning: No streaming options available for ur trash show :warning:"
