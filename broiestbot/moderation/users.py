@@ -2,7 +2,8 @@ from typing import Optional
 
 from emoji import emojize
 
-from chatango.ch import Message, Room
+from chatango.message import Message
+from chatango.room import Room
 from config import (
     CHATANGO_BLACKLISTED_USERS,
     CHATANGO_BANNED_IPS,

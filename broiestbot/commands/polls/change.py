@@ -1,11 +1,11 @@
 """Conduct a chat poll whether to 'change or stay'."""
 
-from typing import Tuple, Optional, List, Union
+from typing import Tuple, Optional, List
 from datetime import timedelta
 
 from emoji import emojize
 from redis.exceptions import RedisError
-from chatango.ch import Room
+from chatango.room import Room
 
 from clients import r, redis_scheduler
 from logger import LOGGER

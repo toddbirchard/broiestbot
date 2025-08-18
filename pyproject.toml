@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "broiestbot"
-version = "0.1.1"
+version = "0.2.0"
 description = "The Broiest of all chat bots for the Chatango platform."
 license = "MIT"
 readme = "README.md"
@@ -24,6 +24,7 @@ python = ">=3.12,<4.0"
 requests = "*"
 sqlalchemy = "*"
 pymysql = "*"
+chatango-lib = {git = "https://github.com/LmaoLover/chatango-lib.git", rev = "master"}
 google-cloud-storage = "*"
 loguru = "*"
 plotly = "*"

@@ -33,7 +33,7 @@ $(VIRTUAL_ENVIRONMENT):
 
 .PHONY: run
 run: env
-	$(LOCAL_PYTHON) -m gunicorn --config=gunicorn.conf.py
+	$(LOCAL_PYTHON) -m main:app
 
 .PHONY: install
 install: env
