@@ -7,6 +7,12 @@ from emoji import emojize
 from database import session
 from database.models import Command, Phrase
 
+import chatango
+from chatango.room import Room
+from chatango.message import Message
+from chatango.user import User
+
+
 from broiestbot.commands import (
     all_leagues_golden_boot,
     basic_message,
@@ -68,7 +74,7 @@ from broiestbot.commands import (
     get_psn_game_trophies,
     get_titles_with_stats,
 )
-from chatango.ch import Message, Room, RoomManager, User
+
 from config import (
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
@@ -89,19 +95,12 @@ from .moderation import ban_word, check_blacklisted_users
 from .moderation.users import ignored_user
 
 
-class Bot(RoomManager):
+class Bot(chatango.Client):
     """Chatango bot."""
 
-    def __init__(self, name=None, password=None):
-        super().__init__(name, password)
+    def __init__(self, name, password, rooms, pm=False):
+        super().__init__(name, password, rooms, pm=pm)
         self.bot_username = name
-
-    def on_init(self):
-        """Initialize bot."""
-        self.set_name_color("000000")
-        self.set_font_color("000000")
-        self.set_font_face("Arial")
-        self.set_font_size(11)
 
     def create_message(
         self,

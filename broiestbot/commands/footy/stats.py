@@ -3,7 +3,7 @@
 from typing import Optional
 import requests
 from emoji import emojize
-from chatango.ch import Room
+from chatango.room import Room
 
 from logger import LOGGER
 from config import FOOTY_FIXTURE_STATS_ENDPOINT, FOOTY_HTTP_HEADERS, FOOTY_LIVE_STATS_LEAGUES, HTTP_REQUEST_TIMEOUT

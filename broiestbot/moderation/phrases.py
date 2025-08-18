@@ -1,6 +1,7 @@
 """Delete chats containing blacklisted phrases."""
 
-from chatango.ch import Message, Room
+from chatango.message import Message
+from chatango.room import Room
 
 
 def ban_word(room: Room, message: Message, user_name: str, silent=False) -> None:
