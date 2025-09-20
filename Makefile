@@ -28,7 +28,7 @@ env: $(VIRTUAL_ENVIRONMENT)
 $(VIRTUAL_ENVIRONMENT):
 	if [ ! -d $(VIRTUAL_ENVIRONMENT) ]; then \
 		echo "Creating Python virtual environment..."; \
-		python -m venv $(VIRTUAL_ENVIRONMENT); \
+		python3 -m venv $(VIRTUAL_ENVIRONMENT); \
 	fi
 
 .PHONY: run
