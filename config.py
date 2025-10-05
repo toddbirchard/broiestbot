@@ -45,6 +45,7 @@ CHATANGO_PATREON_ROOM = getenv("CHATANGO_PATREON_ROOM")
 CHATANGO_FLYERS_ROOM = getenv("CHATANGO_FLYERS_ROOM")
 CHATANGO_UFC_ROOM = getenv("CHATANGO_UFC_ROOM")
 CHATANGO_UNION_ROOM = getenv("CHATANGO_UNION_ROOM")
+CHATANGO_LMAO_ROOM = getenv("CHATANGO_LMAO_ROOM")
 
 # Chatango rooms to be joined by the bot
 CHATANGO_ROOMS = [
@@ -60,6 +61,7 @@ CHATANGO_ROOMS = [
     # CHATANGO_PATREON_ROOM,
     # CHATANGO_UFC_ROOM,
     # CHATANGO_UNION_ROOM,
+    CHATANGO_LMAO_ROOM,
 ]
 
 # List of Chatango users with privileges to special commands
