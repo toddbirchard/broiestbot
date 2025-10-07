@@ -2,12 +2,14 @@ PROJECT_NAME := $(shell basename $CURDIR)
 VIRTUAL_ENVIRONMENT := $(CURDIR)/.venv
 LOCAL_PYTHON := $(VIRTUAL_ENVIRONMENT)/bin/python
 LOCAL_PYTHON_ACTIVATE := $(VIRTUAL_ENVIRONMENT)/bin/activate
+PROJECT_RUNNING_PROCESSES := $(shell pgrep -f broiestbot)
 
 define HELP
 Manage $(PROJECT_NAME). Usage:
 
 make run        - Run $(PROJECT_NAME) locally.
 make install    - Create local virtualenv & install dependencies.
+make kill       - Kill running instance of the bot.
 make deploy     - Set up project & run locally.
 make update     - Update dependencies via Poetry and output resulting `requirements.txt`.
 make format     - Run Python code formatter & sort dependencies.
@@ -40,6 +42,16 @@ install: env
 	$(LOCAL_PYTHON) -m pip install --upgrade pip setuptools wheel && \
 	$(LOCAL_PYTHON) -m pip install -r requirements.txt && \
 	echo "Installed dependencies in virtualenv \`${VIRTUAL_ENVIRONMENT}\`";
+
+.PHONY: kill
+kill:
+	ifeq ($(PROJECT_RUNNING_PROCESSES), )
+		echo "Killing running instances of $(PROJECT_NAME): $(PROJECT_RUNNING_PROCESSES)" && \
+		pkill $(PROJECT_RUNNING_PROCESSES) || true
+
+	else
+		echo "No running instances of $(PROJECT_NAME) found: $(PROJECT_RUNNING_PROCESSES)"
+	endif
 
 .PHONY: deploy
 deploy:
