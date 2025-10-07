@@ -61,7 +61,7 @@ CHATANGO_ROOMS = [
     # CHATANGO_PATREON_ROOM,
     # CHATANGO_UFC_ROOM,
     # CHATANGO_UNION_ROOM,
-    CHATANGO_LMAO_ROOM,
+    # CHATANGO_LMAO_ROOM,
 ]
 
 # List of Chatango users with privileges to special commands

@@ -23,9 +23,9 @@ if ENVIRONMENT == "development" or ENVIRONMENT is None:
     capture_output = False
 elif ENVIRONMENT == "production":
     daemon = True
-    accesslog = f"/var/log/{proc_name}/access.log"
-    errorlog = f"/var/log/{proc_name}/errors.log"
-    capture_output = True
+    # accesslog = f"/var/log/{proc_name}/access.log"
+    # errorlog = f"/var/log/{proc_name}/errors.log"
+    # capture_output = True
     ca_certs = "creds/ca-certificate.crt"
     dogstatsd_tags = "env:production,service:broiest,language:python"
 else:
