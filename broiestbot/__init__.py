@@ -6,7 +6,7 @@ from broiestbot.bot import Bot
 from config import (
     CHATANGO_USERS,
     CHATANGO_ROOMS,
-    CHATANGO_TEST_ROOM,
+    CHATANGO_LMAO_ROOM,
     ENVIRONMENT,
 )
 from logger import LOGGER
@@ -19,8 +19,8 @@ def start_bot():
         join_rooms(CHATANGO_ROOMS)
     else:
         LOGGER.info("Starting in dev mode...")
-        join_rooms([CHATANGO_TEST_ROOM])
-    return f"Joined {len(CHATANGO_ROOMS)} rooms."
+        join_rooms([CHATANGO_LMAO_ROOM])
+    return f"Joined {len(CHATANGO_LMAO_ROOM)} rooms."
 
 
 def join_rooms(rooms: List[str]):
@@ -36,7 +36,7 @@ def join_rooms(rooms: List[str]):
     try:
         for room in rooms:
             broiestbot.join_room(room)
-            broiestbot.main()
+        broiestbot.main()
     except KeyboardInterrupt as e:
         LOGGER.info(f"KeyboardInterrupt while joining Chatango room: {e}")
         broiestbot.stop()
