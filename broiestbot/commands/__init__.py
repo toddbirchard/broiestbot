@@ -36,6 +36,7 @@ from .lyrics import get_song_lyrics
 from .markets import get_crypto_chart, get_crypto_price, get_stock, get_top_crypto
 from .misc import (
     blaze_time_remaining,
+    nontent_time_remaining,
     covid_cases_usa,
     send_text_message,
     time_until_wayne,

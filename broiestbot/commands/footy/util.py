@@ -1,7 +1,7 @@
 """Helpers for footy commands."""
 
 from datetime import datetime, timedelta, tzinfo
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import pytz
 from pytz import BaseTzInfo
@@ -153,7 +153,7 @@ def abbreviate_team_name(team_name: str) -> str:
     )
 
 
-def check_fixture_start_date(fixture_start_date: datetime, tz: tzinfo, display_date: str) -> Union[str, datetime]:
+def check_fixture_start_date(fixture_start_date: datetime, tz: tzinfo, display_date: str) -> str:
     """
     Simplify fixture date if fixture occurs `Today` or `Tomorrow`.'
 
@@ -161,7 +161,7 @@ def check_fixture_start_date(fixture_start_date: datetime, tz: tzinfo, display_d
     :param tzinfo tz: Timezone of fixture start time.
     :param str display_date: Fallback string of fixture start time.
 
-    :returns: Union[str, datetime]
+    :returns: str
     """
     if fixture_start_date.date() == datetime.date(datetime.now(tz)):
         return f"<b>Today</b>, {display_date.split(', ')[1]}"

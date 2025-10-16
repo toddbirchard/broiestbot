@@ -19,7 +19,6 @@ threads = 1
 workers = 1
 
 if ENVIRONMENT == "development" or ENVIRONMENT is None:
-    errorlog = "logs/gunicorn_errors.log"
     capture_output = False
 elif ENVIRONMENT == "production":
     daemon = True

@@ -29,12 +29,10 @@ def today_upcoming_fixtures(room: str, username: str) -> str:
 
     :returns: str
     """
-    i = 0
     upcoming_fixtures = "\n\n\n\n"
     for league_name, league_id in FOOTY_LEAGUES.items():
         league_fixtures = today_upcoming_fixtures_per_league(league_name, league_id, room, username)
-        if league_fixtures is not None and i < 7:
-            i += 1
+        if league_fixtures is not None:
             upcoming_fixtures += f"{league_fixtures}\n"
     if upcoming_fixtures != "\n\n\n\n":
         return upcoming_fixtures
@@ -75,7 +73,7 @@ def today_upcoming_fixtures_per_league(league_name: str, league_id: int, room: s
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> List[Optional[dict]]:
+def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
     """
     Fetch all upcoming fixtures for the current date.
 
@@ -83,7 +81,7 @@ def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> L
     :param str room: Chatango room in which command was triggered.
     :param str timezone_name: Name of user's preferred timezone (ie: `America/New_York`).
 
-    :returns: List[Optional[dict]]
+    :returns: Optional[List[dict]]
     """
     try:
         today = get_current_day(room)

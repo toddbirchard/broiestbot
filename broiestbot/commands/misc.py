@@ -52,6 +52,35 @@ def blaze_time_remaining() -> str:
     )
 
 
+def nontent_time_remaining(user_name: str) -> str:
+    """
+    Calculate remaining time until EAFC nontent is released.
+
+    :param str user_name: Username of the user requesting the time remaining.
+
+    :returns: str
+    """
+    now = datetime.now(tz=TIMEZONE_US_EASTERN)
+    nontent_time = now.replace(hour=13, minute=0, second=0)
+    if nontent_time.today().weekday() == 4 and nontent_time <= now < nontent_time + timedelta(seconds=59):
+        return "\n\n⚽️🔥💯😁 OMFG EAFC <b>CONTENT</b> JUST DROPPED! CMON DEGENS LETS FOOKIN GRIND THIS PROMO AHHHHH! 😁💯🔥⚽️ \
+                \n\n https://www.futbin.com/"
+    elif nontent_time <= now < nontent_time + timedelta(seconds=59):
+        return "\n\n⚽️🚫🎮 NEW EAFC NONTENT JUST DROPPED! Lets see what BULLSHIT is in store for us today! 🎮🚫⚽️ \
+                \n\n https://www.futbin.com/"
+    elif nontent_time > now and nontent_time.today().weekday() == 4:
+        remaining = f"{nontent_time - now}"
+        remaining = remaining.split(":")
+        return f"\n\n⚽️🔥 {remaining[0]} hours, {remaining[1]} minutes, & {remaining[2]} seconds until CONTENT!!! AHHH!!! 🔥⚽️ \
+            \n\n https://x.com/FutSheriff"
+    elif nontent_time > now:
+        remaining = f"{nontent_time - now}"
+        remaining = remaining.split(":")
+        return f"\n\n⚽️🚫 {remaining[0]} hours, {remaining[1]} minutes, & {remaining[2]} seconds until NONTENT! Lets see what BULLSHIT is in store for us today! 🚫⚽️ \
+            \n\n https://x.com/FutSheriff"
+    return f"⚽️🤦 Nontent and/or content already dropped MORAN! LOG IN @{user_name}! 🤦⚽️"
+
+
 def send_text_message(message: str, user: str, recipient: str) -> Optional[str]:
     """
     Send SMS to moderator via Twilio.

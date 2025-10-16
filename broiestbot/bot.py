@@ -11,6 +11,7 @@ from broiestbot.commands import (
     all_leagues_golden_boot,
     basic_message,
     blaze_time_remaining,
+    nontent_time_remaining,
     change_or_stay_vote,
     get_live_poll_results,
     covid_cases_usa,
@@ -150,6 +151,8 @@ class Bot(RoomManager):
             return get_urban_definition(args)
         elif cmd_type == "420" and args is None:
             return blaze_time_remaining()
+        elif cmd_type == "nontent" and user_name:
+            return nontent_time_remaining(user_name)
         elif cmd_type == "sms" and args and user_name and content:
             return send_text_message(args, user_name, content)
         elif cmd_type == "epltable":
