@@ -60,7 +60,7 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
         return emojize(":yellow_square: trash API couldnt find footy odds smdh :yellow_square:", language="en")
 
 
-def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> List[Optional[dict]]:
+def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
     """
     Fetch all upcoming fixtures for the current date.
 
@@ -68,7 +68,7 @@ def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> L
     :param str room: Chatango room in which command was triggered.
     :param str tz_name: Name of user who triggered the command.
 
-    :returns: List[Optional[dict]]
+    :returns: Optional[List[dict]]
     """
     try:
         today = get_current_day(room)
@@ -125,7 +125,9 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) 
         LOGGER.error(f"Unexpected error when fetching today's footy fixtures: {e}")
 
 
-def parse_fixture_odds(league_name: str, fixtures: dict, fixtures_odds: dict, room: str, username: str) -> str:
+def parse_fixture_odds(
+    league_name: str, fixtures: dict, fixtures_odds: dict, room: str, username: str
+) -> Optional[str]:
     """
     Parse fixture details and odds.
 

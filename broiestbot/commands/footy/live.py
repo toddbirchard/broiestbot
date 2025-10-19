@@ -64,7 +64,9 @@ def footy_live_fixtures_per_league(league_id: int, league_name: str, username: s
                 live_fixtures += live_fixture
                 fixture_events_response = fetch_events_per_live_fixture(fixture["fixture"]["id"])
                 if fixture_events_response:
-                    live_fixtures += parse_events_per_live_fixture(fixture_events_response, subs=subs)
+                    live_fixture_events = parse_events_per_live_fixture(fixture_events_response, subs=subs)
+                    if live_fixture_events is not None:
+                        live_fixtures += live_fixture_events
                 if i < len(fixtures):
                     live_fixtures += "\n\n\n"
             if live_fixtures != "\n\n\n\n":
@@ -105,13 +107,13 @@ def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
         LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_events_per_live_fixture(fixture_id: int) -> Optional[str]:
+def fetch_events_per_live_fixture(fixture_id: int) -> Optional[dict]:
     """
     Construct timeline of events for a single live fixture.
 
     :param int fixture_id: ID of a single live fixture.
 
-    :returns: Optional[str]
+    :returns: Optional[dict]
     """
     try:
         params = {"fixture": fixture_id}
@@ -130,14 +132,14 @@ def fetch_events_per_live_fixture(fixture_id: int) -> Optional[str]:
         LOGGER.exception(f"Unexpected error while compiling events in live fixture: {e}")
 
 
-def parse_events_per_live_fixture(events: dict, subs=False) -> str:
+def parse_events_per_live_fixture(events: dict, subs=False) -> Optional[str]:
     """
     Construct a human-readable timeline of events for a single live fixture.
 
     :param dict events: Notable events for a single live fixture.
     :param bool subs: Whether to include substitutions in match summaries.
 
-    :returns: str
+    :returns: Optional[str]
     """
     try:
         event_log = "\n"
@@ -150,7 +152,7 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> str:
             event_detail = event.get("detail", "")
             if time_elapsed:
                 time_elapsed = f'{time_elapsed}"'
-            if assisting_player is not None:
+            if assisting_player is not None and assisting_player != "":
                 assisting_player = assisting_player.get("name")
             if player_name and time_elapsed:
                 if "Goal" in event_detail and event_type == "Var":

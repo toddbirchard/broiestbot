@@ -28,7 +28,7 @@ from .util import (
 
 
 @LOGGER.catch
-def footy_team_lineups(room: str, username: str) -> str:
+def footy_team_lineups(room: str, username: str) -> Optional[str]:
     """
     Fetch starting lineups by team for immediate or live fixtures.
 
@@ -65,7 +65,7 @@ def footy_team_lineups(room: str, username: str) -> str:
 
 
 @LOGGER.catch
-def fetch_lineups_per_fixture(fixture_id: int) -> List[Optional[dict]]:
+def fetch_lineups_per_fixture(fixture_id: int) -> Optional[List[dict]]:
     """
     Get team lineup for given fixture.
 
@@ -161,7 +161,7 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name: str)
 
 
 @LOGGER.catch
-def build_fixture_summary(fixture: dict, room: str, username: str) -> str:
+def build_fixture_summary(fixture: dict, room: str, username: str) -> Optional[str]:
     """
     Summarize basic details about a fixture.
 

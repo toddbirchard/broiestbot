@@ -135,11 +135,11 @@ class Bot(RoomManager):
             return fetch_random_image_from_gcs_bucket(content)
         elif cmd_type == "imagespam":
             return spam_random_images_from_gcs_bucket(content)
-        elif cmd_type == "crypto":
+        elif cmd_type == "crypto" and command:
             return get_crypto_price(command.lower(), content)
         elif cmd_type == "giphy":
             return giphy_image_search(content)
-        elif cmd_type == "weather" and args:
+        elif cmd_type == "weather" and args and room and user_name:
             return get_current_weather(args, room.room_name, user_name)
         elif cmd_type == "wiki" and args:
             return wiki_summary(args)
@@ -175,29 +175,29 @@ class Bot(RoomManager):
             return league_table_standings(PRIMEIRA_LIGA_ID)
         elif cmd_type == "mlstable":
             return mls_standings()
-        elif cmd_type == "fixtures":
+        elif cmd_type == "fixtures" and room and user_name:
             return footy_upcoming_fixtures(room.room_name.lower(), user_name)
-        elif cmd_type == "allfixtures":
+        elif cmd_type == "allfixtures" and room and user_name:
             return footy_all_upcoming_fixtures(room.room_name.lower(), user_name)
-        elif cmd_type == "livefixtures":
+        elif cmd_type == "livefixtures" and user_name:
             return footy_live_fixtures(user_name, subs=True)
-        elif cmd_type == "livefixtureswithsubs":
+        elif cmd_type == "livefixtureswithsubs" and user_name:
             return footy_live_fixtures(user_name, subs=True)
-        elif cmd_type == "livefixturestats":
+        elif cmd_type == "livefixturestats" and room and user_name:
             return footy_stats_for_live_fixtures(room.room_name.lower(), user_name)
-        elif cmd_type == "footystats":
+        elif cmd_type == "footystats" and room and user_name:
             return footy_stats_for_live_fixtures(room.room_name.lower(), user_name)
-        elif cmd_type == "todayfixtures":
+        elif cmd_type == "todayfixtures" and room and user_name:
             return today_upcoming_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "goldenboot":
             return epl_golden_boot()
         elif cmd_type == "goldenshoe":
             return all_leagues_golden_boot()
-        elif cmd_type == "footypredicts":
+        elif cmd_type == "footypredicts" and room and user_name:
             return footy_today_fixtures_odds(room.room_name.lower(), user_name)
-        elif cmd_type == "foxtures":
+        elif cmd_type == "foxtures" and room and user_name:
             return fetch_fox_fixtures(room.room_name.lower(), user_name)
-        elif cmd_type == "footyxi":
+        elif cmd_type == "footyxi" and room and user_name:
             return footy_team_lineups(room.room_name.lower(), user_name)
         elif cmd_type == "covid":
             return covid_cases_usa()
@@ -209,23 +209,23 @@ class Bot(RoomManager):
             return get_summer_olympic_medals()
         elif cmd_type in ("wolympics", "winterolympics"):
             return get_winter_olympic_medals()
-        elif cmd_type == "footyodds":
+        elif cmd_type == "footyodds" and room and user_name:
             return footy_today_fixtures_odds(room.room_name.lower(), user_name)
         elif cmd_type == "twitch":
             return get_all_live_twitch_streams()
         elif cmd_type == "todaynfl":
             return get_today_nfl_games()
-        elif cmd_type == "livenfl":
+        elif cmd_type == "livenfl" and user_name:
             return get_live_nfl_game_summaries(user_name)
         elif cmd_type == "topcrypto":
             return get_top_crypto()
-        elif cmd_type == "define" and args:
+        elif cmd_type == "define" and args and user_name:
             return get_english_definition(user_name, args)
-        elif cmd_type == "tune" and args:
+        elif cmd_type == "tune" and args and room and user_name:
             return tuner(args, user_name, room.user.name.lower())
-        elif cmd_type == "wayne":
+        elif cmd_type == "wayne" and user_name:
             return time_until_wayne(user_name)
-        elif cmd_type == "np":
+        elif cmd_type == "np" and room:
             return get_current_show(True, room.user.name.lower())
         elif cmd_type == "reserved":
             return None

@@ -3,7 +3,6 @@
 from typing import Optional
 import requests
 from emoji import emojize
-from chatango.ch import Room
 
 from logger import LOGGER
 from config import FOOTY_FIXTURE_STATS_ENDPOINT, FOOTY_HTTP_HEADERS, FOOTY_LIVE_STATS_LEAGUES, HTTP_REQUEST_TIMEOUT
@@ -12,7 +11,7 @@ from .live import fetch_live_fixtures
 from .util import get_preferred_timezone
 
 
-def footy_stats_for_live_fixtures(room: Room, username: str):
+def footy_stats_for_live_fixtures(room: str, username: str):
     """
     Fetch live fixture odds for EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
 
@@ -30,16 +29,20 @@ def footy_stats_for_live_fixtures(room: Room, username: str):
                 for fixture in live_league_fixtures:
                     if fixture.get("fixture"):
                         fixture_id = fixture["fixture"]["id"]
-                        live_fixture_stats = fetch_stats_per_live_fixture(fixture_id)
-                        live_fixture_stats_response += parse_live_fixture_stats(live_fixture_stats)
+                        raw_live_fixture_stats = fetch_stats_per_live_fixture(fixture_id)
+                        if raw_live_fixture_stats:
+                            live_fixture_stats = parse_live_fixture_stats(raw_live_fixture_stats)
+                        if live_fixture_stats:
+                            live_fixture_stats_response += live_fixture_stats
         if live_fixture_stats_response != "\n\n\n":
+            live_fixture_stats_response = live_fixture_stats_response.rsplit("\n-------------------\n\n", 1)[0]
             return emojize(live_fixture_stats_response, language="en")
         return emojize(f":warning: sry @{username} I couldn't find live fixtures bc im gay :warning:", language="en")
     except Exception as e:
         LOGGER.error(f"Unexpected error when serving live fixture stats: {e}")
 
 
-def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[str]:
+def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[dict]:
     """
     Construct fixture stats for a single live fixture.
 
@@ -64,7 +67,7 @@ def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[str]:
         LOGGER.error(f"Unexpected error when fetching live fixtures: {e}")
 
 
-def parse_live_fixture_stats(fixture_stats: dict) -> str:
+def parse_live_fixture_stats(fixture_stats: dict) -> Optional[str]:
     """
     Parse live fixture stats aggregated by team.
 
@@ -83,14 +86,14 @@ def parse_live_fixture_stats(fixture_stats: dict) -> str:
             red_cards = team_stats.get("Red Cards", 0)
             pass_accuracy = team_stats.get("Passes %", 0)
             xg = team_stats.get("expected_goals")
-            if team_fixture_stats and i < len(team_fixture_stats) - 1:
+            if team_fixture_stats:
                 fixture_stats_response += f"<b>{team_name}</b>\n \
                                                 :bar_chart: Possession: {possession}\n \
                                                 :bullseye: Shots: {sog} SOG of {total_shots} total \n \
                                                 :counterclockwise_arrows_button: Pass accuracy: {pass_accuracy}\n \
                                                 :no_entry: Fouls: {fouls} (:yellow_square: {yellow_cards}, :red_square: {red_cards})\n \
                                                 :soccer_ball: xG: {xg} \n"
-            if i % 2 == 0:
+            if i % 2 == 1 and i < len(team_fixture_stats):
                 fixture_stats_response += "\n-------------------\n\n"
         return fixture_stats_response
     except ValueError as e:
