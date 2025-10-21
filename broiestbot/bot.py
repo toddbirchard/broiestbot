@@ -68,6 +68,7 @@ from broiestbot.commands import (
     footy_stats_for_live_fixtures,
     get_psn_game_trophies,
     get_titles_with_stats,
+    fetch_sleeper_matchups,
 )
 from chatango.ch import Message, Room, RoomManager, User
 from config import (
@@ -255,6 +256,8 @@ class Bot(RoomManager):
             return get_psn_game_trophies()
         elif cmd_type == "bropsn":
             return get_titles_with_stats()
+        elif cmd_type == "sleeper" and user_name:
+            return fetch_sleeper_matchups(user_name)
         # elif cmd_type == "cryptochart" and args:
         #     return get_crypto_chart(args)
         # elif cmd_type == "lesbians":
