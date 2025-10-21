@@ -731,6 +731,10 @@ STREAMING_SERVICE_HEADER = "streaming-availability.p.rapidapi.com"
 OMDB_ENDPOINT = "http://www.omdbapi.com/"
 OMDB_API_KEY = getenv("OMDB_API_KEY")
 
+# Sleeper
+# -------------------------------------------------
+SLEEPER_LEAGUE_ID = getenv("SLEEPER_LEAGUE_ID")
+
 # Twitter (Unused)
 # -------------------------------------------------
 TWITTER_API_V1_ENDPOINT = "https://api.twitter.com/1.1/statuses/lookup.json"
