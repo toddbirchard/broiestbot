@@ -292,14 +292,14 @@ files = [
 
 [[package]]
 name = "botocore"
-version = "1.40.58"
+version = "1.40.59"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.40.58-py3-none-any.whl", hash = "sha256:2571ca3aec8150e1b5a597794da6fd06284de72f29d3ea806804b798755f2e5a"},
-    {file = "botocore-1.40.58.tar.gz", hash = "sha256:cf2de7f5538f23c8067408a984ed32221e8b196ce98e66945a479d06b2663c33"},
+    {file = "botocore-1.40.59-py3-none-any.whl", hash = "sha256:042dd844ca82155ca1ab9608b9bef36d517515c775d075f57b89257108ae843b"},
+    {file = "botocore-1.40.59.tar.gz", hash = "sha256:842a466d8735272a30fe5b7f97df559d9e211a18e412f62a17ed249fd62f85fe"},
 ]
 
 [package.dependencies]
@@ -1250,14 +1250,14 @@ pyparsing = ">=3.0.4,<4"
 
 [[package]]
 name = "hypothesis"
-version = "6.142.3"
+version = "6.142.4"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "hypothesis-6.142.3-py3-none-any.whl", hash = "sha256:2fc19a2824c9bdc3f8e39d87861fbdf1d766982b20d54646a642bce82bcac179"},
-    {file = "hypothesis-6.142.3.tar.gz", hash = "sha256:f1aaf83f6cc0c50f1b61e167974a8a67377dce13e0ea628b67a83f574ef30b85"},
+    {file = "hypothesis-6.142.4-py3-none-any.whl", hash = "sha256:25eecc73fadecd8b491aed822204cfe4be9c98ff5c1e8e038d181136ffc54b5b"},
+    {file = "hypothesis-6.142.4.tar.gz", hash = "sha256:b3e71a84708994aa910ea47f1483ad892a7c390839959d689b2a2b07ebfd160e"},
 ]
 
 [package.dependencies]
@@ -1548,14 +1548,14 @@ htmlsoup = ["BeautifulSoup4"]
 
 [[package]]
 name = "lyricsgenius"
-version = "3.7.2"
+version = "3.7.5"
 description = "Download lyrics and metadata from Genius.com"
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "lyricsgenius-3.7.2-py3-none-any.whl", hash = "sha256:edd0769ac64e7276695d7d7e2018a51fa1c23598a0f38fcb15a0c659fdb6bc33"},
-    {file = "lyricsgenius-3.7.2.tar.gz", hash = "sha256:01ad51fdca6f7f5a7bc1e24d2a1dc513e664ceaa9abb59f7da9362b16a0a173a"},
+    {file = "lyricsgenius-3.7.5-py3-none-any.whl", hash = "sha256:0c11f864cbd735c46171b5d5bc970edcc3815d9f1aa5caf5e546bddb51bc531b"},
+    {file = "lyricsgenius-3.7.5.tar.gz", hash = "sha256:c4f10c14f7980455c65c87d0cfd1086be0966daecaf99693032d36b65a38aa16"},
 ]
 
 [package.dependencies]
@@ -2578,14 +2578,14 @@ six = ">=1.5"
 
 [[package]]
 name = "python-dotenv"
-version = "1.1.1"
+version = "1.2.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "python_dotenv-1.1.1-py3-none-any.whl", hash = "sha256:31f23644fe2602f88ff55e1f5c79ba497e01224ee7737937930c448e4d0e24dc"},
-    {file = "python_dotenv-1.1.1.tar.gz", hash = "sha256:a8a6399716257f45be6a007360200409fce5cda2661e3dec71d23dc15f6189ab"},
+    {file = "python_dotenv-1.2.1-py3-none-any.whl", hash = "sha256:b81ee9561e9ca4004139c6cbba3a238c32b03e4894671e181b671e8cb8425d61"},
+    {file = "python_dotenv-1.2.1.tar.gz", hash = "sha256:42667e897e16ab0d66954af0e60a9caa94f0fd4ecf3aaf6d2d260eec1aa36ad6"},
 ]
 
 [package.extras]

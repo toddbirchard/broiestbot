@@ -8,12 +8,9 @@ from emoji import emojize
 from requests.exceptions import HTTPError
 
 from config import (
-    CHATANGO_OBI_ROOM,
-    ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LEAGUES,
-    FOXES_TEAM_ID,
     HTTP_REQUEST_TIMEOUT,
 )
 from logger import LOGGER
@@ -23,7 +20,6 @@ from .util import (
     check_fixture_start_date,
     get_preferred_time_format,
     get_preferred_timezone,
-    get_season_year,
 )
 
 
@@ -164,44 +160,3 @@ def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str
     display_date = check_fixture_start_date(date, tz, display_date)
     matchup = f"{away_team} @ {home_team}"
     return f"{matchup:<40} | <i>{display_date}</i>\n"
-
-
-def fetch_fox_fixtures(room: str, username: str) -> str:
-    """
-    Fetch next 5 fixtures played by Lesta Foxes (now in EFL).
-
-    :param str room: Chatango room which triggered the command.
-    :param str username: Chatango user who triggered the command.
-
-    :returns: str
-    """
-    try:
-        tz_name = get_preferred_timezone(room, username)
-        upcoming_foxtures = "\n\n\n\n<b>:fox: FOXTURES</b>\n"
-        season = get_season_year(ENGLISH_CHAMPIONSHIP_LEAGUE_ID)
-        params = {"season": season, "team": FOXES_TEAM_ID, "next": "7", "timezone": tz_name}
-        resp = requests.get(
-            FOOTY_FIXTURES_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        fixtures = resp.json().get("response")
-        if bool(fixtures):
-            for fixture in fixtures:
-                home_team = fixture["teams"]["home"]["name"]
-                away_team = fixture["teams"]["away"]["name"]
-                date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
-                display_date, tz = get_preferred_time_format(date, room, username)
-                display_date = check_fixture_start_date(date, tz, display_date)
-                if room == CHATANGO_OBI_ROOM:
-                    display_date, tz = get_preferred_time_format(date, room, username)
-                upcoming_foxtures = upcoming_foxtures + f"{away_team} @ {home_team} | <i>{display_date}</i>\n"
-            return emojize(upcoming_foxtures, language="en")
-        return emojize(":warning: Couldn't find fixtures, has season started yet? :warning:", language="en")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching fox fixtures: {e.response.content}")
-    except KeyError as e:
-        LOGGER.exception(f"KeyError while fetching fox fixtures: {e}")
-    except Exception as e:
-        LOGGER.exception(f"Unexpected error when fetching fox fixtures: {e}")

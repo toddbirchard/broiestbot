@@ -18,6 +18,7 @@ from broiestbot.commands import (
     epl_golden_boot,
     # extract_url,
     fetch_fox_fixtures,
+    fetch_aafk_fixture_data,
     fetch_random_image_from_gcs_bucket,
     find_imdb_movie,
     find_movie,
@@ -198,6 +199,8 @@ class Bot(RoomManager):
             return footy_today_fixtures_odds(room.room_name.lower(), user_name)
         elif cmd_type == "foxtures" and room and user_name:
             return fetch_fox_fixtures(room.room_name.lower(), user_name)
+        elif cmd_type == "aafkxtures" and room and user_name:
+            return fetch_aafk_fixture_data(room.room_name.lower(), user_name)
         elif cmd_type == "footyxi" and room and user_name:
             return footy_team_lineups(room.room_name.lower(), user_name)
         elif cmd_type == "covid":

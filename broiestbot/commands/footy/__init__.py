@@ -6,8 +6,8 @@ from .predicts import footy_today_fixtures_odds
 from .standings import league_table_standings, mls_standings
 from .today import today_upcoming_fixtures
 from .upcoming import (
-    fetch_fox_fixtures,
     footy_all_upcoming_fixtures,
     footy_upcoming_fixtures,
 )
 from .stats import footy_stats_for_live_fixtures
+from .teams import fetch_fox_fixtures, fetch_aafk_fixture_data

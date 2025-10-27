@@ -22,6 +22,7 @@ from .footy import (
     league_table_standings,
     mls_standings,
     footy_stats_for_live_fixtures,
+    fetch_aafk_fixture_data,
 )
 from .images import (
     fetch_random_image_from_gcs_bucket,

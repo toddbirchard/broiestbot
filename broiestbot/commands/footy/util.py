@@ -189,13 +189,13 @@ def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str
     return f"{matchup:<30} | <i>{display_date}</i>\n"
 
 
-def get_season_year(league_id: int) -> Optional[int]:
+def get_season_year(league_id: int) -> int:
     """
     Determine `season` year — based on month for domestic leagues, or year for international leagues.
 
     :param int league_id: ID of league to determine season year for.
 
-    :returns:  Optional[int]
+    :returns: int
     """
     current_year = datetime.now().year
     current_month = datetime.now().month
