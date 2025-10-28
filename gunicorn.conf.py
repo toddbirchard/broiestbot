@@ -13,18 +13,15 @@ ENVIRONMENT = environ.get("ENVIRONMENT")
 
 proc_name = "broiestbot"
 wsgi_app = "wsgi:app"
-bind = ["127.0.0.1:8005"]
+bind = f"unix:{BASE_DIR}/broiestbot.sock"
 reload = True
-threads = 1
+threads = 4
 workers = 1
 
 if ENVIRONMENT == "development" or ENVIRONMENT is None:
     capture_output = False
 elif ENVIRONMENT == "production":
     daemon = True
-    # accesslog = f"/var/log/{proc_name}/access.log"
-    # errorlog = f"/var/log/{proc_name}/errors.log"
-    # capture_output = True
     ca_certs = "creds/ca-certificate.crt"
     dogstatsd_tags = "env:production,service:broiest,language:python"
 else:

@@ -20,7 +20,7 @@ def json_formatter(record: dict) -> str:
     :returns: str
     """
     if isinstance(record, (str, bool)):
-        return construct_json_from_corrupted_log(record)
+        return json.dumps(construct_json_from_corrupted_log(record))
 
     record["time"] = record["time"].strftime("%m/%d/%Y, %H:%M:%S")
     record["elapsed"] = record["elapsed"].total_seconds()
@@ -87,7 +87,7 @@ def json_formatter(record: dict) -> str:
                 "message": log["message"],
             }
             return json.dumps(subset)
-        elif not log.get("message"):
+        if not log.get("message"):
             subset = {
                 "time": log["time"],
                 "level": log["level"].name,
@@ -105,9 +105,10 @@ def json_formatter(record: dict) -> str:
         record["extra"]["serialized"] = serialize_error(record)
         sms_error_handler(record)
         return "{extra[serialized]},\n"
+    return "{log},\n"
 
 
-def construct_json_from_corrupted_log(log: str) -> str:
+def construct_json_from_corrupted_log(log: str) -> dict:
     """
     Create JSON log record from corrupt string.
 
