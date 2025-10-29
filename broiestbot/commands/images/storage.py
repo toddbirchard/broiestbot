@@ -24,16 +24,16 @@ def fetch_random_image_from_gcs_bucket(subdirectory: str) -> str:
         image_list = [image.name for image in images if "." in image.name]
         rand = randint(0, len(image_list) - 1)
         image = f"{GOOGLE_BUCKET_URL}{GOOGLE_BUCKET_NAME}/{image_list[rand]}"
-        return image.lower()
+        return image
     except NotFound as e:
         LOGGER.warning(f"GCS `NotFound` error when fetching image for `{subdirectory}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        return "⚠️ omfg bot just broke wtf did u do ⚠️"
     except GoogleCloudError as e:
         LOGGER.exception(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        return "⚠️ omfg bot just broke wtf did u do ⚠️"
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(f":warning: o shit i broke im a trash bot :warning:", language="en")
+        return "⚠️ o shit i broke im a trash bot ⚠️"
 
 
 def spam_random_images_from_gcs_bucket(subdirectory: str) -> str:

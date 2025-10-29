@@ -20,7 +20,6 @@ from broiestbot.commands import (
     fetch_fox_fixtures,
     fetch_aafk_fixture_data,
     fetch_random_image_from_gcs_bucket,
-    find_imdb_movie,
     find_movie,
     streaming_service_show,
     footy_all_upcoming_fixtures,
