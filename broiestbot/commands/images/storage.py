@@ -53,10 +53,10 @@ def spam_random_images_from_gcs_bucket(subdirectory: str) -> str:
         return " ".join(response)
     except GoogleCloudError as e:
         LOGGER.warning(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
-        return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        return "⚠️ omfg bot just broke wtf did u do ⚠️"
     except Exception as e:
         LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(f":warning: o shit i broke im a trash bot :warning:", language="en")
+        return "⚠️ o shit i broke im a trash bot ⚠️"
 
 
 def gcs_count_images_in_bucket(subdirectory: str) -> str:
@@ -81,13 +81,13 @@ def gcs_count_images_in_bucket(subdirectory: str) -> str:
         )
     except GoogleCloudError as e:
         LOGGER.warning(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
-        return emojize(":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        return "⚠️ omfg bot just broke wtf did u do ⚠️"
     except ValueError as e:
         LOGGER.warning(f"ValueError when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        return "⚠️ omfg bot just broke wtf did u do ⚠️"
     except Exception as e:
         LOGGER.warning(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(":warning: o shit i broke im a trash bot :warning:", language="en")
+        return "⚠️ o shit i broke im a trash bot ⚠️"
 
 
 def fetch_latest_image_from_gcs_bucket(subdirectory: str) -> str:
@@ -108,7 +108,7 @@ def fetch_latest_image_from_gcs_bucket(subdirectory: str) -> str:
             <i>(Added on {datetime.date(most_recent_image[1])})</i>"
     except GoogleCloudError as e:
         LOGGER.exception(f"GCS `GoogleCloudError` error when fetching image for `{subdirectory}`: {e}")
-        return emojize(":warning: omfg bot just broke wtf did u do :warning:", language="en")
+        return "⚠️ omfg bot just broke wtf did u do ⚠️"
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching random GCS image for `{subdirectory}`: {e}")
-        return emojize(":warning: o shit i broke im a trash bot :warning:", language="en")
+        return "⚠️ o shit i broke im a trash bot ⚠️"
