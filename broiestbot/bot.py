@@ -309,6 +309,8 @@ class Bot(RoomManager):
             ban_word(room, message, user_name, silent=True)
         elif "http://broiestbro." in chat_message:
             ban_word(room, message, user_name, silent=True)
+        elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
+            ban_word(room, message, user_name, silent=True)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             ban_word(room, message, user_name, silent=True)
         else:
