@@ -1,8 +1,10 @@
+"""Commands for fetching video stream info from Twitch and YouTube."""
+
 from datetime import datetime
 from typing import Optional
 
 import requests
-from emoji import emojize
+from youtube_search import YoutubeSearch
 
 from requests.exceptions import HTTPError
 
@@ -37,13 +39,13 @@ def get_all_live_twitch_streams() -> str:
                 elif i > 1:
                     return "\n-----------------------\n".join(twitch_streams)
                 return "".join(twitch_streams)
-        return emojize(f":frowning: no memers streaming twitch rn :frowning:", language="en")
+        return "🚫🎮🙁 no memers streaming twitch rn 🙁🎮🚫"
     except HTTPError as e:
         LOGGER.exception(f"HTTPError error while fetching Twitch streams: {e}")
-        return emojize(f":frowning: twitch is down or something idk :frowning:", language="en")
+        return "🙁 twitch is down or something idk 🙁"
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Twitch streams: {e}")
-        return emojize(f":frowning: fmga bot died trying to get meme streamers :frowning:", language="en")
+        return "🙁⚠️ fmga bot died trying to get meme streamers ⚠️🙁"
 
 
 def get_live_twitch_stream(broadcaster_id: str, token: str) -> Optional[str]:
@@ -114,6 +116,34 @@ def get_twitch_auth_token() -> Optional[str]:
         LOGGER.exception(f"HTTPError {resp.status_code} when fetching Twitch auth token: {e.response.content}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Twitch auth token: {e}")
+
+
+def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
+    """
+    Generate a link preview for a Youtube video from its URL.
+
+    :param str chat_message: Chat message containing URL to a YouTube video.
+
+    :returns: Optional[str
+    """
+    try:
+        video_preview = "\n\n"
+        video_results = YoutubeSearch(chat_message, max_results=1).to_dict()
+        if bool(video_results):
+            video = video_results[0]
+            LOGGER.info(f"Found video(s): {video_results}")
+            video_preview += f"<b>{video['title']}</b>\n\n \
+                {video['thumbnails'][0]}\n\n \
+                ⏳ Duration: {video['duration']} \n \
+                👀 {video['views']} \n \
+                🎦 Channel: {video['channel']}\n \
+                📅 {video['publish_time']}\n\n \
+                {chat_message}"
+            LOGGER.info(f"Generated video preview: {video_preview}")
+            return video_preview
+        return None
+    except Exception as e:
+        LOGGER.error(f"Error while fetching YouTube video: {e}")
 
 
 '''def create_youtube_video_preview(video_url: str) -> str:
