@@ -292,14 +292,14 @@ files = [
 
 [[package]]
 name = "botocore"
-version = "1.40.63"
+version = "1.40.64"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.40.63-py3-none-any.whl", hash = "sha256:83657b3ee487268fccc9ba022cba572ba657b9ece8cddd1fa241e2c6a49c8c14"},
-    {file = "botocore-1.40.63.tar.gz", hash = "sha256:0324552c3c800e258cbcb8c22b495a2e2e0260a7408d08016196e46fa0d1b587"},
+    {file = "botocore-1.40.64-py3-none-any.whl", hash = "sha256:6902b3dadfba1fbacc9648171bef3942530d8f823ff2bdb0e585a332323f89fc"},
+    {file = "botocore-1.40.64.tar.gz", hash = "sha256:a13af4009f6912eafe32108f6fa584fb26e24375149836c2bcaaaaec9a7a9e58"},
 ]
 
 [package.dependencies]
@@ -1250,14 +1250,14 @@ pyparsing = ">=3.0.4,<4"
 
 [[package]]
 name = "hypothesis"
-version = "6.142.4"
+version = "6.143.0"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "hypothesis-6.142.4-py3-none-any.whl", hash = "sha256:25eecc73fadecd8b491aed822204cfe4be9c98ff5c1e8e038d181136ffc54b5b"},
-    {file = "hypothesis-6.142.4.tar.gz", hash = "sha256:b3e71a84708994aa910ea47f1483ad892a7c390839959d689b2a2b07ebfd160e"},
+    {file = "hypothesis-6.143.0-py3-none-any.whl", hash = "sha256:5f7321f7e5d3eadaa65de3d94dbd5a0222165c3a2120d491fd3ee889eba887d9"},
+    {file = "hypothesis-6.143.0.tar.gz", hash = "sha256:37dcd5cf9396deb832553dabe6c75003c0d3bcbbb77ac3db9321971dc914d2d0"},
 ]
 
 [package.dependencies]
@@ -1805,14 +1805,14 @@ files = [
 
 [[package]]
 name = "narwhals"
-version = "2.10.0"
+version = "2.10.1"
 description = "Extremely lightweight compatibility layer between dataframe libraries"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "narwhals-2.10.0-py3-none-any.whl", hash = "sha256:baed44e8fc38e800e3a585e3fa9843a7079a6fad5fbffbecee4348d6ac52298c"},
-    {file = "narwhals-2.10.0.tar.gz", hash = "sha256:1c05bbef2048a4045263de7d98c3d06140583eb13d796dd733b2157f05d24485"},
+    {file = "narwhals-2.10.1-py3-none-any.whl", hash = "sha256:eed3d9ec8f821963456fef306c1ad11017995982169fca1f38f71c97d6a97b9b"},
+    {file = "narwhals-2.10.1.tar.gz", hash = "sha256:d6e3a9b1c0904a82984dec58a3d12b3bc08e9d61bbee639e7bb05349e663d036"},
 ]
 
 [package.extras]
@@ -2322,14 +2322,14 @@ files = [
 
 [[package]]
 name = "psnawp"
-version = "3.0.0"
+version = "3.0.1"
 description = "Python API Wrapper for PlayStation Network API."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "psnawp-3.0.0-py3-none-any.whl", hash = "sha256:f839e0550982e14e947c0e592307b8f2f6f1479f8a00bf3df6deef62f441cdd2"},
-    {file = "psnawp-3.0.0.tar.gz", hash = "sha256:b20db39290e93269566b563f209bddc9e9681afd954f029baebd3e9ac3b4ffc4"},
+    {file = "psnawp-3.0.1-py3-none-any.whl", hash = "sha256:84d7a1f45c93c8ae248ee7a7c44d876d59a74f055a2ac06f5df611d0c569913f"},
+    {file = "psnawp-3.0.1.tar.gz", hash = "sha256:2ddd899d65b0777866ca0db60b279ef349fa862f134f6c6187bfdca55e06b55c"},
 ]
 
 [package.dependencies]
@@ -3231,7 +3231,22 @@ idna = ">=2.0"
 multidict = ">=4.0"
 propcache = ">=0.2.1"
 
+[[package]]
+name = "youtube-search"
+version = "2.1.2"
+description = "Perform YouTube video searches without the API"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "youtube-search-2.1.2.tar.gz", hash = "sha256:5749a6d8076fda65557c91367f0fab0936290ecdea457c831c9f3f05918a3aa2"},
+    {file = "youtube_search-2.1.2-py3-none-any.whl", hash = "sha256:f9cfaaf7c59806777eb29d3b8acee96b50e80f73a0621c2bb220d4e5beb09e4f"},
+]
+
+[package.dependencies]
+requests = "*"
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "7cff49c080b953ec050be778cd514088a6a7effd4f6f14699daf503e571f0e89"
+content-hash = "845955bbe431025089920c0439a91180eeabe54564d2c4d4b5c261c3fd668903"

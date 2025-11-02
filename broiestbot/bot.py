@@ -31,6 +31,7 @@ from broiestbot.commands import (
     spam_random_images_from_gcs_bucket,
     fetch_latest_image_from_gcs_bucket,
     get_all_live_twitch_streams,
+    generate_youtube_video_preview,
     # get_crypto_chart,
     get_crypto_price,
     get_current_show,
@@ -303,6 +304,13 @@ class Bot(RoomManager):
         if chat_message.startswith("!"):
             self._process_command(chat_message, room, user_name, message)
         # elif message.body.startswith("http"):
+        if re.match(
+            r"^(https?\:\/\/)?((www\.)?youtube\.com|youtu\.be)\/.+$",
+            chat_message
+        ):
+            LOGGER.info(f"Matched Youtube video URL pattern: {chat_message}")
+            preview = generate_youtube_video_preview(chat_message)
+            room.message(preview, html=True)
         elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:
             ban_word(room, message, user_name, silent=False)
         elif chat_message == "image not found :(":
@@ -346,7 +354,7 @@ class Bot(RoomManager):
         else:
             LOGGER.warning(f"[{room.room_name}] [{user.name}] [no IP address]: {message.body}")
 
-    def _process_command(self, chat_message: str, room: Room, user_name: str, message: Message) -> None:
+    def _process_command(self, chat_message: str, room: Room, user_name: str, message: Message):
         """
         Determines if message is a bot command.
 
@@ -477,3 +485,4 @@ class Bot(RoomManager):
         """
         message.delete()
         room.message("™")
+
