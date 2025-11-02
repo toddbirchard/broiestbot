@@ -139,7 +139,6 @@ def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
                 🎦 Channel: {video['channel']}\n \
                 📅 {video['publish_time']}\n\n \
                 {chat_message}"
-            LOGGER.info(f"Generated video preview: {video_preview}")
             return video_preview
         return None
     except Exception as e:

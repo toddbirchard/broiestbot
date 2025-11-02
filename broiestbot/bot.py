@@ -305,9 +305,8 @@ class Bot(RoomManager):
             r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$",
             chat_message,
         ):
-            LOGGER.info(f"Matched Youtube video URL pattern: {chat_message}")
             preview = generate_youtube_video_preview(chat_message)
-            if preview:
+            if preview and user_name != "acleebot":
                 room.message(preview, html=True)
         elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:
             ban_word(room, message, user_name, silent=False)
