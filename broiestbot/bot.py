@@ -305,7 +305,9 @@ class Bot(RoomManager):
             r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$",
             chat_message,
         ):
+            LOGGER.info(f"Matched YouTube video: {chat_message}")
             preview = generate_youtube_video_preview(chat_message)
+            LOGGER.info(f"YouTube preview: {preview}")
             if preview and user_name != "acleebot":
                 room.message(preview, html=True)
         elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:

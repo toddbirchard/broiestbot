@@ -127,13 +127,12 @@ def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
     :returns: Optional[str
     """
     try:
-        video_preview = "\n\n"
+        video_preview = "\n\n\n\n"
         video_results = YoutubeSearch(chat_message, max_results=1).to_dict()
         if bool(video_results):
             video = video_results[0]
-            LOGGER.info(f"Found video(s): {video_results}")
-            video_preview += f"<b>{video['title']}</b>\n\n \
-                {video['thumbnails'][0]}\n\n \
+            video_preview += f"{video['title']}\n \
+                {video['thumbnails'][0]}\n \
                 ⏳ Duration: {video['duration']} \n \
                 👀 {video['views']} \n \
                 🎦 Channel: {video['channel']}\n \
@@ -141,8 +140,10 @@ def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
                 {chat_message}"
             return video_preview
         return None
+    except KeyError as e:
+        LOGGER.error(f"KeyError while generating YouTube video preview: {e}")
     except Exception as e:
-        LOGGER.error(f"Error while fetching YouTube video: {e}")
+        LOGGER.error(f"Error while generating YouTube video preview: {e}")
 
 
 '''def create_youtube_video_preview(video_url: str) -> str:
