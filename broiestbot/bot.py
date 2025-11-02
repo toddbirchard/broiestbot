@@ -299,18 +299,16 @@ class Bot(RoomManager):
         persist_chat_logs(user_name, room_name, chat_message, bot_username)
         # if "https://twitter.com/" in chat_message:
         # self._create_twitter_preview(room, chat_message)
-        # if "youtube" in chat_message or "youtu.be" in chat_message:
-        # self.create_link_preview(user_name, message.body, room, message)
         if chat_message.startswith("!"):
             self._process_command(chat_message, room, user_name, message)
-        # elif message.body.startswith("http"):
         if re.match(
-            r"^(https?\:\/\/)?((www\.)?youtube\.com|youtu\.be)\/.+$",
-            chat_message
+            r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$",
+            chat_message,
         ):
             LOGGER.info(f"Matched Youtube video URL pattern: {chat_message}")
             preview = generate_youtube_video_preview(chat_message)
-            room.message(preview, html=True)
+            if preview:
+                room.message(preview, html=True)
         elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:
             ban_word(room, message, user_name, silent=False)
         elif chat_message == "image not found :(":
@@ -485,4 +483,3 @@ class Bot(RoomManager):
         """
         message.delete()
         room.message("™")
-

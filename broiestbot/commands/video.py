@@ -1,4 +1,5 @@
 """Commands for fetching video stream info from Twitch and YouTube."""
+
 from datetime import datetime
 from typing import Optional
 
@@ -127,18 +128,22 @@ def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
     """
     try:
         video_preview = "\n\n"
-        video_results = YoutubeSearch("search terms", max_results=1).to_dict()
+        video_results = YoutubeSearch(chat_message, max_results=1).to_dict()
         if bool(video_results):
             video = video_results[0]
-            LOGGER.info(f"Found video: {video}")
-            video_preview += f"{video['title']}\n ({video['link']})\n"
+            LOGGER.info(f"Found video(s): {video_results}")
+            video_preview += f"<b>{video['title']}</b>\n\n \
+                {video['thumbnails'][0]}\n\n \
+                ⏳ Duration: {video['duration']} \n \
+                👀 {video['views']} \n \
+                🎦 Channel: {video['channel']}\n \
+                📅 {video['publish_time']}\n\n \
+                {chat_message}"
             LOGGER.info(f"Generated video preview: {video_preview}")
             return video_preview
         return None
     except Exception as e:
         LOGGER.error(f"Error while fetching YouTube video: {e}")
-
-
 
 
 '''def create_youtube_video_preview(video_url: str) -> str:
