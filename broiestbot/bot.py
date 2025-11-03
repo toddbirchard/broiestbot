@@ -86,6 +86,7 @@ from config import (
     ENGLISH_NATIONAL_LEAGUE_ID,
 )
 from logger import LOGGER
+from config import CHATANGO_LMAO_ROOM
 
 from .data import persist_chat_logs, persist_user_data
 from .moderation import ban_word, check_blacklisted_users
@@ -305,9 +306,7 @@ class Bot(RoomManager):
             r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$",
             chat_message,
         ):
-            LOGGER.info(f"Matched YouTube video: {chat_message}")
             preview = generate_youtube_video_preview(chat_message)
-            LOGGER.info(f"YouTube preview: {preview}")
             if preview and user_name != "acleebot":
                 room.message(preview, html=True)
         elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:
@@ -316,8 +315,8 @@ class Bot(RoomManager):
             ban_word(room, message, user_name, silent=True)
         elif "http://broiestbro." in chat_message:
             ban_word(room, message, user_name, silent=True)
-        elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
-            ban_word(room, message, user_name, silent=True)
+        # elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
+            # ban_word(room, message, user_name, silent=True)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             ban_word(room, message, user_name, silent=True)
         else:
@@ -438,7 +437,10 @@ class Bot(RoomManager):
                 user_name=user_name,
             )
             if response:
-                room.message(response, html=True)
+                if room.room_name.lower() != CHATANGO_LMAO_ROOM:
+                    room.message("https://i.imgur.com/bQJxsBV.png")
+                else:
+                    room.message(response, html=True)
         else:
             self._giphy_fallback(chat_message, room)
 
