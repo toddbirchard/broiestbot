@@ -131,8 +131,8 @@ def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
         video_results = YoutubeSearch(chat_message, max_results=1).to_dict()
         if bool(video_results):
             video = video_results[0]
-            video_preview += f"{video['title']}\n \
-                {video['thumbnails'][0]}\n \
+            video_preview += f"{video['thumbnails'][0]}\n \
+                {video['title']}\n\n \
                 ⏳ Duration: {video['duration']} \n \
                 👀 {video['views']} \n \
                 🎦 Channel: {video['channel']}\n \
