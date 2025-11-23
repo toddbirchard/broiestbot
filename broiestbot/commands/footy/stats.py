@@ -1,11 +1,17 @@
 """Get general fixture stats for live fixtures."""
 
-from typing import Optional
+from typing import Optional, Tuple
 import requests
 from emoji import emojize
 
 from logger import LOGGER
-from config import FOOTY_FIXTURE_STATS_ENDPOINT, FOOTY_HTTP_HEADERS, FOOTY_LIVE_STATS_LEAGUES, HTTP_REQUEST_TIMEOUT
+from config import (
+    FOOTY_FIXTURE_STATS_ENDPOINT,
+    FOOTY_FIXTURES_ENDPOINT,
+    FOOTY_HTTP_HEADERS,
+    FOOTY_LIVE_STATS_LEAGUES,
+    HTTP_REQUEST_TIMEOUT,
+)
 
 from .live import fetch_live_fixtures
 from .util import get_preferred_timezone
@@ -30,10 +36,11 @@ def footy_stats_for_live_fixtures(room: str, username: str):
                     if fixture.get("fixture"):
                         fixture_id = fixture["fixture"]["id"]
                         raw_live_fixture_stats = fetch_stats_per_live_fixture(fixture_id)
-                        if raw_live_fixture_stats:
-                            live_fixture_stats = parse_live_fixture_stats(raw_live_fixture_stats)
-                        if live_fixture_stats:
-                            live_fixture_stats_response += live_fixture_stats
+                        live_fixture_score = get_fixture_score(fixture_id)
+                        if raw_live_fixture_stats and live_fixture_score:
+                            live_fixture_stats = parse_live_fixture_stats(raw_live_fixture_stats, live_fixture_score)
+                            if live_fixture_stats:
+                                live_fixture_stats_response += live_fixture_stats
         if live_fixture_stats_response != "\n\n\n":
             live_fixture_stats_response = live_fixture_stats_response.rsplit("\n-------------------\n\n", 1)[0]
             return emojize(live_fixture_stats_response, language="en")
@@ -67,7 +74,7 @@ def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[dict]:
         LOGGER.error(f"Unexpected error when fetching live fixtures: {e}")
 
 
-def parse_live_fixture_stats(fixture_stats: dict) -> Optional[str]:
+def parse_live_fixture_stats(fixture_stats: dict, live_fixture_score: tuple[int, int]) -> Optional[str]:
     """
     Parse live fixture stats aggregated by team.
 
@@ -87,7 +94,7 @@ def parse_live_fixture_stats(fixture_stats: dict) -> Optional[str]:
             pass_accuracy = team_stats.get("Passes %", 0)
             xg = team_stats.get("expected_goals")
             if team_fixture_stats:
-                fixture_stats_response += f"<b>{team_name}</b>\n \
+                fixture_stats_response += f"<b>{team_name} - {live_fixture_score[i]}</b>\n \
                                                 :bar_chart: Possession: {possession}\n \
                                                 :bullseye: Shots: {sog} SOG of {total_shots} total \n \
                                                 :counterclockwise_arrows_button: Pass accuracy: {pass_accuracy}\n \
@@ -114,3 +121,34 @@ def unpack_team_statistics(team_stats_list: list) -> dict:
     for stat in team_stats_list:
         team_stats[stat["type"]] = stat["value"] if stat["value"] else 0
     return team_stats
+
+
+def get_fixture_score(fixture_id: int) -> Optional[Tuple[int, int]]:
+    """
+    Fetch the current score for a given fixture.
+
+    :param int fixture_id: ID of the fixture.
+
+    :returns: Optional[Tuple[int, int]]
+    """
+    try:
+        params = {"id": fixture_id}
+        resp = requests.get(
+            FOOTY_FIXTURES_ENDPOINT,
+            headers=FOOTY_HTTP_HEADERS,
+            params=params,
+            timeout=HTTP_REQUEST_TIMEOUT,
+        )
+        fixture_data = resp.json()["response"]
+        if fixture_data and len(fixture_data) > 0:
+            goals = fixture_data[0].get("goals", {})
+            home_goals = goals.get("home", 0)
+            away_goals = goals.get("away", 0)
+            return home_goals, away_goals
+        return 0, 0
+    except requests.HTTPError as e:
+        LOGGER.error(f"HTTPError while fetching fixture score: {e.response.content}")
+    except KeyError as e:
+        LOGGER.error(f"KeyError while fetching fixture score: {e}")
+    except Exception as e:
+        LOGGER.error(f"Unexpected error when fetching fixture score: {e}")
