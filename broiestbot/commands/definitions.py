@@ -1,9 +1,11 @@
 """Lookup definitions via Wikipedia, Urban Dictionary, etc"""
 
+from typing import Optional
 import requests
 from emoji import emojize
 from PyMultiDictionary import MultiDictionary
 from requests.exceptions import HTTPError
+from bs4 import BeautifulSoup
 
 from clients import wiki
 from config import (
@@ -108,6 +110,41 @@ def wiki_summary(query: str) -> str:
             f":warning: BRUH YOU BROKE THE BOT WTF IS `{query}`?! :warning:",
             language="en",
         )
+
+
+def create_wiki_preview(url: str) -> Optional[str]:
+    """
+    Create a link preview for a Wikipedia URL.
+
+    :param str chat_message: Chat message containing URL to a Wikipedia page.
+
+    :returns: Optional[str]
+    """
+    try:
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "3600",
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0",
+        }
+        req = requests.get(url, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
+        wiki_preview = "\n\n\n\n"
+        page_title = url.split("/")[-1]
+        page = wiki.page(page_title)
+        html = BeautifulSoup(req.content, "html.parser")
+        img_tag = html.find("meta", property="og:image")
+        wiki_preview += f"<b>{page.displaytitle}</b>\n\n"
+        wiki_preview += f"{page.summary}\n\n"
+        wiki_preview += f"{img_tag.get('content')} \n\n" if img_tag is not None else ""
+        wiki_preview += f"{page.sections[0].text[0:500]}\n\n" if page.sections_by_title else "\n\n"
+        wiki_preview += (
+            "- " + "\n- ".join([section._title for section in page.sections if section._title != "See also"]) + "\n\n"
+        )
+        return wiki_preview
+    except Exception as e:
+        LOGGER.exception(f"Unexpected error while creating Wikipedia preview for `{url}`: {e}")
+        return None
 
 
 def get_english_translation(language_symbol: str, language_full_name: str, phrase: str) -> str:

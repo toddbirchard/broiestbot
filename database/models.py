@@ -5,7 +5,6 @@ from sqlalchemy import Column, ForeignKey, DateTime, Float, Integer, String, Tex
 from sqlalchemy.sql import func
 from database import engine
 
-
 Base = declarative_base()
 
 

@@ -16,6 +16,7 @@ from broiestbot.commands import (
     get_live_poll_results,
     covid_cases_usa,
     epl_golden_boot,
+    create_wiki_preview,
     # extract_url,
     fetch_fox_fixtures,
     fetch_aafk_fixture_data,
@@ -305,10 +306,12 @@ class Bot(RoomManager):
             r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$",
             chat_message,
         ):
-            LOGGER.info(f"Matched YouTube video: {chat_message}")
             preview = generate_youtube_video_preview(chat_message)
-            LOGGER.info(f"YouTube preview: {preview}")
             if preview and user_name != "acleebot":
+                room.message(preview, html=True)
+        elif re.match(r".+(wikipedia.org)", chat_message):
+            preview = create_wiki_preview(chat_message)
+            if preview:
                 room.message(preview, html=True)
         elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:
             ban_word(room, message, user_name, silent=False)

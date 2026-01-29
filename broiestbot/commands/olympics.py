@@ -74,11 +74,11 @@ def add_nation_flag_emojis(row: Series):
         .replace("NED", ":flag_for_Netherlands: NED")
         .replace("GER", ":flag_for_Germany: GER")
         .replace("SWE", ":flag_for_Sweden: SWE")
-        .replace("AUT", ":flag_for_Austria: AUT&nbsp;")
+        .replace("AUT", ":flag_for_Austria: AUT")
         .replace("CHN", ":flag_for_China: CHN")
         .replace("ROC", ":flag_for_Russia: ROC")
-        .replace("ITA", ":flag_for_Italy: ITA&nbsp;&nbsp;")
-        .replace("SUI", ":flag_for_Switzerland: SUI&nbsp;&nbsp;")
+        .replace("ITA", ":flag_for_Italy: ITA")
+        .replace("SUI", ":flag_for_Switzerland: SUI")
         .replace("CAN", ":flag_for_Canada: CAN")
         .replace("FRA", ":flag_for_France: FRA")
         .replace("KOR", ":flag_for_South_Korea: KOR")
@@ -90,6 +90,7 @@ def add_nation_flag_emojis(row: Series):
         .replace("POL", ":flag_for_Poland: POL")
         .replace("NZL", ":flag_for_New_Zealand: NZL")
         .replace("JPN", ":flag_for_Japan: JPN"),
+        language="en",
     )
     row[0] = f"{row[0]}&nbsp;&nbsp;"
     row[4] = f"<strong>{row[4]}</strong>"
