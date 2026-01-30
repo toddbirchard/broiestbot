@@ -313,6 +313,8 @@ class Bot(RoomManager):
             preview = create_wiki_preview(chat_message)
             if preview:
                 room.message(preview, html=True)
+        elif "https://i.imgur.com/wppfinC.png" in chat_message:
+            ban_word(room, message, user_name, silent=True)
         elif re.match(r"bl\/S+b", chat_message) and "south" not in chat_message:
             ban_word(room, message, user_name, silent=False)
         elif chat_message == "image not found :(":
