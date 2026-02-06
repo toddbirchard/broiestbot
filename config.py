@@ -710,8 +710,8 @@ CHANNEL_TUNER_HEADERS = {
 
 # Olympics
 # -------------------------------------------------
-OLYMPICS_LEADERBOARD_ENDPOINT = "https://www.espn.com/olympics/summer/2020/medals/_/view/overall/sort/gold"
-WINTER_OLYMPICS_LEADERBOARD_ENDPOINT = "https://www.espn.com/olympics/winter/2022/medals/"
+OLYMPICS_LEADERBOARD_ENDPOINT = "https://www.espn.com/olympics/summer/2020/medals/"
+WINTER_OLYMPICS_LEADERBOARD_ENDPOINT = "https://www.espn.com/olympics/winter/2026/medals/"
 
 # NBA
 # -------------------------------------------------
