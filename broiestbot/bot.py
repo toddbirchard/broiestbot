@@ -33,6 +33,7 @@ from broiestbot.commands import (
     fetch_latest_image_from_gcs_bucket,
     get_all_live_twitch_streams,
     generate_youtube_video_preview,
+    search_youtube_video,
     # get_crypto_chart,
     get_crypto_price,
     get_current_show,
@@ -300,6 +301,11 @@ class Bot(RoomManager):
         persist_chat_logs(user_name, room_name, chat_message, bot_username)
         # if "https://twitter.com/" in chat_message:
         # self._create_twitter_preview(room, chat_message)
+        if chat_message.startswith("?") and len(chat_message) > 3:
+            search_query = chat_message[1:].strip()
+            yt_video_result = search_youtube_video(search_query)
+            if yt_video_result:
+                room.message(yt_video_result, html=True)
         if chat_message.startswith("!"):
             self._process_command(chat_message, room, user_name, message)
         if re.match(

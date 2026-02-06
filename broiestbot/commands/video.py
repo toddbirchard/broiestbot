@@ -1,7 +1,9 @@
 """Commands for fetching video stream info from Twitch and YouTube."""
 
+import re
 from datetime import datetime
 from typing import Optional
+from urllib.parse import urlparse, urlunparse, parse_qs
 
 import requests
 from youtube_search import YoutubeSearch
@@ -124,7 +126,7 @@ def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
 
     :param str chat_message: Chat message containing URL to a YouTube video.
 
-    :returns: Optional[str
+    :returns: Optional[str]
     """
     try:
         video_preview = "\n\n\n\n"
@@ -144,6 +146,38 @@ def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
         LOGGER.error(f"KeyError while generating YouTube video preview: {e}")
     except Exception as e:
         LOGGER.error(f"Error while generating YouTube video preview: {e}")
+
+
+def search_youtube_video(chat_message: str) -> Optional[str]:
+    """
+    Search YouTube for a video by query string and return the first result.
+
+    :param str chat_message: Search query string.
+
+    :returns: Optional[str]
+    """
+    try:
+        video_results = YoutubeSearch(chat_message, max_results=1).to_dict()
+        if bool(video_results):
+            video = video_results[0]
+            url_suffix = re.sub(r"shorts\/", "watch?v=", video["url_suffix"])
+            link = f"https://youtu.be{url_suffix}"
+            parsed_url = urlparse(link)
+            v = parse_qs(parsed_url.query).get("v", [""])[0]
+            link = urlunparse(parsed_url._replace(query=f"v={v}"))
+            return f"\n\n\n\n \
+                {video['thumbnails'][0]}\n \
+                <b>{video['title']}</b>\n\n \
+                ⏳ Duration: {video['duration']} \n \
+                👀 {video['views']} \n \
+                🎦 Channel: {video['channel']}\n \
+                📅 {video['publish_time']}\n\n \
+                    {link}"
+        return None
+    except KeyError as e:
+        LOGGER.error(f"KeyError while searching YouTube for video: {e}")
+    except Exception as e:
+        LOGGER.error(f"Error while searching YouTube for video: {e}")
 
 
 '''def create_youtube_video_preview(video_url: str) -> str:
