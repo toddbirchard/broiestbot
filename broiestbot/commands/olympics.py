@@ -42,18 +42,33 @@ def get_medals_by_nation(endpoint: str) -> str:
             header=0,
             index_col=None,
         )
-        medals_df = medals_df[0].head(10)
+        medals_df = medals_df[0].head(15)
         medals_df.rename(
             columns={
-                "Group": "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;",
-                "G": f"{emojize(':1st_place_medal:', language='en')}",
-                "S": f"{emojize(':2nd_place_medal:', language='en')}",
-                "B": f"{emojize(':3rd_place_medal:', language='en')}",
+                "Group": "Nation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;",
+                "G": "🥇&nbsp;&nbsp;&nbsp;",
+                "S": "🥈&nbsp;&nbsp;&nbsp;",
+                "B": "🥉&nbsp;&nbsp;&nbsp;",
+                "Total": "&nbsp;&nbsp;#️⃣",
             },
             inplace=True,
         )
-        medals_df = medals_df.apply(add_nation_flag_emojis, axis=1)
-        return f"\n\n{medals_df.to_string(header=True, index=False, col_space=10, justify='center')}"
+        medals_df["Nation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"] = medals_df[
+            "Nation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+        ].apply(add_nation_flag_emojis)
+        medals_df["Nation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"] = medals_df[
+            "Nation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+        ].apply(lambda x: f"{x}&nbsp;&nbsp;")
+        medals_df["🥇&nbsp;&nbsp;&nbsp;"] = medals_df["🥇&nbsp;&nbsp;&nbsp;"].apply(
+            lambda x: f"{x}&nbsp;&nbsp;&nbsp;&nbsp;"
+        )
+        medals_df["🥈&nbsp;&nbsp;&nbsp;"] = medals_df["🥈&nbsp;&nbsp;&nbsp;"].apply(
+            lambda x: f"{x}&nbsp;&nbsp;&nbsp;&nbsp;"
+        )
+        medals_df["🥉&nbsp;&nbsp;&nbsp;"] = medals_df["🥉&nbsp;&nbsp;&nbsp;"].apply(
+            lambda x: f"{x}&nbsp;&nbsp;&nbsp;&nbsp;"
+        )
+        return f"\n\n\n\n\n{medals_df.to_string(header=True, index=False)}"
     except Exception as e:
         LOGGER.exception(f"Exception occurred while fetching winter olympics leaderboard: {e}")
         return emojize(":warning: lmao nobody has won anything yet retart :warning:", language="en")
@@ -67,34 +82,31 @@ def add_nation_flag_emojis(row: Series):
 
     :returns: Series
     """
-    row[0] = emojize(
-        row[0]
-        .replace("NOR", ":flag_for_Norway: NOR")
-        .replace("USA", ":flag_for_United_States: USA")
-        .replace("NED", ":flag_for_Netherlands: NED")
-        .replace("GER", ":flag_for_Germany: GER")
-        .replace("SWE", ":flag_for_Sweden: SWE")
-        .replace("AUT", ":flag_for_Austria: AUT")
-        .replace("CHN", ":flag_for_China: CHN")
-        .replace("ROC", ":flag_for_Russia: ROC")
-        .replace("ITA", ":flag_for_Italy: ITA")
-        .replace("SUI", ":flag_for_Switzerland: SUI")
-        .replace("CAN", ":flag_for_Canada: CAN")
-        .replace("FRA", ":flag_for_France: FRA")
-        .replace("KOR", ":flag_for_South_Korea: KOR")
-        .replace("AUS", ":flag_for_Australia: AUS")
-        .replace("FIN", ":flag_for_Finland: FIN")
-        .replace("SLO", ":flag_for_Slovenia: SLO")
-        .replace("FIN", ":flag_for_Finland: FIN")
-        .replace("CZE", ":flag_for_Czech_Republic: CZE")
-        .replace("POL", ":flag_for_Poland: POL")
-        .replace("NZL", ":flag_for_New_Zealand: NZL")
-        .replace("JPN", ":flag_for_Japan: JPN"),
-        language="en",
+    row = (
+        row.replace("NORNorway", "🇳🇴 NOR")
+        .replace("USAUnited States", "🇺🇸 USA")
+        .replace("NEDNetherlands", "🇳🇱 NED")
+        .replace("GERGermany", "🇩🇪 GER")
+        .replace("SWESweden", "🇸🇪 SWE")
+        .replace("AUTAustria", "🇦🇹 AUT")
+        .replace("CHNChina", "🇨🇳 CHN")
+        .replace("ROCRussian Olympic Committee", "🇷🇺 ROC")
+        .replace("ITAItaly", "🇮🇹 ITA&nbsp;&nbsp;")
+        .replace("SUISwitzerland", "🇨🇭 SUI&nbsp;")
+        .replace("CANCanada", "🇨🇦 CAN")
+        .replace("FRAFrance", "🇫🇷 FRA")
+        .replace("KORSouth Korea", "🇰🇷 KOR")
+        .replace("AUSAustralia", "🇦🇺 AUS")
+        .replace("FINFinland", "🇫🇮 FIN&nbsp;&nbsp;")
+        .replace("SLOSlovenia", "🇸🇮 SLO")
+        .replace("HUNHungary", "🇭🇺 HUN")
+        .replace("CZE", "🇨🇿 CZE")
+        .replace("POL", "🇵🇱 POL")
+        .replace("NZLNew Zealand", "🇳🇿 NZL")
+        .replace("JPNJapan", "🇯🇵 JPN")
+        .replace("GBRGreat Britain", "🇬🇧 GBR")
     )
-    row[0] = f"{row[0]}&nbsp;&nbsp;"
-    row[4] = f"<strong>{row[4]}</strong>"
-    return row
+    return f"<b>{row}</b>&nbsp;&nbsp;"
 
 
 def format_country_name(value: str):
