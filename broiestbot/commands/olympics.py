@@ -116,6 +116,7 @@ def add_nation_flag_emojis(row: Series):
         .replace("SRBSrbia", "🇷🇸 SRB")
         .replace("CROCroatia", "🇭🇷 CRO")
         .replace("MEXMexico", "🇲🇽 MEX")
+        .replace("BULBulgaria", "🇧🇬 BUL")
     )
     return f"<b>{row}</b>&nbsp;&nbsp;"
 
