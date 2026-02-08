@@ -68,7 +68,7 @@ def get_medals_by_nation(endpoint: str) -> str:
         medals_df["🥉&nbsp;&nbsp;&nbsp;"] = medals_df["🥉&nbsp;&nbsp;&nbsp;"].apply(
             lambda x: f"{x}&nbsp;&nbsp;&nbsp;&nbsp;"
         )
-        return f"\n\n\n\n\n{medals_df.to_string(header=True, index=False)}"
+        return f"\n\n\n\n\n\n\n\n{medals_df.to_string(header=True, index=False)}"
     except Exception as e:
         LOGGER.exception(f"Exception occurred while fetching winter olympics leaderboard: {e}")
         return emojize(":warning: lmao nobody has won anything yet retart :warning:", language="en")
