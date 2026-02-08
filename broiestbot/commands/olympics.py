@@ -14,7 +14,7 @@ def get_summer_olympic_medals() -> str:
 
     :returns: str
     """
-    return get_medals_by_nation(OLYMPICS_LEADERBOARD_ENDPOINT)
+    return get_medals_by_nation(f"\n\n{OLYMPICS_LEADERBOARD_ENDPOINT}")
 
 
 def get_winter_olympic_medals() -> str:
@@ -23,7 +23,7 @@ def get_winter_olympic_medals() -> str:
 
     :returns: str
     """
-    return get_medals_by_nation(WINTER_OLYMPICS_LEADERBOARD_ENDPOINT)
+    return get_medals_by_nation(f"\n\n{WINTER_OLYMPICS_LEADERBOARD_ENDPOINT}")
 
 
 def get_medals_by_nation(endpoint: str) -> str:
