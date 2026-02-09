@@ -43,6 +43,7 @@ def get_medals_by_nation(endpoint: str) -> str:
             index_col=None,
         )
         medals_df = medals_df[0].head(15)
+        medals_df.sort_values(by=["G", "Total"], ascending=False, inplace=True)
         medals_df.rename(
             columns={
                 "Group": "Nation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;",
