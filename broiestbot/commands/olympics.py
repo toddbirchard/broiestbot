@@ -1,4 +1,4 @@
-"""2020/2022 Olympics medal leaders"""
+"""2028 Olympics & 2026 Winter Olympics medal leaders"""
 
 import pandas as pd
 from emoji import emojize
@@ -50,7 +50,7 @@ def get_medals_by_nation(endpoint: str) -> str:
                 "G": "🥇&nbsp;&nbsp;&nbsp;",
                 "S": "🥈&nbsp;&nbsp;&nbsp;",
                 "B": "🥉&nbsp;&nbsp;&nbsp;",
-                "Total": "&nbsp;&nbsp;#️⃣",
+                "Total": "#️⃣",
             },
             inplace=True,
         )
