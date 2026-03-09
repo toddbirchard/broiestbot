@@ -31,6 +31,7 @@ from .images import (
     spam_random_images_from_gcs_bucket,
     fetch_latest_image_from_gcs_bucket,
     giphy_image_search,
+    klipy_image_search,
     random_image,
     subreddit_image,
 )

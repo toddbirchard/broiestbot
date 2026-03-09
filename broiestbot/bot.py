@@ -48,6 +48,7 @@ from broiestbot.commands import (
     get_urban_definition,
     get_winter_olympic_medals,
     giphy_image_search,
+    klipy_image_search,
     live_nba_games,
     nba_standings,
     random_image,
@@ -142,7 +143,7 @@ class Bot(RoomManager):
         elif cmd_type == "crypto" and command:
             return get_crypto_price(command.lower(), content)
         elif cmd_type == "giphy":
-            return giphy_image_search(content)
+            return klipy_image_search(content)
         elif cmd_type == "weather" and args and room and user_name:
             return get_current_weather(args, room.room_name, user_name)
         elif cmd_type == "wiki" and args:
@@ -380,7 +381,7 @@ class Bot(RoomManager):
         if chat_message == "!!":
             pass
         if re.match(r"^!!.+$", chat_message):
-            return self._giphy_fallback(chat_message[2::], room)
+            return self._gif_fallback(chat_message[2::], room)
         if re.match(r"^!ein+$", chat_message):
             return self._respond_if_bot_command("!ein", room, user_name)
         if re.match(r"^!\S+", chat_message):
@@ -451,7 +452,7 @@ class Bot(RoomManager):
             if response:
                 room.message(response, html=True)
         else:
-            self._giphy_fallback(chat_message, room)
+            self._gif_fallback(chat_message, room)
 
     @staticmethod
     def _wave_back(room: Room, user_name: str, bot_username) -> None:
@@ -468,7 +469,7 @@ class Bot(RoomManager):
         room.message(f"@{user_name} *waves*")
 
     @staticmethod
-    def _giphy_fallback(message: str, room: Room) -> None:
+    def _gif_fallback(message: str, room: Room) -> None:
         """
         Default to Giphy for non-existent commands.
 
@@ -479,7 +480,7 @@ class Bot(RoomManager):
         """
         query = message.replace("!", "").lower().strip()
         if len(query) > 1:
-            image = giphy_image_search(query)
+            image = klipy_image_search(query)
             if image:
                 room.message(image)
 
