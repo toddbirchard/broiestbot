@@ -69,6 +69,7 @@ def klipy_image_search(query: str) -> Optional[str]:
         images = resp.json()["data"]["data"]
         rand = randint(0, len(images) - 1)
         image = resp.json()["data"]["data"][rand]["file"]["md"]["gif"].get("url")
+        LOGGER.info(f"Klipy search for `{query}` returned {len(images)} results. Returning result: {resp.json()['data']['data'][rand]}")
         if image is not None:
             return image
     except HTTPError as e:

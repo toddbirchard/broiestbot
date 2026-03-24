@@ -33,6 +33,7 @@ from broiestbot.commands import (
     fetch_latest_image_from_gcs_bucket,
     get_all_live_twitch_streams,
     generate_youtube_video_preview,
+    generate_twitter_preview,
     search_youtube_video,
     # get_crypto_chart,
     get_crypto_price,
@@ -315,6 +316,10 @@ class Bot(RoomManager):
         ):
             preview = generate_youtube_video_preview(chat_message)
             if preview and user_name != "acleebot":
+                room.message(preview, html=True)
+        elif re.match(r"((https?):\/\/)?(www.)?x\.com(\/@?(\w){1,15})\/status\/[0-9]{19}\?", chat_message):
+            preview = generate_twitter_preview(chat_message)
+            if preview:
                 room.message(preview, html=True)
         elif re.match(r".+(wikipedia.org)", chat_message):
             preview = create_wiki_preview(chat_message)
