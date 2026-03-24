@@ -124,6 +124,7 @@ URBAN_DICTIONARY_ENDPOINT = "http://api.urbandictionary.com/v0/define"
 # Gifs
 # -------------------------------------------------
 GIPHY_API_KEY = getenv("GIPHY_API_KEY")
+KLIPY_API_KEY = getenv("KLIPY_API_KEY")
 REDGIFS_ACCESS_KEY = getenv("REDGIFS_ACCESS_KEY")
 REDGIFS_TOKEN_ENDPOINT = "https://weblogin.redgifs.com/oauth/webtoken"
 REDGIFS_IMAGE_SEARCH_ENDPOINT = "https://api.redgifs.com/v2/gifs/search"

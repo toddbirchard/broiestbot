@@ -109,3 +109,18 @@ def parse_scraped_metadata(page_meta: dict) -> Tuple[Optional[str], Optional[str
         title = page_meta["twitter"].get("title") if title is None else None
         description = page_meta["twitter"].get("description") if description is None else None
     return title, description, page_type
+
+
+def generate_twitter_preview(tweet_url: str) -> Optional[str]:
+    """
+    Generate a Twitter preview card from a tweet URL.
+
+    :param str tweet_url: URL of the target tweet.
+
+    :returns: Optional[str]
+    """
+    try:
+        # TODO: Parse Twitter URL and generate preview
+        return None
+    except Exception as e:
+        LOGGER.error(f"Unexpected error while generating Twitter preview for URL `{tweet_url}`: {e}")
