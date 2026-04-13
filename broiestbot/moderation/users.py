@@ -1,3 +1,4 @@
+"""Moderate or ban problematic users in Chatango rooms."""
 from typing import Optional
 
 from emoji import emojize
@@ -9,6 +10,7 @@ from config import (
     CHATANGO_EGGSER_USERNAME_WHITELIST,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
+    CHATANGO_ROOM_BLACKLIST_DADDY_ANONS,
     CHATANGO_BLACKLIST_ROOMS,
 )
 from logger import LOGGER
@@ -50,6 +52,25 @@ def check_blacklisted_users(room: Room, user_name: str, message: Message) -> Non
         ban_user(room, message)
     elif "is the wordle" in message.body.lower():
         ban_user(room, message)
+
+
+def ban_daddy_anons(room: Room, user_name: str, message: Message) -> None:
+    """
+    Ban and delete chat history of anons who post from Daddy.
+
+    :param Room room: Chatango room in which user appeared.
+    :param str user_name: Chatango username to validate against blacklist.
+    :param Message message: User submitted message.
+
+    :returns: None
+    """
+    if room.room_name.lower() in CHATANGO_ROOM_BLACKLIST_DADDY_ANONS:
+        if "!anon" in user_name and message.body.startswith("@"):
+            reply = f"👋🏏 @{user_name} lmao have fun being banned forever 🏏👋"
+            LOGGER.warning(f"BANNED user: username={message.user.name} ip={message.ip}")
+            room.message(reply)
+            room.clear_user(message.user)
+            room.ban_user(message.user)
 
 
 def ignored_user(user_name: str, user_ip: str) -> Optional[str]:

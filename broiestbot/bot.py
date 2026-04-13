@@ -90,7 +90,7 @@ from config import (
 from logger import LOGGER
 
 from .data import persist_chat_logs, persist_user_data
-from .moderation import ban_word, check_blacklisted_users
+from .moderation import ban_word, check_blacklisted_users, ban_daddy_anons
 from .moderation.users import ignored_user
 
 
@@ -296,6 +296,7 @@ class Bot(RoomManager):
         room_name = room.room_name.lower()
         bot_username = room.user.name.lower()
         check_blacklisted_users(room, user_name, message)
+        ban_daddy_anons(room, user_name, message)
         self._log_message(room, user, message)
         persist_user_data(room_name, user, message, bot_username)
         persist_chat_logs(user_name, room_name, chat_message, bot_username)
