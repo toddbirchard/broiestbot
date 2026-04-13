@@ -1,4 +1,5 @@
 """Moderate or ban problematic users in Chatango rooms."""
+
 from typing import Optional
 
 from emoji import emojize
