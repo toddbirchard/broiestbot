@@ -67,7 +67,7 @@ def ban_daddy_anons(room: Room, user_name: str, message: Message) -> None:
     :returns: None
     """
     if room.room_name.lower() in CHATANGO_ROOM_BLACKLIST_DADDY_ANONS:
-        if "!anon" in user_name and re.match(r"(https?:\/\/)?([a-zA-Z0-9\-]+\.)?daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}(\/[^\s]*)?",
+        if "!anon" in user_name and re.fullmatch(r"(https?:\/\/)?([a-zA-Z0-9\-]+\.)?daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}(\/[^\s]*)?",
             message.body
         ):
             reply = f"👋🏏 @{user_name} lmao have fun being banned forever 🏏👋"
