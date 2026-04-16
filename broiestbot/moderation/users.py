@@ -1,6 +1,7 @@
 """Moderate or ban problematic users in Chatango rooms."""
 
 from typing import Optional
+import re
 
 from emoji import emojize
 
@@ -66,7 +67,9 @@ def ban_daddy_anons(room: Room, user_name: str, message: Message) -> None:
     :returns: None
     """
     if room.room_name.lower() in CHATANGO_ROOM_BLACKLIST_DADDY_ANONS:
-        if "!anon" in user_name and message.body.startswith("@"):
+        if "!anon" in user_name and re.match(r"(https?:\/\/)?([a-zA-Z0-9\-]+\.)?daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}(\/[^\s]*)?",
+            message.body
+        ):
             reply = f"👋🏏 @{user_name} lmao have fun being banned forever 🏏👋"
             LOGGER.warning(f"BANNED user: username={message.user.name} ip={message.ip}")
             room.message(reply)
