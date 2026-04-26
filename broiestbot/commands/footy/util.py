@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 
 import pytz
 from pytz import BaseTzInfo
+from sqlalchemy import Column
 
 from database import session
 from database.models import ChatangoUser
@@ -41,13 +42,13 @@ from config import (
 )
 
 
-def lookup_user_preferred_timezone(username: str) -> Optional[str]:
+def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]:
     """
     Lookup user to determine preferred timezone.
 
     :param str username: Chatango username.
 
-    :returns: Optional[str]
+    :returns: Optional[Column[str]]
     """
     user = (
         session.query(ChatangoUser)
@@ -55,7 +56,7 @@ def lookup_user_preferred_timezone(username: str) -> Optional[str]:
         .filter(ChatangoUser.ip is not None)
         .first()
     )
-    if user and user.time_zone_name:
+    if user and user.time_zone_name is not None:
         # TODO: Prevent fetching for preferred TZ per fixture
         # LOGGER.info(f"Found user {username} in database with tz: {user.time_zone_name}")
         return user.time_zone_name
@@ -97,8 +98,8 @@ def get_preferred_time_format(start_time: datetime, room: str, username: str) ->
         )
     if "anon" not in username and timezone_name:
         return start_time.strftime("%b %d, %H:%M"), pytz.timezone(timezone_name)
-    if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
-        return start_time.strftime("%b %d, %H:%M"), pytz.utc
+    if room == CHATANGO_OBI_ROOM or (METRIC_SYSTEM_USERS is not None and username in METRIC_SYSTEM_USERS):
+        return start_time.strftime("%b %d, %H:%M"), pytz.timezone("Europe/London")
     return (
         start_time.strftime("%b %d, %l:%M%p").replace("AM", "am").replace("PM", "pm"),
         pytz.timezone(timezone_name),
