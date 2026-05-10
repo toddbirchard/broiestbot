@@ -333,7 +333,7 @@ class Bot(RoomManager):
         elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
             ban_word(room, message, user_name, silent=True)
         elif chat_message.startswith(f"@{CHATANGO_BOT_USERNAME} "):
-            return self._respond_llm_prompt(room)
+            return self._respond_llm_prompt(user_name, room)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             ban_word(room, message, user_name, silent=True)
         else:
@@ -502,15 +502,16 @@ class Bot(RoomManager):
         room.message("™")
 
     @staticmethod
-    def _respond_llm_prompt(room: Room) -> None:
+    def _respond_llm_prompt(user_name: str, room: Room) -> None:
         """
         Respond to messages directed at the bot with LLM-generated responses.
 
+        :param str user_name: Username of the Chatango user who triggered the LLM response.
         :param Room room: Current Chatango room object.
 
         :returns: None
         """
         LOGGER.info(f"Generating LLM response for message directed at bot in room {room.room_name}")
-        response = generate_llm_response(room._history)
+        response = generate_llm_response(user_name, room._history)
         if response:
             room.message(response, html=True)

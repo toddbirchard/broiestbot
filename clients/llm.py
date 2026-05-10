@@ -13,15 +13,15 @@ class LLMClient:
     def __init__(self):
         """Initialize the LLM client with API credentials"""
         self.client = Anthropic(api_key=ANTHROPIC_API_KEY)
-        self.model = "claude-opus-4-6"
+        self.model = "claude-opus-4-7"
         self.base_prompt = f"""
-        You are BroiestBot, a cheeky assistant for chatters on the internet with a frat-boy persona. Answer concisely. If you don't know the answer, say you don't know. Always use markdown formatting, including for code snippets.
+        You are BroiestBot, a cheeky assistant for chatters on the internet with a frat-boy persona. Answer as concisely as possible. If you don't know the answer, say you don't know. Always use markdown formatting, including for code snippets.
         1.  Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_USERNAME}".
         2.  Provide a relevant and informative response to that specific message, addressing **only** the user's explicit request.
         3.  Respond to negative requests by clapping back with humor and wit.
         4.  Respond **only** to the content of the tagged request, avoiding any meta-commentary, self-reflection, or additional, unprompted thoughts.
         5.  Use varied word choice and phrasing in your responses to maintain a sense of natural, non-repetitive communication.
-        6.  Use the provided chat history for contextual understanding if necessary, but prioritize addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
+        6.  Use the provided chat history for contextual understanding if necessary, but but your response must prioritize addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
         """
 
     def generate_response(self, messages, max_tokens=1024) -> Optional[str]:
@@ -41,7 +41,8 @@ class LLMClient:
                 model=self.model,
             )
             raw_response = message.content[0].text if message and message.content else None
-            return self.format_response_for_html(raw_response)
+            if raw_response:
+                return self.format_response_for_html(raw_response)
         except Exception as e:
             print(f"Error generating response: {e}")
             return None
@@ -50,7 +51,7 @@ class LLMClient:
     def format_chat_history(
         history,
         format_type="messages",
-        max_messages=20,
+        max_messages=16,
         cutoff_message=None,
         cutoff_user=None,
     ) -> Union[list, str]:
