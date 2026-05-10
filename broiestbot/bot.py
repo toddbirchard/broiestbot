@@ -33,6 +33,7 @@ from broiestbot.commands import (
     fetch_latest_image_from_gcs_bucket,
     get_all_live_twitch_streams,
     generate_youtube_video_preview,
+    generate_llm_response,
     search_youtube_video,
     # get_crypto_chart,
     get_crypto_price,
@@ -86,6 +87,7 @@ from config import (
     ENGLISH_LEAGUE_ONE_ID,
     ENGLISH_LEAGUE_TWO_ID,
     ENGLISH_NATIONAL_LEAGUE_ID,
+    CHATANGO_BOT_USERNAME,
 )
 from logger import LOGGER
 
@@ -330,6 +332,8 @@ class Bot(RoomManager):
             ban_word(room, message, user_name, silent=True)
         elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
             ban_word(room, message, user_name, silent=True)
+        elif chat_message.startswith(f"@{CHATANGO_BOT_USERNAME} "):
+            return self._respond_llm_prompt(room)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             ban_word(room, message, user_name, silent=True)
         else:
@@ -496,3 +500,17 @@ class Bot(RoomManager):
         """
         message.delete()
         room.message("™")
+
+    @staticmethod
+    def _respond_llm_prompt(room: Room) -> None:
+        """
+        Respond to messages directed at the bot with LLM-generated responses.
+
+        :param Room room: Current Chatango room object.
+
+        :returns: None
+        """
+        LOGGER.info(f"Generating LLM response for message directed at bot in room {room.room_name}")
+        response = generate_llm_response(room._history)
+        if response:
+            room.message(response, html=True)

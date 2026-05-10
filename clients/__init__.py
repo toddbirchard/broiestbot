@@ -29,6 +29,7 @@ from config import (
     TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN,
     PLAYSTATION_SSO_TOKEN,
+    ANTHROPIC_API_KEY,
 )
 
 from .crypto import CryptoChartHandler
@@ -36,6 +37,7 @@ from .gcs import GCS
 from .geo import GeoIP
 from .stock import StockChartHandler
 from .psn import PlaystationClient
+from .llm import LLMClient
 
 # Google Cloud Storage
 gcs = GCS(GOOGLE_BUCKET_NAME, GOOGLE_BUCKET_URL)
@@ -84,3 +86,6 @@ redis_scheduler = Scheduler(connection=r)
 
 # Playstation
 psn = PlaystationClient(PLAYSTATION_SSO_TOKEN)
+
+# Anthropic LLM Client
+claude = LLMClient()
