@@ -18,6 +18,7 @@ HTTP_REQUEST_TIMEOUT = 40
 
 # Chatango
 # -------------------------------------------------
+CHATANGO_BOT_USERNAME = "bro"
 CHATANGO_USERS = {
     "BROIESTBOT": {
         "USERNAME": getenv("CHATANGO_BOT_USERNAME"),
@@ -748,6 +749,10 @@ OMDB_API_KEY = getenv("OMDB_API_KEY")
 # Sleeper
 # -------------------------------------------------
 SLEEPER_LEAGUE_ID = getenv("SLEEPER_LEAGUE_ID")
+
+# Anthropic
+# ------------------------------------------------
+ANTHROPIC_API_KEY = getenv("ANTHROPIC_API_KEY")
 
 # Twitter (Unused)
 # -------------------------------------------------
