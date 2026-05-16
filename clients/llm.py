@@ -60,7 +60,7 @@ class LLMClient:
         max_messages=16,
         cutoff_message=None,
         cutoff_user=None,
-    ) -> Union[list, str]:
+    ) -> Optional[Union[list, str]]:
         """
         Format chat history based on the required format type
 
@@ -70,48 +70,43 @@ class LLMClient:
         :param str cutoff_message: Message content to use as a cutoff point
         :param str cutoff_user: User to use as a cutoff point
 
-        :returns Union[list, str]: Formatted history in requested format
+        :returns Optional[Union[list, str]]: Formatted chat history, if parsed correctly.
         """
-        filtered_history = []
+        try:
+            filtered_history = []
 
-        history = [msg for msg in list(reversed(history))[:max_messages]]
+            history = [msg for msg in list(reversed(history))[:max_messages]]
 
-        # Filter history first
-        for msg in history[:max_messages]:
-            filtered_history.append(msg)
+            # Filter history first
+            for msg in history[:max_messages]:
+                filtered_history.append(msg)
 
-        if cutoff_message:
-            for i, item in enumerate(filtered_history):
-                if item.body.strip() == cutoff_message:
-                    del filtered_history[i + 1 :]
-                    break
+            if cutoff_message:
+                for i, item in enumerate(filtered_history):
+                    if item.body.strip() == cutoff_message:
+                        del filtered_history[i + 1 :]
+                        break
 
-        # Format based on the requested type
-        if format_type == "messages":
-            # Message list format for chat models
-            messages = []
-            for msg in filtered_history:
-                messages.append(
-                    {
-                        "role": ("assistant" if msg.user.name.lower() == CHATANGO_BOT_USERNAME.lower() else "user"),
-                        "content": (
-                            msg.body
-                            if msg.user.name.lower() == CHATANGO_BOT_USERNAME.lower()
-                            else f"<{msg.user.name}>: {msg.body}"
-                        ),
-                    }
-                )
-            return list(reversed(messages))
-
-        elif format_type == "string":
-            # String format for simpler models
-            history_text = ""
-            for msg in filtered_history:
-                history_text += f"<{msg.user.name}>: {msg.body}\n"
-            return history_text
-
-        else:
-            raise ValueError(f"Unknown format_type: {format_type}")
+            # Format based on the requested type
+            if format_type == "messages":
+                # Message list format for chat models
+                messages = []
+                for msg in filtered_history:
+                    messages.append(
+                        {
+                            "role": ("assistant" if msg.user.name.lower() == CHATANGO_BOT_USERNAME.lower() else "user"),
+                            "content": (
+                                msg.body
+                                if msg.user.name.lower() == CHATANGO_BOT_USERNAME.lower()
+                                else f"<{msg.user.name}>: {msg.body}"
+                            ),
+                        }
+                    )
+                return list(reversed(messages))
+            else:
+                raise ValueError(f"Unknown format_type: {format_type}")
+        except Exception as e:
+            print(f"Error formatting chat history: {e}")
 
     @staticmethod
     def format_response_for_html(response: str) -> Optional[str]:
