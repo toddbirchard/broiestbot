@@ -2,9 +2,10 @@
 
 from typing import Optional
 
-from clients import claude
-from anthropic import RateLimitError, APIError
+from anthropic import APIError, RateLimitError
 from logger import LOGGER
+
+from clients import claude
 
 
 def generate_llm_response(user_name: str, history) -> Optional[str]:

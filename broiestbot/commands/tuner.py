@@ -6,6 +6,7 @@ from typing import Optional
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 
 from config import (
     CHANNEL_HOST,
@@ -14,7 +15,6 @@ from config import (
     CHATANGO_SPECIAL_USERS,
     HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
 
 
 def parse_channel_json():

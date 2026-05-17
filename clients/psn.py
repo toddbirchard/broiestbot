@@ -1,13 +1,15 @@
 """PSN account API client."""
 
-from typing import Optional, List
+from typing import List, Optional
+
 from psnawp_api import PSNAWP
-from psnawp_api.models.user import User
 from psnawp_api.models.client import Client
+from psnawp_api.models.user import User
+
+from config import PLAYSTATION_EAFC_2025_ID
 
 # from psnawp_api.models.trophies.trophy import Trophy
 
-from config import PLAYSTATION_EAFC_2025_ID
 
 
 class PlaystationClient:

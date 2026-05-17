@@ -2,13 +2,14 @@
 
 from datetime import datetime, timedelta
 from typing import Optional
-import requests
+
 import pytz
+import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
-from config import NFL_GAMES_URL, NFL_HTTP_HEADERS, HTTP_REQUEST_TIMEOUT
-from logger import LOGGER
+from config import HTTP_REQUEST_TIMEOUT, NFL_GAMES_URL, NFL_HTTP_HEADERS
 
 
 def get_today_nfl_games() -> str:

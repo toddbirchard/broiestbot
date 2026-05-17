@@ -1,14 +1,14 @@
 """Fetch randomly selected meme image(s) from storage bucket."""
 
-from random import randint
 from datetime import datetime
+from random import randint
 
 from emoji import emojize
 from google.cloud.exceptions import GoogleCloudError, NotFound
+from logger import LOGGER
 
 from clients import gcs
 from config import GOOGLE_BUCKET_NAME, GOOGLE_BUCKET_URL
-from logger import LOGGER
 
 
 def fetch_random_image_from_gcs_bucket(subdirectory: str) -> str:

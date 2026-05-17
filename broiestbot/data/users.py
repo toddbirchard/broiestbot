@@ -1,16 +1,16 @@
 """Persist user metadata."""
 
-from typing import Optional
 from datetime import datetime
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-
-from database import session
-from database.models import ChatangoUser
+from typing import Optional
 
 from chatango.ch import Message, User
+from logger import LOGGER
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
 from clients import geo
 from config import PERSIST_USER_DATA
-from logger import LOGGER
+from database import session
+from database.models import ChatangoUser
 
 
 def persist_user_data(room_name: str, user: User, message: Message, bot_username: str) -> None:

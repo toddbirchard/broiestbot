@@ -6,16 +6,16 @@ from typing import Optional
 import pytz
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
+    HTTP_REQUEST_TIMEOUT,
     MLB_BASE_ENDPOINT,
     MLB_LEAGUE_ID,
     MLB_PHILLIES_ID,
     RAPID_API_KEY,
-    HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
 
 from .util import parse_mlb_game
 

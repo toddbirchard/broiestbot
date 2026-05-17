@@ -1,10 +1,11 @@
 """Commands related to Sleeper Fantasy Football."""
 
 from typing import Optional
+
 import requests
+from logger import LOGGER
 
 from config import SLEEPER_LEAGUE_ID
-from logger import LOGGER
 
 
 def get_sleeper_week_number() -> Optional[int]:

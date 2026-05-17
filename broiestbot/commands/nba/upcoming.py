@@ -3,7 +3,6 @@
 from datetime import datetime
 
 from emoji import emojize
-
 from logger import LOGGER
 
 from .today import today_nba_games

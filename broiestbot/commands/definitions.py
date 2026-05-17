@@ -1,20 +1,21 @@
 """Lookup definitions via Wikipedia, Urban Dictionary, etc"""
 
 from typing import Optional
+
 import requests
+from bs4 import BeautifulSoup
 from emoji import emojize
+from logger import LOGGER
 from PyMultiDictionary import MultiDictionary
 from requests.exceptions import HTTPError
-from bs4 import BeautifulSoup
 
 from clients import wiki
 from config import (
-    RAPID_API_KEY,
-    HTTP_REQUEST_TIMEOUT,
     GOOGLE_TRANSLATE_ENDPOINT,
+    HTTP_REQUEST_TIMEOUT,
+    RAPID_API_KEY,
     URBAN_DICTIONARY_ENDPOINT,
 )
-from logger import LOGGER
 
 
 def get_english_definition(user_name: str, word: str) -> str:

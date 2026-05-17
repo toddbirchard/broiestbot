@@ -2,10 +2,10 @@
 
 import pandas as pd
 from emoji import emojize
+from logger import LOGGER
 from pandas import Series
 
 from config import OLYMPICS_LEADERBOARD_ENDPOINT, WINTER_OLYMPICS_LEADERBOARD_ENDPOINT
-from logger import LOGGER
 
 
 def get_summer_olympic_medals() -> str:

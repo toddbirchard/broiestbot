@@ -5,10 +5,10 @@ from typing import Optional
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import GIPHY_API_KEY, HTTP_REQUEST_TIMEOUT
-from logger import LOGGER
 
 
 def giphy_image_search(query: str) -> Optional[str]:

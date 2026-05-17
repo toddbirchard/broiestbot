@@ -1,8 +1,9 @@
 """LLM client for interacting with language models like Anthropic's Claude."""
 
-from anthropic import Anthropic
-import markdown
 from typing import Optional, Union
+
+import markdown
+from anthropic import Anthropic
 
 from config import ANTHROPIC_API_KEY, CHATANGO_BOT_USERNAME
 

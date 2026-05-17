@@ -1,21 +1,21 @@
 """Moderate or ban problematic users in Chatango rooms."""
 
-from typing import Optional
 import re
-
-from emoji import emojize
+from typing import Optional
 
 from chatango.ch import Message, Room
+from emoji import emojize
+from logger import LOGGER
+
 from config import (
-    CHATANGO_BLACKLISTED_USERS,
     CHATANGO_BANNED_IPS,
+    CHATANGO_BLACKLIST_ROOMS,
+    CHATANGO_BLACKLISTED_USERS,
+    CHATANGO_DADDY_ANON_BAN_ROOMS,
     CHATANGO_EGGSER_USERNAME_WHITELIST,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
-    CHATANGO_DADDY_ANON_BAN_ROOMS,
-    CHATANGO_BLACKLIST_ROOMS,
 )
-from logger import LOGGER
 
 from .ban import ban_user
 

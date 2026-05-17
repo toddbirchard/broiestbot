@@ -4,16 +4,16 @@ from typing import Optional
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
-    FOOTY_LIVE_SCORED_LEAGUES,
     FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT,
+    FOOTY_LIVE_SCORED_LEAGUES,
     HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
 
 
 def footy_live_fixtures(username: str, subs=False) -> str:

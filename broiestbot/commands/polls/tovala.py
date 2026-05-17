@@ -1,13 +1,13 @@
 """Allow users to track consecutive Tovala streaks via Redis cache."""
 
-from database import session
-from database.models import PollResult
 from emoji import emojize
+from logger import LOGGER
 from redis.exceptions import RedisError
 from sqlalchemy.exc import SQLAlchemyError
 
 from clients import r
-from logger import LOGGER
+from database import session
+from database.models import PollResult
 
 
 def tovala_counter(user_name: str) -> str:

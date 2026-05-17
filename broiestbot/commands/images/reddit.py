@@ -1,10 +1,10 @@
 """Fetch random trending image from a given subreddit."""
 
 from emoji import emojize
+from logger import LOGGER
 from praw.exceptions import RedditAPIException
 
 from clients import reddit
-from logger import LOGGER
 
 
 def subreddit_image(subreddit: str) -> str:

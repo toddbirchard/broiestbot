@@ -1,15 +1,14 @@
 """PSN Commands"""
 
-from typing import List, Optional
 from math import floor
-from psnawp_api.models.user import User
+from typing import List, Optional
+
 from emoji import emojize
+from logger import LOGGER
+from psnawp_api.models.user import User
 
 from clients import psn
-
 from config import PLAYSTATION_EAFC_2025_ID
-
-from logger import LOGGER
 
 
 def get_psn_online_friends() -> str:

@@ -1,9 +1,9 @@
 """Fetch sports betting markets."""
 
 import requests
-
-from config import RAPID_API_KEY, ODDS_API_ENDPOINT
 from logger import LOGGER
+
+from config import ODDS_API_ENDPOINT, RAPID_API_KEY
 
 
 def get_odds(sport_id: str) -> dict:
