@@ -37,6 +37,7 @@ from config import (
     EUROS_QUALIFIERS_ID,
     U20_ELITE_LEAGUE_ID,
     OBOS_LIGAEN_ID,
+    ELITESERIEN_LEAGUE_ID,
     CLUB_WORLD_CUP_LEAGUE_ID,
     WEUROS_LEAGUE_ID,
 )
@@ -226,6 +227,7 @@ def get_season_year(league_id: int) -> int:
         U20_ELITE_LEAGUE_ID,
         CONCACAF_NATIONS_LEAGUE_ID,
         OBOS_LIGAEN_ID,
+        ELITESERIEN_LEAGUE_ID,
         CLUB_WORLD_CUP_LEAGUE_ID,
         WEUROS_LEAGUE_ID,
     ):

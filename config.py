@@ -392,6 +392,7 @@ MLS_ALL_STAR_ID = 866
 MLS_LEAGUES_CUP_ID = 772
 US_OPEN_CUP_ID = 257
 EPL_SUMMER_SERIES_LEAGUE_ID = 1022
+ELITESERIEN_LEAGUE_ID = 103
 OBOS_LIGAEN_ID = 104
 TACA_DE_PORTUGAL_ID = 96
 
@@ -401,7 +402,7 @@ FOOTY_LEAGUES = {
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
@@ -434,6 +435,7 @@ FOOTY_LEAGUES = {
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
@@ -509,6 +511,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":Norway: :men’s_room: OBOS LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF CHAMPIONS": CONCACAF_CHAMPIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
@@ -526,7 +529,7 @@ FOOTY_XI_LEAGUES = {
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: :keycap_2: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
-    ":trophy: :England: FA CUP": FA_CUP_ID,
+    # ":trophy: :England: FA CUP": FA_CUP_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
@@ -555,6 +558,7 @@ FOOTY_XI_LEAGUES = {
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
@@ -590,6 +594,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
@@ -612,6 +617,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,

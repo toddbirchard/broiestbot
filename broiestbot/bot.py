@@ -83,6 +83,7 @@ from config import (
     BUND_LEAGUE_ID,
     LIGUE_ONE_ID,
     PRIMEIRA_LIGA_ID,
+    ELITESERIEN_LEAGUE_ID,
     ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ENGLISH_LEAGUE_ONE_ID,
     ENGLISH_LEAGUE_TWO_ID,
@@ -179,6 +180,8 @@ class Bot(RoomManager):
             return league_table_standings(LIGUE_ONE_ID)
         elif cmd_type == "primeratable":
             return league_table_standings(PRIMEIRA_LIGA_ID)
+        elif cmd_type == "estable":
+            return league_table_standings(ELITESERIEN_LEAGUE_ID)
         elif cmd_type == "mlstable":
             return mls_standings()
         elif cmd_type == "fixtures" and room and user_name:
