@@ -58,14 +58,14 @@ def create_psn_response(active_friends: List[User]) -> str:
     return response
 
 
-def create_active_psn_user_response(active_friend: User) -> str:
+def create_active_psn_user_response(active_friend: User) -> Optional[str]:
     """
     Create response for active PSN user.
 
     :param str account_name: PSN User ID.
     :param str friend_meta: PSN User online presence data.
 
-    :returns: str
+    :returns: Optional[str]
     """
     try:
         friend_meta = active_friend.get_presence()

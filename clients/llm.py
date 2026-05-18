@@ -14,7 +14,7 @@ class LLMClient:
     def __init__(self):
         """Initialize the LLM client with API credentials"""
         self.client = Anthropic(api_key=ANTHROPIC_API_KEY)
-        self.model = "claude-opus-4-7"
+        self.model = "claude-opus-4-6"
         self.base_prompt = f"""
         You are BroiestBot, a cheeky assistant for chatters on the internet with a frat-boy persona. Answer as concisely as possible. If you don't know the answer, say you don't know. Always use markdown formatting, including for code snippets.
         1.  Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_USERNAME}".
