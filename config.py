@@ -396,17 +396,18 @@ EPL_SUMMER_SERIES_LEAGUE_ID = 1022
 ELITESERIEN_LEAGUE_ID = 103
 OBOS_LIGAEN_ID = 104
 TACA_DE_PORTUGAL_ID = 96
+DFB_POKAL_CUP_ID = 81
 
 # Footy Leagues, cups and tournaments
 FOOTY_LEAGUES = {
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
-    ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
+    # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
-    ":trophy: :England: FA CUP": FA_CUP_ID,
+    # ":trophy: :England: FA CUP": FA_CUP_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":United_States: MLS": MLS_LEAGUE_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
@@ -444,7 +445,8 @@ FOOTY_LEAGUES = {
     # ":United_States: :woman_medium_skin_tone: NSWL": NWSL_LEAGUE_ID,
     # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
     # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
-    # ":trophy: WORLD CUP": WORLD_CUP_ID,
+    ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
+    ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
@@ -464,12 +466,12 @@ FOOTY_LEAGUES = {
 
 # Footy leagues with "live scoring" enabled
 FOOTY_LIVE_SCORED_LEAGUES = {
-    # ":trophy: WORLD CUP": WORLD_CUP_ID,
+    ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
-    ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
+    # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    ":trophy: :England: FA CUP": FA_CUP_ID,
+    # ":trophy: :England: FA CUP": FA_CUP_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
@@ -513,6 +515,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":Norway: :men’s_room: OBOS LIGAEN": OBOS_LIGAEN_ID,
     ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
+    ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF CHAMPIONS": CONCACAF_CHAMPIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
@@ -523,9 +526,10 @@ FOOTY_LIVE_SCORED_LEAGUES = {
 
 # Footy leagues with "lineups" enabled
 FOOTY_XI_LEAGUES = {
+    ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
-    ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
+    # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
@@ -539,6 +543,7 @@ FOOTY_XI_LEAGUES = {
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
+    ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
@@ -565,18 +570,20 @@ FOOTY_XI_LEAGUES = {
 }
 
 FOOTY_LIVE_ODDS_LEAGUES = {
+    ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
-    ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
+    # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
-    ":trophy: :England: FA CUP": FA_CUP_ID,
+    # ":trophy: :England: FA CUP": FA_CUP_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
+    ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
@@ -602,9 +609,9 @@ FOOTY_LIVE_ODDS_LEAGUES = {
 FOOTY_LIVE_STATS_LEAGUES = {
     ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
-    ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
+    # ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
@@ -626,6 +633,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
+    ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
