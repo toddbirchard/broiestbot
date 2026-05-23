@@ -5,26 +5,25 @@ from typing import Optional
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
+    AALESUND_TEAM_ID,
     CHATANGO_OBI_ROOM,
-    OBOS_LIGAEN_ID,
     ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
-    AALESUND_TEAM_ID,
     FOXES_TEAM_ID,
     HTTP_REQUEST_TIMEOUT,
+    OBOS_LIGAEN_ID,
 )
-from logger import LOGGER
 
 from .upcoming import (
+    check_fixture_start_date,
     get_preferred_time_format,
     get_preferred_timezone,
-    check_fixture_start_date,
 )
-
 from .util import get_season_year
 
 

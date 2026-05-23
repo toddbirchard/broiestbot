@@ -2,8 +2,8 @@
 
 from typing import Union
 
-import pandas as pd
 import ipdata
+import pandas as pd
 from ipdata import IPData
 from ipdata.ipdata import IPDataException
 from pandas import DataFrame

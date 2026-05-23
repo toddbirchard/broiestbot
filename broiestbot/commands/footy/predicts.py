@@ -4,19 +4,24 @@ from datetime import datetime
 from typing import List, Optional
 
 import requests
-from requests.exceptions import HTTPError
 from emoji import emojize
+from logger import LOGGER
+from requests.exceptions import HTTPError
 
 from config import (
     FOOTY_FIXTURES_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LEAGUES,
     FOOTY_ODDS_ENDPOINT_2,
+    HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
 
-from .util import get_preferred_timezone, get_current_day, abbreviate_team_name, get_season_year
+from .util import (
+    abbreviate_team_name,
+    get_current_day,
+    get_preferred_timezone,
+    get_season_year,
+)
 
 
 def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:

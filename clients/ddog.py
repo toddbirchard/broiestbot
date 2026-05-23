@@ -1,9 +1,11 @@
 """Datadog APM trace"""
 
-from typing import Callable
-from ddtrace import config, patch_all
-from config import ENVIRONMENT
 from functools import wraps
+from typing import Callable
+
+from ddtrace import config, patch_all
+
+from config import ENVIRONMENT
 
 
 def ddog_apm_trace(func: Callable):

@@ -7,15 +7,15 @@ from typing import Optional
 import pytz
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
+    HTTP_REQUEST_TIMEOUT,
     REDGIFS_ACCESS_KEY,
     REDGIFS_IMAGE_SEARCH_ENDPOINT,
     REDGIFS_TOKEN_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
 
 
 def is_after_dark() -> bool:

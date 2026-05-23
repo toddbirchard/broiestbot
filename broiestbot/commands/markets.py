@@ -2,11 +2,15 @@
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from clients import cch, sch
-from config import COINMARKETCAP_API_KEY, COINMARKETCAP_LATEST_ENDPOINT, HTTP_REQUEST_TIMEOUT
-from logger import LOGGER
+from config import (
+    COINMARKETCAP_API_KEY,
+    COINMARKETCAP_LATEST_ENDPOINT,
+    HTTP_REQUEST_TIMEOUT,
+)
 
 
 def get_crypto_chart(symbol: str) -> str:

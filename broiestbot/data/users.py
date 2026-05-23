@@ -1,16 +1,16 @@
 """Persist user metadata."""
 
-from typing import Optional
 from datetime import datetime
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-
-from database import session
-from database.models import ChatangoUser
+from typing import Optional
 
 from chatango.ch import Message, User
+from logger import LOGGER
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
 from clients import geo
 from config import PERSIST_USER_DATA
-from logger import LOGGER
+from database import session
+from database.models import ChatangoUser
 
 
 def persist_user_data(room_name: str, user: User, message: Message, bot_username: str) -> None:
@@ -30,6 +30,11 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
             if existing_user is None:
                 user_data = geo.lookup_user_by_ip(message.ip)
                 if user_data:
+                    user_name = user.name.lower()
+                    if "anon" in user.name.lower():
+                        user_name = (
+                            f"{user.name.lower().replace('!anon', 'anon')}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                        )
                     user_asn_data = user_data.get("asn")
                     user_language_data = user_data.get("languages")[0]
                     user_currency_data = user_data.get("currency")
@@ -39,7 +44,7 @@ def persist_user_data(room_name: str, user: User, message: Message, bot_username
                     # fmt: off
                     session.add(
                         ChatangoUser(
-                            username=user.name.lower().replace("!anon", "anon"),
+                            username=user_name,
                             chatango_room=room_name,
                             ip=message.ip,
                             city=user_data.get("city"),

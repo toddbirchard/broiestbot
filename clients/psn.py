@@ -1,13 +1,14 @@
 """PSN account API client."""
 
-from typing import Optional, List
+from typing import List, Optional
+
 from psnawp_api import PSNAWP
-from psnawp_api.models.user import User
 from psnawp_api.models.client import Client
+from psnawp_api.models.user import User
+
+from config import PLAYSTATION_EAFC_2026_ID
 
 # from psnawp_api.models.trophies.trophy import Trophy
-
-from config import PLAYSTATION_EAFC_2025_ID
 
 
 class PlaystationClient:
@@ -15,7 +16,7 @@ class PlaystationClient:
 
     def __init__(self, token: str):
         self.psn = PSNAWP(token)
-        self.eafc = PLAYSTATION_EAFC_2025_ID
+        self.eafc = PLAYSTATION_EAFC_2026_ID
 
     @property
     def account(self) -> Client:
@@ -26,11 +27,11 @@ class PlaystationClient:
         """
         return self.psn.me()
 
-    def get_online_friends(self) -> List[Optional[User]]:
+    def get_online_friends(self) -> List[User]:
         """
         Get friends of logged-in PSN user.
 
-        :returns: List[Optional[User]]
+        :returns: List[User]
         """
         friends = self.account.friends_list()
         online_friends = [

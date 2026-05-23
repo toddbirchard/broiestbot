@@ -1,11 +1,13 @@
 """Live NFL game stats."""
 
 from datetime import datetime
+
 import requests
-from requests import HTTPError
 from emoji import emojize
 from logger import LOGGER
-from config import NFL_LIVE_HTTP_HEADERS, NFL_LIVE_GAMES_URL
+from requests import HTTPError
+
+from config import NFL_LIVE_GAMES_URL, NFL_LIVE_HTTP_HEADERS
 
 
 def get_live_nfl_game_summaries(username: str) -> str:

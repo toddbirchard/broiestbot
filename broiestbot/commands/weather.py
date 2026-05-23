@@ -1,22 +1,22 @@
 """Fetch weather for a given location."""
 
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
-from database import session
-from database.models import Weather
 
 from config import (
     CHATANGO_OBI_ROOM,
+    HTTP_REQUEST_TIMEOUT,
     METRIC_SYSTEM_USERS,
     WEATHERSTACK_API_ENDPOINT,
     WEATHERSTACK_API_KEY,
-    HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
+from database import session
+from database.models import Weather
 
 
 def get_current_weather(location: str, room: str, user: str) -> str:

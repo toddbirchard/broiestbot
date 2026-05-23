@@ -4,11 +4,11 @@ from datetime import datetime
 
 import pytz
 import requests
+from logger import LOGGER
 from requests import Response
 from requests.exceptions import HTTPError
 
-from config import NBA_BASE_URL, NBA_SEASON_YEAR, RAPID_API_KEY, HTTP_REQUEST_TIMEOUT
-from logger import LOGGER
+from config import HTTP_REQUEST_TIMEOUT, NBA_BASE_URL, NBA_SEASON_YEAR, RAPID_API_KEY
 
 
 def today_nba_games() -> Response:

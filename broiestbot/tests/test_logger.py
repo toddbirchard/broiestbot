@@ -3,9 +3,9 @@
 from os import mkdir, path
 
 import pytest
+from logger import LOGGER
 
 from config import BASE_DIR, ENVIRONMENT
-from logger import LOGGER
 
 
 @pytest.fixture

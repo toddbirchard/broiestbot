@@ -2,28 +2,27 @@
 
 from datetime import datetime, timedelta
 from typing import List, Optional
-import pytz
 
+import pytz
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
-    FOOTY_HTTP_HEADERS,
-    FOOTY_XI_LEAGUES,
     FOOTY_FIXTURES_ENDPOINT,
+    FOOTY_HTTP_HEADERS,
     FOOTY_XI_ENDPOINT,
+    FOOTY_XI_LEAGUES,
     HTTP_REQUEST_TIMEOUT,
 )
 
-from logger import LOGGER
-
 from .util import (
+    check_fixture_start_date,
     get_current_day,
+    get_preferred_time_format,
     get_preferred_timezone,
     get_season_year,
-    check_fixture_start_date,
-    get_preferred_time_format,
 )
 
 

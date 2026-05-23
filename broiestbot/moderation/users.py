@@ -1,17 +1,21 @@
+"""Moderate or ban problematic users in Chatango rooms."""
+
+import re
 from typing import Optional
 
-from emoji import emojize
-
 from chatango.ch import Message, Room
+from emoji import emojize
+from logger import LOGGER
+
 from config import (
-    CHATANGO_BLACKLISTED_USERS,
     CHATANGO_BANNED_IPS,
+    CHATANGO_BLACKLIST_ROOMS,
+    CHATANGO_BLACKLISTED_USERS,
+    CHATANGO_DADDY_ANON_BAN_ROOMS,
     CHATANGO_EGGSER_USERNAME_WHITELIST,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
-    CHATANGO_BLACKLIST_ROOMS,
 )
-from logger import LOGGER
 
 from .ban import ban_user
 
@@ -50,6 +54,29 @@ def check_blacklisted_users(room: Room, user_name: str, message: Message) -> Non
         ban_user(room, message)
     elif "is the wordle" in message.body.lower():
         ban_user(room, message)
+
+
+def ban_daddy_anons(room: Room, user_name: str, message: Message) -> None:
+    """
+    Ban and delete chat history of anons who post from Daddy.
+
+    :param Room room: Chatango room in which user appeared.
+    :param str user_name: Chatango username to validate against blacklist.
+    :param Message message: User submitted message.
+
+    :returns: None
+    """
+    if room.room_name.lower() in CHATANGO_DADDY_ANON_BAN_ROOMS:
+        LOGGER.info(f"Checking for Daddy anons: username={user_name} ip={message.ip}")
+        if is_user_anon(user_name) and re.match(
+            r"(.+)?(https?:\/\/)?([a-zA-Z0-9\-]+\.)?daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}(\/[^\s]*)?", message.body
+        ):
+            LOGGER.warning(f"BANNED Daddy anon user: username={user_name} ip={message.ip}")
+            reply = f"👋🏏 @{user_name} lmao have fun being banned forever 🏏👋"
+            LOGGER.warning(f"BANNED user: username={message.user.name} ip={message.ip}")
+            room.message(reply)
+            room.clear_user(message.user)
+            room.ban_user(message.user)
 
 
 def ignored_user(user_name: str, user_ip: str) -> Optional[str]:

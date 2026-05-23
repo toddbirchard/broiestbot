@@ -4,6 +4,7 @@ from typing import Optional
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
@@ -12,9 +13,8 @@ from config import (
     HTTP_REQUEST_TIMEOUT,
     MLS_LEAGUE_ID,
 )
-from logger import LOGGER
 
-from .util import get_season_year, abbreviate_team_name
+from .util import abbreviate_team_name, get_season_year
 
 
 def league_table_standings(league_id: int) -> Optional[str]:
@@ -84,7 +84,9 @@ def mls_standings() -> Optional[str]:
         if mls_standings_response:
             standings_table = "\n\n\n\n"
             for i, conference in enumerate(mls_standings_response[0]["league"]["standings"]):
-                standings_table += mls_conference_standings(conference)
+                mls_conference_standings = mls_conference_standings(conference)
+                if mls_conference_standings:
+                    standings_table += mls_conference_standings
                 if i == 0:
                     standings_table += "\n\n"
                 elif standings_table != "\n\n\n\n":

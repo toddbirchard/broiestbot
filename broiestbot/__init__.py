@@ -2,14 +2,15 @@
 
 from typing import List
 
+from logger import LOGGER
+
 from broiestbot.bot import Bot
 from config import (
-    CHATANGO_USERS,
     CHATANGO_ROOMS,
     CHATANGO_TEST_ROOM,
+    CHATANGO_USERS,
     ENVIRONMENT,
 )
-from logger import LOGGER
 
 
 def start_bot():

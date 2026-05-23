@@ -1,10 +1,11 @@
 """Get general fixture stats for live fixtures."""
 
 from typing import Optional, Tuple
+
 import requests
 from emoji import emojize
-
 from logger import LOGGER
+
 from config import (
     FOOTY_FIXTURE_STATS_ENDPOINT,
     FOOTY_FIXTURES_ENDPOINT,

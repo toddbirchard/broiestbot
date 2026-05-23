@@ -57,23 +57,25 @@ def klipy_image_search(query: str) -> Optional[str]:
     """
     params = {
         "q": query,
-        "limit": 1,
+        "page": 1,
         "per_page": 10,
     }
     try:
         resp = requests.get(
-            f"https://api.klipy.io/v1/gifs/search{KLIPY_API_KEY}/gifs/search",
+            f"https://api.klipy.com/api/v1/{KLIPY_API_KEY}/gifs/search",
             params=params,
             timeout=HTTP_REQUEST_TIMEOUT,
         )
+        resp.raise_for_status()
+        if resp.status_code == 204:
+            return None
         images = resp.json()["data"]["data"]
         rand = randint(0, len(images) - 1)
-        image = resp.json()["data"]["data"][rand]["file"]["md"]["gif"].get("url")
-        LOGGER.info(f"Klipy search for `{query}` returned {len(images)} results. Returning result: {resp.json()['data']['data'][rand]}")
+        image = images[rand]["file"]["md"]["gif"].get("url")
         if image is not None:
             return image
     except HTTPError as e:
-        LOGGER.error(f"Klipy failed to fetch `{query}`: {e.response.content}")
+        LOGGER.error(f"Klipy failed to fetch `{query}`: {e.response}")
         return emojize(":warning: yoooo gif API is down rn lmao :warning:", language="en")
     except ValueError as e:
         LOGGER.error(f"ValueError while fetching Klipy `{query}`: {e}")

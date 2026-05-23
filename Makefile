@@ -2,7 +2,6 @@ PROJECT_NAME := $(shell basename $CURDIR)
 VIRTUAL_ENVIRONMENT := $(CURDIR)/.venv
 LOCAL_PYTHON := $(VIRTUAL_ENVIRONMENT)/bin/python
 LOCAL_PYTHON_ACTIVATE := $(VIRTUAL_ENVIRONMENT)/bin/activate
-PROJECT_RUNNING_PROCESSES := $(shell pgrep -f broiestbot)
 
 define HELP
 Manage $(PROJECT_NAME). Usage:
@@ -45,13 +44,12 @@ install: env
 
 .PHONY: kill
 kill:
-	ifeq ($(PROJECT_RUNNING_PROCESSES), )
-		echo "Killing running instances of $(PROJECT_NAME): $(PROJECT_RUNNING_PROCESSES)" && \
-		pkill $(PROJECT_RUNNING_PROCESSES) || true
-
-	else
-		echo "No running instances of $(PROJECT_NAME) found: $(PROJECT_RUNNING_PROCESSES)"
-	endif
+	@if pgrep -f broiestbot > /dev/null; then \
+		echo "Killing running instances of $(PROJECT_NAME)..."; \
+		pkill -f broiestbot || true; \
+	else \
+		echo "No running instances of $(PROJECT_NAME) found."; \
+	fi
 
 .PHONY: deploy
 deploy:

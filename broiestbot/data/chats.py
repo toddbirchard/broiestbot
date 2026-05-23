@@ -1,11 +1,11 @@
 """Persist chat logs."""
 
-from database import session
-from database.models import Chat
+from logger import LOGGER
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from config import PERSIST_CHAT_DATA
-from logger import LOGGER
+from database import session
+from database.models import Chat
 
 
 def persist_chat_logs(user_name: str, room_name: str, chat_message: str, bot_username: str) -> None:

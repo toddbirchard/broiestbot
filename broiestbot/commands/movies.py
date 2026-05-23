@@ -3,21 +3,20 @@
 from typing import Optional
 
 import requests
-from requests.exceptions import HTTPError
 from emoji import emojize
 from imdb import IMDbError
 from imdb.Movie import Movie
+from logger import LOGGER
+from requests.exceptions import HTTPError
 
 from clients import ia
-from logger import LOGGER
-
 from config import (
+    HTTP_REQUEST_TIMEOUT,
+    OMDB_API_KEY,
+    OMDB_ENDPOINT,
+    RAPID_API_KEY,
     STREAMING_SERVICE_ENDPOINT,
     STREAMING_SERVICE_HEADER,
-    RAPID_API_KEY,
-    HTTP_REQUEST_TIMEOUT,
-    OMDB_ENDPOINT,
-    OMDB_API_KEY,
 )
 
 

@@ -5,6 +5,7 @@ from typing import List, Optional
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
@@ -13,7 +14,6 @@ from config import (
     FOOTY_LEAGUES,
     HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
 
 from .util import (
     abbreviate_team_name,

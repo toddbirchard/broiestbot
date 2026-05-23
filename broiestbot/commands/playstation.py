@@ -1,15 +1,14 @@
 """PSN Commands"""
 
-from typing import List, Optional
 from math import floor
-from psnawp_api.models.user import User
+from typing import List, Optional
+
 from emoji import emojize
+from logger import LOGGER
+from psnawp_api.models.user import User
 
 from clients import psn
-
 from config import PLAYSTATION_EAFC_2025_ID
-
-from logger import LOGGER
 
 
 def get_psn_online_friends() -> str:
@@ -59,14 +58,14 @@ def create_psn_response(active_friends: List[User]) -> str:
     return response
 
 
-def create_active_psn_user_response(active_friend: User) -> str:
+def create_active_psn_user_response(active_friend: User) -> Optional[str]:
     """
     Create response for active PSN user.
 
     :param str account_name: PSN User ID.
     :param str friend_meta: PSN User online presence data.
 
-    :returns: str
+    :returns: Optional[str]
     """
     try:
         friend_meta = active_friend.get_presence()

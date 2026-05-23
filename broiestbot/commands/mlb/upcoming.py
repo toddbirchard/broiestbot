@@ -5,10 +5,15 @@ from typing import Optional, Tuple
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
-from config import MLB_BASE_ENDPOINT, RAPID_API_KEY, TIMEZONE_US_EASTERN, HTTP_REQUEST_TIMEOUT
-from logger import LOGGER
+from config import (
+    HTTP_REQUEST_TIMEOUT,
+    MLB_BASE_ENDPOINT,
+    RAPID_API_KEY,
+    TIMEZONE_US_EASTERN,
+)
 
 
 def parse_upcoming_mlb_game(game: dict) -> Optional[str]:

@@ -2,97 +2,96 @@
 
 import re
 from typing import Optional, Tuple
+
+from chatango.ch import Message, Room, RoomManager, User
 from emoji import emojize
+from logger import LOGGER
 
-from database import session
-from database.models import Command, Phrase
-
-from broiestbot.commands import (
+from broiestbot.commands import (  # extract_url,; get_crypto_chart,; get_redgifs_gif,; today_phillies_games,; get_today_footy_odds_for_league,
     all_leagues_golden_boot,
+    bach_gang_counter,
     basic_message,
     blaze_time_remaining,
-    nontent_time_remaining,
     change_or_stay_vote,
-    get_live_poll_results,
     covid_cases_usa,
-    epl_golden_boot,
     create_wiki_preview,
-    # extract_url,
-    fetch_fox_fixtures,
+    epl_golden_boot,
     fetch_aafk_fixture_data,
+    fetch_fox_fixtures,
+    fetch_latest_image_from_gcs_bucket,
     fetch_random_image_from_gcs_bucket,
+    fetch_sleeper_matchups,
     find_movie,
-    streaming_service_show,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
-    footy_today_fixtures_odds,
+    footy_stats_for_live_fixtures,
     footy_team_lineups,
+    footy_today_fixtures_odds,
     footy_upcoming_fixtures,
     gcs_count_images_in_bucket,
-    spam_random_images_from_gcs_bucket,
-    fetch_latest_image_from_gcs_bucket,
-    get_all_live_twitch_streams,
-    generate_youtube_video_preview,
+    generate_llm_response,
     generate_twitter_preview,
+    generate_youtube_video_preview,
     search_youtube_video,
     # get_crypto_chart,
+    get_all_live_twitch_streams,
     get_crypto_price,
     get_current_show,
+    get_current_weather,
     get_english_definition,
     get_english_translation,
-    get_today_nfl_games,
-    # get_redgifs_gif,
+    get_live_nfl_game_summaries,
+    get_live_poll_results,
+    get_odds,
+    get_psn_game_trophies,
+    get_psn_online_friends,
     get_song_lyrics,
     get_stock,
     get_summer_olympic_medals,
+    get_titles_with_stats,
+    get_today_nfl_games,
     get_top_crypto,
     get_urban_definition,
     get_winter_olympic_medals,
     giphy_image_search,
     klipy_image_search,
+    league_table_standings,
     live_nba_games,
+    mls_standings,
     nba_standings,
+    nontent_time_remaining,
     random_image,
+    search_youtube_video,
     send_text_message,
+    spam_random_images_from_gcs_bucket,
+    streaming_service_show,
     time_until_wayne,
-    # today_phillies_games,
     today_upcoming_fixtures,
     tovala_counter,
     tuner,
     upcoming_nba_games,
-    get_current_weather,
     wiki_summary,
-    get_psn_online_friends,
-    league_table_standings,
-    generate_twitter_preview,
-    mls_standings,
-    get_odds,
-    # get_today_footy_odds_for_league,
-    bach_gang_counter,
-    get_live_nfl_game_summaries,
-    footy_stats_for_live_fixtures,
-    get_psn_game_trophies,
-    get_titles_with_stats,
-    fetch_sleeper_matchups,
 )
-from chatango.ch import Message, Room, RoomManager, User
 from config import (
+    BUND_LEAGUE_ID,
+    CHATANGO_BOT_USERNAME,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
-    EPL_LEAGUE_ID,
-    LIGA_LEAGUE_ID,
-    BUND_LEAGUE_ID,
-    LIGUE_ONE_ID,
-    PRIMEIRA_LIGA_ID,
+    ELITESERIEN_LEAGUE_ID,
     ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ENGLISH_LEAGUE_ONE_ID,
     ENGLISH_LEAGUE_TWO_ID,
     ENGLISH_NATIONAL_LEAGUE_ID,
+    EPL_LEAGUE_ID,
+    LIGA_LEAGUE_ID,
+    LIGUE_ONE_ID,
+    PRIMEIRA_LIGA_ID,
 )
-from logger import LOGGER
+from database import session
+from database.models import Command, Phrase
 
 from .data import persist_chat_logs, persist_user_data
-from .moderation import ban_word, check_blacklisted_users
+from .moderation import ban_daddy_anons, ban_word, check_blacklisted_users
 from .moderation.users import ignored_user
 
 
@@ -179,6 +178,8 @@ class Bot(RoomManager):
             return league_table_standings(LIGUE_ONE_ID)
         elif cmd_type == "primeratable":
             return league_table_standings(PRIMEIRA_LIGA_ID)
+        elif cmd_type == "estable":
+            return league_table_standings(ELITESERIEN_LEAGUE_ID)
         elif cmd_type == "mlstable":
             return mls_standings()
         elif cmd_type == "fixtures" and room and user_name:
@@ -298,6 +299,7 @@ class Bot(RoomManager):
         room_name = room.room_name.lower()
         bot_username = room.user.name.lower()
         check_blacklisted_users(room, user_name, message)
+        ban_daddy_anons(room, user_name, message)
         self._log_message(room, user, message)
         persist_user_data(room_name, user, message, bot_username)
         persist_chat_logs(user_name, room_name, chat_message, bot_username)
@@ -335,6 +337,8 @@ class Bot(RoomManager):
             ban_word(room, message, user_name, silent=True)
         elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
             ban_word(room, message, user_name, silent=True)
+        elif chat_message.startswith(f"@{CHATANGO_BOT_USERNAME} "):
+            return self._respond_llm_prompt(user_name, room)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             ban_word(room, message, user_name, silent=True)
         else:
@@ -501,3 +505,18 @@ class Bot(RoomManager):
         """
         message.delete()
         room.message("™")
+
+    @staticmethod
+    def _respond_llm_prompt(user_name: str, room: Room) -> None:
+        """
+        Respond to messages directed at the bot with LLM-generated responses.
+
+        :param str user_name: Username of the Chatango user who triggered the LLM response.
+        :param Room room: Current Chatango room object.
+
+        :returns: None
+        """
+        LOGGER.info(f"Generating LLM response for message directed at bot in room {room.room_name}")
+        response = generate_llm_response(user_name, room._history)
+        if response:
+            room.message(response, html=True)

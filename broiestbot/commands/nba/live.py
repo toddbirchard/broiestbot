@@ -1,9 +1,8 @@
 """Parse live NBA scores, or fallback to upcoming games."""
 
 from emoji import emojize
-from requests.exceptions import HTTPError
-
 from logger import LOGGER
+from requests.exceptions import HTTPError
 
 from .today import today_nba_games
 from .upcoming import upcoming_nba_games

@@ -18,6 +18,7 @@ HTTP_REQUEST_TIMEOUT = 40
 
 # Chatango
 # -------------------------------------------------
+CHATANGO_BOT_USERNAME = "bro"
 CHATANGO_USERS = {
     "BROIESTBOT": {
         "USERNAME": getenv("CHATANGO_BOT_USERNAME"),
@@ -50,12 +51,12 @@ CHATANGO_LMAO_ROOM = getenv("CHATANGO_LMAO_ROOM")
 # Chatango rooms to be joined by the bot
 CHATANGO_ROOMS = [
     # CHATANGO_ACLEE_ROOM,
-    # CHATANGO_SIXERS_ROOM,
+    CHATANGO_SIXERS_ROOM,
     # CHATANGO_PHILLIES_ROOM,
-    # CHATANGO_FLYERS_ROOM,
-    # CHATANGO_ALT_ROOM,
+    CHATANGO_FLYERS_ROOM,
+    CHATANGO_ALT_ROOM,
     # CHATANGO_NFL_ROOM,
-    # CHATANGO_OBI_ROOM,
+    CHATANGO_OBI_ROOM,
     # CHATANGO_TEST_ROOM,
     # CHATANGO_REDZONE_ROOM,
     # CHATANGO_PATREON_ROOM,
@@ -63,6 +64,13 @@ CHATANGO_ROOMS = [
     # CHATANGO_UNION_ROOM,
     CHATANGO_LMAO_ROOM,
 ]
+
+# Chatango rooms to ban daddy anons from
+CHATANGO_DADDY_ANON_BAN_ROOMS = [
+    CHATANGO_LMAO_ROOM,
+    CHATANGO_TEST_ROOM,
+]
+
 
 # List of Chatango users with privileges to special commands
 CHATANGO_SPECIAL_USERS = getenv("CHATANGO_SPECIAL_USERS")
@@ -168,6 +176,7 @@ TWILIO_SLANT_PHONE_NUMBER = getenv("TWILIO_SLANT_PHONE_NUMBER")
 TWILIO_PIZZA_PHONE_NUMBER = getenv("TWILIO_PIZZA_PHONE_NUMBER")
 TWILIO_HURTS_PHONE_NUMBER = getenv("TWILIO_HURTS_PHONE_NUMBER")
 TWILIO_MRSACLEE_PHONE_NUMBER = getenv("TWILIO_MRSACLEE_PHONE_NUMBER")
+TWILIO_PANDUH_PHONE_NUMBER = getenv("TWILIO_PANDUH_PHONE_NUMBER")
 TWILIO_AUTH_TOKEN = getenv("TWILIO_AUTH_TOKEN")
 TWILIO_ACCOUNT_SID = getenv("TWILIO_ACCOUNT_SID")
 TWILIO_PHONE_NUMBERS = {
@@ -177,6 +186,7 @@ TWILIO_PHONE_NUMBERS = {
     "findanewslant": TWILIO_SLANT_PHONE_NUMBER,
     "thegreatpizza": TWILIO_PIZZA_PHONE_NUMBER,
     "hurtsmeplenty": TWILIO_HURTS_PHONE_NUMBER,
+    "panduhbear8": TWILIO_PANDUH_PHONE_NUMBER,
 }
 
 # Reddit
@@ -383,6 +393,7 @@ MLS_ALL_STAR_ID = 866
 MLS_LEAGUES_CUP_ID = 772
 US_OPEN_CUP_ID = 257
 EPL_SUMMER_SERIES_LEAGUE_ID = 1022
+ELITESERIEN_LEAGUE_ID = 103
 OBOS_LIGAEN_ID = 104
 TACA_DE_PORTUGAL_ID = 96
 
@@ -392,15 +403,15 @@ FOOTY_LEAGUES = {
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
-    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    ":United_States: MLS": MLS_LEAGUE_ID,
+    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    # ":United_States: MLS": MLS_LEAGUE_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     ":Germany: BUND": BUND_LEAGUE_ID,
-    # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
+    ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
@@ -422,9 +433,10 @@ FOOTY_LEAGUES = {
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":European_Union: UEFA NATIONS LEAGUE": UEFA_NATIONS_LEAGUE_ID,
     # ":trophy: UEFA SUPER CUP": UEFA_SUPER_CUP_ID,
-    ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
+    # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
@@ -458,13 +470,13 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     ":trophy: :England: FA CUP": FA_CUP_ID,
-    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: :keycap_2: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
-    # ":Germany: BUND": BUND_LEAGUE_ID,
-    # ":Italy: Serie A": SERIE_A_LEAGUE_ID,
+    ":Germany: BUND": BUND_LEAGUE_ID,
+    ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
@@ -477,7 +489,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
-    ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
+    # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
@@ -500,6 +512,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":Norway: :men’s_room: OBOS LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF CHAMPIONS": CONCACAF_CHAMPIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
@@ -517,8 +530,8 @@ FOOTY_XI_LEAGUES = {
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: :keycap_2: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
-    ":trophy: :England: FA CUP": FA_CUP_ID,
-    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    # ":trophy: :England: FA CUP": FA_CUP_ID,
+    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
@@ -526,7 +539,7 @@ FOOTY_XI_LEAGUES = {
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
-    ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
+    # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
@@ -546,6 +559,7 @@ FOOTY_XI_LEAGUES = {
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
@@ -557,7 +571,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
-    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
@@ -567,7 +581,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":United_States: MLS": MLS_LEAGUE_ID,
-    ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
+    # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
@@ -581,6 +595,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
@@ -590,7 +605,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
-    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
@@ -601,8 +616,9 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":United_States: MLS": MLS_LEAGUE_ID,
-    ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
+    # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
@@ -726,6 +742,7 @@ NBA_SEASON_YEAR = "2024-2025"
 PLAYSTATION_SSO_TOKEN = getenv("PLAYSTATION_SSO_TOKEN")
 PLAYSTATION_EAFC_2024_ID = "PPSA13393_00"
 PLAYSTATION_EAFC_2025_ID = "PPSA20049_00"
+PLAYSTATION_EAFC_2026_ID = "PPSA27360_00"
 
 # Streaming Services
 # -------------------------------------------------
@@ -740,6 +757,10 @@ OMDB_API_KEY = getenv("OMDB_API_KEY")
 # Sleeper
 # -------------------------------------------------
 SLEEPER_LEAGUE_ID = getenv("SLEEPER_LEAGUE_ID")
+
+# Anthropic
+# ------------------------------------------------
+ANTHROPIC_API_KEY = getenv("ANTHROPIC_API_KEY")
 
 # Twitter (Unused)
 # -------------------------------------------------

@@ -3,7 +3,6 @@
 from random import randint
 
 from emoji import emojize
-
 from logger import LOGGER
 
 

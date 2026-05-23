@@ -3,10 +3,9 @@
 import re
 from typing import Optional, Tuple
 
+from logger import LOGGER
 from metadata_parser import InvalidDocument, MetadataParser
 from requests.exceptions import HTTPError, RequestException
-
-from logger import LOGGER
 
 headers = {
     "Access-Control-Allow-Origin": "*",

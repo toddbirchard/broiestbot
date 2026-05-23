@@ -4,10 +4,10 @@ from typing import List, Optional
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
-from config import RAPID_API_KEY, HTTP_REQUEST_TIMEOUT, FOOTY_ODDS_ENDPOINT_2
-from logger import LOGGER
+from config import FOOTY_ODDS_ENDPOINT_2, HTTP_REQUEST_TIMEOUT, RAPID_API_KEY
 
 
 def get_today_footy_odds_for_league(league_id: int):

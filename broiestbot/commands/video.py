@@ -3,22 +3,21 @@
 import re
 from datetime import datetime
 from typing import Optional
-from urllib.parse import urlparse, urlunparse, parse_qs
+from urllib.parse import parse_qs, urlparse, urlunparse
 
 import requests
+from logger import LOGGER
+from requests.exceptions import HTTPError
 from youtube_search import YoutubeSearch
 
-from requests.exceptions import HTTPError
-
 from config import (
+    HTTP_REQUEST_TIMEOUT,
     TWITCH_BROADCASTERS,
     TWITCH_CLIENT_ID,
     TWITCH_CLIENT_SECRET,
     TWITCH_STREAMS_ENDPOINT,
     TWITCH_TOKEN_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
 
 
 def get_all_live_twitch_streams() -> str:

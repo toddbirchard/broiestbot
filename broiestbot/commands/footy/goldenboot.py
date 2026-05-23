@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 import requests
 from emoji import emojize
+from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
@@ -13,7 +14,6 @@ from config import (
     GOLDEN_SHOE_LEAGUES,
     HTTP_REQUEST_TIMEOUT,
 )
-from logger import LOGGER
 
 from .util import get_season_year
 
