@@ -14,7 +14,7 @@ ENVIRONMENT = environ.get("ENVIRONMENT")
 proc_name = "broiestbot"
 wsgi_app = "wsgi:app"
 bind = f"unix:{BASE_DIR}/broiestbot.sock"
-reload = True
+reload = False
 threads = 4
 workers = 1
 

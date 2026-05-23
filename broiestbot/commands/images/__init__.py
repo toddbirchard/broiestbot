@@ -1,4 +1,4 @@
-from .giphy import giphy_image_search
+from .gifs import giphy_image_search, klipy_image_search
 from .random import random_image
 from .reddit import subreddit_image
 from .storage import (
