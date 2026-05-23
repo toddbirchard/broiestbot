@@ -21,6 +21,7 @@ from broiestbot.commands import (  # extract_url,; get_crypto_chart,; get_redgif
     fetch_latest_image_from_gcs_bucket,
     fetch_random_image_from_gcs_bucket,
     fetch_sleeper_matchups,
+    fetch_redgifs_gif,
     find_movie,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
@@ -268,10 +269,10 @@ class Bot(RoomManager):
             return fetch_sleeper_matchups(user_name)
         # elif cmd_type == "cryptochart" and args:
         #     return get_crypto_chart(args)
-        # elif cmd_type == "lesbians":
-        #     return get_redgifs_gif("lesbians", user_name)
-        # elif cmd_type == "nsfw" and args:
-        #     return get_redgifs_gif(args, user_name, after_dark_only=True)
+        elif cmd_type == "lesbians":
+            return fetch_redgifs_gif("lesbians", user_name)
+        elif cmd_type == "nsfw" and args:
+            return fetch_redgifs_gif(args, user_name, after_dark_only=True)
         elif cmd_type == "psn":
             return get_psn_online_friends()
         # elif cmd_type == "philliesgames":

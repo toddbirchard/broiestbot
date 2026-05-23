@@ -1,6 +1,6 @@
 """Construct responses to bot commands from third-party APIs."""
 
-from .afterdark import get_redgifs_gif
+from .afterdark import get_redgifs_gif, fetch_redgifs_gif
 from .definitions import (
     create_wiki_preview,
     get_english_definition,

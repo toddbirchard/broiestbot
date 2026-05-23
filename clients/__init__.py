@@ -7,6 +7,7 @@ from imdb import Cinemagoer
 from redis import Redis
 from rq_scheduler import Scheduler
 from twilio.rest import Client
+import redgifs
 
 from config import (
     ALPHA_VANTAGE_API_KEY,
@@ -88,3 +89,6 @@ psn = PlaystationClient(PLAYSTATION_SSO_TOKEN)
 
 # Anthropic LLM Client
 claude = LLMClient()
+
+# Redgifs Client
+redgifs_client = redgifs.API()

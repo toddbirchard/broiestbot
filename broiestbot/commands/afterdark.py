@@ -1,4 +1,4 @@
-"""Commands only available from 12am to 5am EST."""
+"""Commands only available from 10pm to 5am EST."""
 
 from datetime import datetime
 from random import randint
@@ -9,6 +9,9 @@ import requests
 from emoji import emojize
 from logger import LOGGER
 from requests.exceptions import HTTPError
+from redgifs import Order
+
+from clients import redgifs_client
 
 from config import (
     HTTP_REQUEST_TIMEOUT,
@@ -26,11 +29,50 @@ def is_after_dark() -> bool:
     """
     tz = pytz.timezone("America/New_York")
     now = datetime.now(tz=tz)
-    start_time = datetime(year=now.year, month=now.month, day=now.day, hour=0, tzinfo=now.tzinfo)
+    LOGGER.info(
+        f"Current time is {now.hour}. After Dark mode is {'ON' if (now.hour >= 0 and now.hour < 5) else 'OFF'}."
+    )
+    start_time = datetime(year=now.year, month=now.month, day=now.day, hour=22, tzinfo=now.tzinfo)
     end_time = datetime(year=now.year, month=now.month, day=now.day, hour=5, tzinfo=now.tzinfo)
-    if start_time > now and now < end_time:
+    if start_time <= now or now > end_time:
         return True
     return False
+
+
+def fetch_redgifs_gif(query: str, username: str, after_dark_only: bool = False) -> Optional[str]:
+    """
+    Fetch a special kind of gif, if you know what I mean ;).
+
+    :param str query: Gif search query.
+    :param str username: Chatango user who triggered the command.
+    :param bool after_dark_only: Whether results should be limited to the `after dark` timeframe.
+
+    :returns: Optional[str]
+    """
+    try:
+        night_mode = is_after_dark()
+        if (after_dark_only and night_mode) or after_dark_only is False:
+            redgifs_client.login()
+            results = redgifs_client.search(search_text=query, order=Order.TRENDING, count=20)
+            gifs = results.gifs
+            if gifs:
+                gif = gifs[randint(0, len(gifs) - 1)]
+                url = gif.urls.web_url
+                thumbnail = gif.urls.thumbnail
+                tags = ", #".join(gif.tags[:5]) if gif.tags else ""
+                tag_str = f"#{tags}" if tags else ""
+                return f"\n\n\n{thumbnail} \n\n \
+                        {url}\n \
+                        👍 Likes {gif.likes}\n \
+                        👀 Views {gif.views}\n \
+                        🏷️ Tags: {tag_str}"
+            elif username == "thegreatpizza":
+                return "🍕 *h* wow pizza ur taste in lesbians is so dank that I coughldnt find nething sry :( *h* 🍕"
+            return f"⚠️ wow @{username} u must b a freak tf r u even searching foughr jfc ⚠️"
+        return "https://i.imgur.com/oGMHkqT.jpg"
+    except Exception as e:
+        LOGGER.warning(f"Unexpected error while fetching nsfw image for `{query}`: {e}")
+        return f"⚠️ @{username} dude u must b a freak cuz that just broke bot ⚠️"
 
 
 def get_redgifs_gif(query: str, username: str, after_dark_only: bool = False) -> Optional[str]:

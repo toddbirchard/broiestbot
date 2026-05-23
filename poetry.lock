@@ -3363,6 +3363,29 @@ files = [
 ]
 
 [[package]]
+name = "redgifs"
+version = "2.4.0"
+description = "Async and Sync Python Wrapper for the RedGIFs API."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+markers = "sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
+files = [
+    {file = "redgifs-2.4.0-py3-none-any.whl", hash = "sha256:b3f9eb4fc3eea5dcb0e3b9ccbb4ad3e9a0876268d133224bff031f97864b96c6"},
+    {file = "redgifs-2.4.0.tar.gz", hash = "sha256:4396bc8bbc16ea73574c5482ef3efa2e823b9640f7ec4c8d7407c62665288dfa"},
+]
+
+[package.dependencies]
+aiohttp = ">=3.9.0,<4"
+click = ">=8"
+requests = ">=2.31.0"
+
+[package.extras]
+dev = ["ruff (>=0.12.10)"]
+docs = ["Sphinx (==6.0)", "furo (==2024.01.29)"]
+test = ["pytest (==8.3.5)"]
+
+[[package]]
 name = "redis"
 version = "7.4.0"
 description = "Python client for Redis database and key-value store"
@@ -4021,4 +4044,4 @@ requests = "*"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "f2abff1b89dcb7039fb993fde5dbf5daa9ce15171bcea6bbb6d1dd6e7fd7e9d0"
+content-hash = "1b80ada58b6810e347423a0960e448f37da0e717ae6f91ddbc74b7af34614753"
