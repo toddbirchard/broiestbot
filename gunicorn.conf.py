@@ -21,7 +21,6 @@ workers = 1
 if ENVIRONMENT == "development" or ENVIRONMENT is None:
     capture_output = False
 elif ENVIRONMENT == "production":
-    daemon = True
     ca_certs = "creds/ca-certificate.crt"
     dogstatsd_tags = "env:production,service:broiest,language:python"
 else:
