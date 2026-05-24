@@ -14,7 +14,7 @@ from database import Session
 from database.models import ChatangoUser
 
 
-async def persist_user_data(room_name: str, user: User, message: RoomMessage, bot_username: str) -> None:
+def persist_user_data(room_name: str, user: User, message: RoomMessage, bot_username: str) -> None:
     """
     Persist user metadata.
 
@@ -29,7 +29,7 @@ async def persist_user_data(room_name: str, user: User, message: RoomMessage, bo
         return
     # Fetch geo data before opening a DB session to avoid holding the connection
     # open during a potentially slow HTTP call.
-    existing_user = await _check_existing_user(room_name, user, message)
+    existing_user = _check_existing_user(room_name, user, message)
     if existing_user is not None:
         return
     user_data = geo.lookup_user_by_ip(message.ip)
@@ -96,7 +96,7 @@ async def persist_user_data(room_name: str, user: User, message: RoomMessage, bo
         LOGGER.exception(f"Unexpected error while saving data for {user.name}: {e}")
 
 
-async def _check_existing_user(room_name: str, user: User, message: RoomMessage) -> Optional[ChatangoUser]:
+def _check_existing_user(room_name: str, user: User, message: RoomMessage) -> Optional[ChatangoUser]:
     """Return existing user record if one exists for this room and IP, else None."""
     with Session() as db:
         return (
