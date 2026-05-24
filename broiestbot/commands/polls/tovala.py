@@ -6,7 +6,7 @@ from redis.exceptions import RedisError
 from sqlalchemy.exc import SQLAlchemyError
 
 from clients import r
-from database import session
+from database import Session
 from database.models import PollResult
 
 
@@ -79,7 +79,8 @@ def get_current_total() -> int:
     :returns: int
     """
     try:
-        total_count = session.query(PollResult).filter(PollResult.type == "tovala").one_or_none()
+        with Session() as db:
+            total_count = db.query(PollResult).filter(PollResult.type == "tovala").one_or_none()
         if total_count is not None:
             return total_count.count
         return 0

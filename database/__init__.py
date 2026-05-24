@@ -5,7 +5,11 @@ from sqlalchemy.orm import sessionmaker
 
 from config import DATABASE_ARGS, SQLALCHEMY_DATABASE_URI
 
-# Initialize Read/write database Session
-engine = create_engine(SQLALCHEMY_DATABASE_URI, connect_args=DATABASE_ARGS, echo=False)
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URI,
+    connect_args=DATABASE_ARGS,
+    echo=False,
+    pool_pre_ping=True,  # Discard stale connections before use
+    pool_recycle=3600,  # Recycle connections every hour (< MySQL wait_timeout)
+)
 Session = sessionmaker(bind=engine, autoflush=True, autobegin=True)
-session = Session()

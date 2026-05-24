@@ -9,7 +9,6 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from clients import r
 from config import TIMEZONE_US_EASTERN
-from database import session
 from database.models import PollResult
 
 

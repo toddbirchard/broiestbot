@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import List, Optional, Tuple, Union
 
-from chatango.ch import Room
+from chatango import Room
 from emoji import emojize
 from logger import LOGGER
 from redis.exceptions import RedisError

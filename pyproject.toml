@@ -21,6 +21,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
+chatango-lib = {path = "https://github.com/toddbirchard/chatango-lib", develop = true}
 requests = "*"
 sqlalchemy = "*"
 pymysql = "*"
@@ -57,7 +58,7 @@ rq-scheduler = "*"
 nflgame = "*"
 coverage = "*"
 youtube-search = "*"
-gunicorn = ">=23.0.0"
+uvicorn = ">=0.34.0"
 anthropic = "^0.100.0"
 markdown = "^3.10.2"
 redgifs = "^2.4.0"
