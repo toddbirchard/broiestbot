@@ -88,7 +88,7 @@ from config import (
     LIGUE_ONE_ID,
     PRIMEIRA_LIGA_ID,
 )
-from database import Session
+from database import async_session
 from database.models import Command, Phrase
 
 from .data import persist_chat_logs, persist_user_data
@@ -96,16 +96,22 @@ from .moderation import ban_daddy_anons, ban_word, check_blacklisted_users
 from .moderation.users import ignored_user
 
 
-def _db_fetch_command(cmd: str) -> Optional[Command]:
-    """Fetch a bot command from the database in its own session."""
-    with Session() as db:
-        return db.query(Command).filter(Command.command == cmd).first()
+async def _db_fetch_command(cmd: str) -> Optional[Command]:
+    """Fetch a bot command from the database in its own async session."""
+    from sqlalchemy import select
+
+    async with async_session() as db:
+        result = await db.execute(select(Command).where(Command.command == cmd))
+        return result.scalars().first()
 
 
-def _db_fetch_phrase(chat_message: str) -> Optional[Phrase]:
-    """Fetch a trigger phrase from the database in its own session."""
-    with Session() as db:
-        return db.query(Phrase).filter(Phrase.phrase == chat_message).one_or_none()
+async def _db_fetch_phrase(chat_message: str) -> Optional[Phrase]:
+    """Fetch a trigger phrase from the database in its own async session."""
+    from sqlalchemy import select
+
+    async with async_session() as db:
+        result = await db.execute(select(Phrase).where(Phrase.phrase == chat_message))
+        return result.scalars().one_or_none()
 
 
 class Bot(chatango.Client):
@@ -319,8 +325,8 @@ class Bot(chatango.Client):
         await check_blacklisted_users(room, user_name, message)
         await ban_daddy_anons(room, user_name, message)
         self._log_message(room, user_name, message)
-        await asyncio.to_thread(persist_user_data, room_name, user, message, bot_username)
-        await asyncio.to_thread(persist_chat_logs, user_name, room_name, chat_message, bot_username)
+        await persist_user_data(room_name, user, message, bot_username)
+        await persist_chat_logs(user_name, room_name, chat_message, bot_username)
         if chat_message.startswith("?") and len(chat_message) > 3:
             search_query = chat_message[1:].strip()
             yt_video_result = await asyncio.to_thread(search_youtube_video, search_query)
@@ -410,7 +416,7 @@ class Bot(chatango.Client):
         elif chat_message.lower() == "tm":
             await self._trademark(room, message)
         else:
-            fetched_phrase = await asyncio.to_thread(_db_fetch_phrase, chat_message)
+            fetched_phrase = await _db_fetch_phrase(chat_message)
             if fetched_phrase is not None:
                 await room.send_message(fetched_phrase.response, use_html=True)
 
@@ -439,7 +445,7 @@ class Bot(chatango.Client):
         :param str user_name: User responsible for triggering command.
         """
         cmd, args = self._parse_command(chat_message[1::].strip())
-        command = await asyncio.to_thread(_db_fetch_command, cmd)
+        command = await _db_fetch_command(cmd)
         if command is not None and command.type != "reserved":
             response = await asyncio.to_thread(
                 self.create_message,

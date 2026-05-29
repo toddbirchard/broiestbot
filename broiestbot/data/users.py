@@ -1,20 +1,22 @@
 """Persist user metadata."""
 
+import asyncio
 from datetime import datetime
 from typing import Optional
 
 from chatango import RoomMessage
 from chatango.user import User
 from logger import LOGGER
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from clients import geo
 from config import PERSIST_USER_DATA
-from database import Session
+from database import async_session
 from database.models import ChatangoUser
 
 
-def persist_user_data(room_name: str, user: User, message: RoomMessage, bot_username: str) -> None:
+async def persist_user_data(room_name: str, user: User, message: RoomMessage, bot_username: str) -> None:
     """
     Persist user metadata.
 
@@ -27,12 +29,11 @@ def persist_user_data(room_name: str, user: User, message: RoomMessage, bot_user
     """
     if not message.ip or not PERSIST_USER_DATA or bot_username not in ("broiestbro", "broiestbot"):
         return
-    # Fetch geo data before opening a DB session to avoid holding the connection
-    # open during a potentially slow HTTP call.
-    existing_user = _check_existing_user(room_name, user, message)
+    existing_user = await _check_existing_user(room_name, user, message)
     if existing_user is not None:
         return
-    user_data = geo.lookup_user_by_ip(message.ip)
+    # Run blocking HTTP call in a thread to avoid stalling the event loop.
+    user_data = await asyncio.to_thread(geo.lookup_user_by_ip, message.ip)
     if not user_data:
         return
 
@@ -48,7 +49,7 @@ def persist_user_data(room_name: str, user: User, message: RoomMessage, bot_user
 
     try:
         # fmt: off
-        with Session.begin() as db:
+        async with async_session.begin() as db:
             db.add(
                 ChatangoUser(
                     username=user_name,
@@ -86,25 +87,22 @@ def persist_user_data(room_name: str, user: User, message: RoomMessage, bot_user
                 )
             )
         # fmt: on
-        return
     except IntegrityError as e:
         LOGGER.warning(f"Duplicate user entry for {user.name}: {e}")
-        return
     except SQLAlchemyError as e:
         LOGGER.exception(f"SQLAlchemyError while persisting data for user {user.name}: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while saving data for {user.name}: {e}")
 
 
-def _check_existing_user(room_name: str, user: User, message: RoomMessage) -> Optional[ChatangoUser]:
+async def _check_existing_user(room_name: str, user: User, message: RoomMessage) -> Optional[ChatangoUser]:
     """Return existing user record if one exists for this room and IP, else None."""
-    with Session() as db:
-        return (
-            db.query(ChatangoUser)
-            .filter(
+    async with async_session() as db:
+        result = await db.execute(
+            select(ChatangoUser).where(
                 ChatangoUser.username == user.name.lower(),
                 ChatangoUser.chatango_room == room_name,
                 ChatangoUser.ip == message.ip,
             )
-            .first()
         )
+        return result.scalars().first()

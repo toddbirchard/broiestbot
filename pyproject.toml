@@ -25,6 +25,8 @@ chatango-lib = {path = "https://github.com/toddbirchard/chatango-lib", develop =
 requests = "*"
 sqlalchemy = "*"
 pymysql = "*"
+aiomysql = "*"
+greenlet = "*"
 google-cloud-storage = "*"
 loguru = "*"
 plotly = "*"
@@ -64,7 +66,7 @@ markdown = "^3.10.2"
 redgifs = "^2.4.0"
 
 [tool.poetry.scripts]
-run = "wsgi:app"
+run = "asgi:app"
 
 [tool.poetry.urls]
 issues = "https://github.com/toddbirchard/broiestbot/issues"

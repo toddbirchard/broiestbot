@@ -4,11 +4,11 @@ from logger import LOGGER
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from config import PERSIST_CHAT_DATA
-from database import Session
+from database import async_session
 from database.models import Chat
 
 
-def persist_chat_logs(user_name: str, room_name: str, chat_message: str, bot_username: str) -> None:
+async def persist_chat_logs(user_name: str, room_name: str, chat_message: str, bot_username: str) -> None:
     """
     Persist chat log record.
 
@@ -22,9 +22,8 @@ def persist_chat_logs(user_name: str, room_name: str, chat_message: str, bot_use
     try:
         if not PERSIST_CHAT_DATA or bot_username not in ("broiestbro", "broiestbot"):
             return
-        with Session.begin() as db:
+        async with async_session.begin() as db:
             db.add(Chat(username=user_name, room=room_name, message=chat_message))
-        return
     except IntegrityError as e:
         LOGGER.warning(f"Failed to save duplicate chat entry: {e}")
     except SQLAlchemyError as e:

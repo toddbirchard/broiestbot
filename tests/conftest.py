@@ -4,8 +4,9 @@ import asyncio
 from unittest.mock import MagicMock
 
 import pytest
+from sqlalchemy import delete
 
-from database import Session
+from database import Session, async_session
 from database.models import Chat, ChatangoUser
 
 TEST_USERNAME_PREFIX = "__pytest__"
@@ -23,8 +24,8 @@ def cleanup_test_rows():
     """Remove any test rows written during a test."""
     yield
     with Session() as db:
-        db.query(Chat).filter(Chat.username.like(f"{TEST_USERNAME_PREFIX}%")).delete()
-        db.query(ChatangoUser).filter(ChatangoUser.username.like(f"{TEST_USERNAME_PREFIX}%")).delete()
+        db.execute(delete(Chat).where(Chat.username.like(f"{TEST_USERNAME_PREFIX}%")))
+        db.execute(delete(ChatangoUser).where(ChatangoUser.username.like(f"{TEST_USERNAME_PREFIX}%")))
         db.commit()
 
 

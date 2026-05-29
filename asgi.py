@@ -6,6 +6,7 @@ from typing import List
 from logger import LOGGER
 
 from broiestbot.bot import Bot
+from database import init_db
 from config import (
     CHATANGO_ROOMS,
     CHATANGO_TEST_ROOM,
@@ -44,6 +45,7 @@ async def _handle_lifespan(receive, send) -> None:
     while True:
         message = await receive()
         if message["type"] == "lifespan.startup":
+            await init_db()
             rooms = CHATANGO_ROOMS if ENVIRONMENT == "production" else [CHATANGO_TEST_ROOM]
             LOGGER.info(f'Starting bot in {ENVIRONMENT} mode, joining: {", ".join(rooms)}')
             _bot_task = asyncio.create_task(_run_bot(rooms))
