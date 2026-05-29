@@ -7,7 +7,7 @@ from chatango.ch import Message, Room, RoomManager, User
 from emoji import emojize
 from logger import LOGGER
 
-from broiestbot.commands import (  # extract_url,; get_crypto_chart,; get_redgifs_gif,; today_phillies_games,; get_today_footy_odds_for_league,
+from broiestbot.commands import (
     all_leagues_golden_boot,
     bach_gang_counter,
     basic_message,
@@ -54,7 +54,6 @@ from broiestbot.commands import (  # extract_url,; get_crypto_chart,; get_redgif
     get_top_crypto,
     get_urban_definition,
     get_winter_olympic_medals,
-    giphy_image_search,
     klipy_image_search,
     league_table_standings,
     live_nba_games,
@@ -213,7 +212,7 @@ class Bot(RoomManager):
             return covid_cases_usa()
         elif cmd_type == "lyrics" and args:
             return get_song_lyrics(args)
-        elif cmd_type == "entranslation" and args:
+        elif cmd_type == "entranslation" and command and args:
             return get_english_translation(command, content, args)
         elif cmd_type == "olympics":
             return get_summer_olympic_medals()
@@ -247,17 +246,17 @@ class Bot(RoomManager):
             return live_nba_games()
         elif cmd_type == "livenba":
             return live_nba_games()
-        elif cmd_type == "tovala":
+        elif cmd_type == "tovala" and user_name:
             return tovala_counter(user_name)
         elif cmd_type == "imagecount":
             return gcs_count_images_in_bucket(content)
-        elif cmd_type == "changeorstayvote":
+        elif cmd_type == "changeorstayvote" and room and user_name:
             return change_or_stay_vote(user_name, content, room)
-        elif cmd_type == "changeorstay":
+        elif cmd_type == "changeorstay" and user_name:
             return get_live_poll_results(user_name)
         elif cmd_type == "odds":
             return get_odds(content)
-        elif cmd_type == "bachcount" and args:
+        elif cmd_type == "bachcount" and args and user_name:
             return bach_gang_counter(user_name, args)
         elif cmd_type == "latestimage":
             return fetch_latest_image_from_gcs_bucket(content)
@@ -269,9 +268,9 @@ class Bot(RoomManager):
             return fetch_sleeper_matchups(user_name)
         # elif cmd_type == "cryptochart" and args:
         #     return get_crypto_chart(args)
-        elif cmd_type == "lesbians":
+        elif cmd_type == "lesbians" and user_name:
             return fetch_redgifs_gif("lesbians", user_name)
-        elif cmd_type == "nsfw" and args:
+        elif cmd_type == "nsfw" and args and user_name:
             return fetch_redgifs_gif(args, user_name, after_dark_only=True)
         elif cmd_type == "psn":
             return get_psn_online_friends()
@@ -386,8 +385,9 @@ class Bot(RoomManager):
 
         :returns: None
         """
-        if user_name in CHATANGO_IGNORED_USERS or message.ip in CHATANGO_IGNORED_IPS:
-            return ignored_user(user_name, message.ip)
+        if CHATANGO_IGNORED_USERS:
+            if user_name in CHATANGO_IGNORED_USERS or message.ip in CHATANGO_IGNORED_IPS:
+                return ignored_user(user_name, message.ip)
         if chat_message == "!!":
             pass
         if re.match(r"^!!.+$", chat_message):
