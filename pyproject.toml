@@ -21,7 +21,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
-chatango-lib = {path = "https://github.com/toddbirchard/chatango-lib", develop = true}
+chatango-lib = {git = "https://github.com/toddbirchard/chatango-lib", develop = true}
 requests = "*"
 sqlalchemy = "*"
 pymysql = "*"
