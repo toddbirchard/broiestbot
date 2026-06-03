@@ -168,5 +168,3 @@ class League(Base):
 
     def __repr__(self):
         return f"id={self.id}, name={self.name}, country={self.country}, is_active={self.is_active}"
-
-

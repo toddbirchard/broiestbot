@@ -307,11 +307,7 @@ class TestPersistUserData:
             mock_geo.lookup_user_by_ip = MagicMock(return_value=MOCK_GEO_DATA)
             asyncio.run(persist_user_data(TEST_ROOM, anon_user, mock_message, BOT_USERNAME))
         with Session() as db:
-            rows = (
-                db.query(ChatangoUser)
-                .filter(ChatangoUser.username.like(f"{TEST_USERNAME_PREFIX}_anon1234-%"))
-                .all()
-            )
+            rows = db.query(ChatangoUser).filter(ChatangoUser.username.like(f"{TEST_USERNAME_PREFIX}_anon1234-%")).all()
         assert len(rows) == 1
         assert rows[0].username.startswith(f"{TEST_USERNAME_PREFIX}_anon1234-")
 
