@@ -15,7 +15,7 @@ from config import (
     WEATHERSTACK_API_ENDPOINT,
     WEATHERSTACK_API_KEY,
 )
-from database import session
+from database import Session
 from database.models import Weather
 
 
@@ -145,7 +145,8 @@ def get_weather_emoji(weather_code: int, is_day: str) -> str:
 
     :returns: str
     """
-    weather_emoji = session.query(Weather).filter(Weather.code == weather_code).one_or_none()
+    with Session() as db:
+        weather_emoji = db.query(Weather).filter(Weather.code == weather_code).one_or_none()
     if weather_emoji is not None:
         return weather_emoji.icon
     elif is_day == "no" and weather_emoji.group in [

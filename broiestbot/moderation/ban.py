@@ -1,18 +1,17 @@
 """Ban a user from a room and delete their chat history."""
 
-from chatango.ch import Message, Room
+from chatango import Room, RoomMessage
 from logger import LOGGER
 
 
-def ban_user(room: Room, message: Message) -> None:
+async def ban_user(room: Room, message: RoomMessage) -> None:
     """
-    Ban and delete chat history of a user.
+    Ban a user and delete the triggering message.
 
     :param Room room: Chatango room object.
-    :param Message message: User submitted message.
+    :param RoomMessage message: User submitted message.
 
     :returns: None
     """
     LOGGER.warning(f"BANNED user: username={message.user.name} ip={message.ip}")
-    room.clear_user(message.user)
-    room.ban_user(message.user)
+    await room.ban_message(message)
