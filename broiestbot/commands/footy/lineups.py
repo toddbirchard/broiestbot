@@ -89,13 +89,13 @@ def fetch_lineups_per_fixture(fixture_id: int) -> Optional[List[dict]]:
         LOGGER.error(f"Unexpected error when fetching footy XIs: {e}")
 
 
-def get_fixture_xis(teams: dict) -> str:
+def get_fixture_xis(teams: dict) -> Optional[str]:
     """
     Parse & format player lineups for an upcoming fixture.
 
     :param dict teams: JSON Response containing two lineups for a given fixture.
 
-    :returns: str
+    :returns: Optional[str]
     """
     try:
         lineups_response = ""
