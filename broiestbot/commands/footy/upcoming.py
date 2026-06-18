@@ -117,6 +117,7 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> 
                 or "UEFA" in league_name
                 or "CARABOU" in league_name
                 or "FA CUP" in league_name
+                or "WORLD CUP" in league_name
                 else 3
             ),
             "league": league_id,
