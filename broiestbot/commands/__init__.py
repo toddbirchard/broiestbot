@@ -16,6 +16,7 @@ from .footy import (
     fetch_fox_fixtures,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
+    footy_live_odds,
     footy_stats_for_live_fixtures,
     footy_team_lineups,
     footy_today_fixtures_odds,

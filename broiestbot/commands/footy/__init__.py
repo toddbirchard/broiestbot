@@ -1,6 +1,7 @@
 from .goldenboot import all_leagues_golden_boot, epl_golden_boot
 from .lineups import footy_team_lineups
 from .live import footy_live_fixtures
+from .liveodds import footy_live_odds
 from .odds import get_today_footy_odds_for_league
 from .predicts import footy_today_fixtures_odds
 from .standings import league_table_standings, mls_standings
