@@ -25,6 +25,7 @@ from broiestbot.commands import (
     find_movie,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
+    footy_live_odds,
     footy_stats_for_live_fixtures,
     footy_team_lineups,
     footy_today_fixtures_odds,
@@ -194,6 +195,8 @@ class Bot(RoomManager):
             return footy_stats_for_live_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "footystats" and room and user_name:
             return footy_stats_for_live_fixtures(room.room_name.lower(), user_name)
+        elif cmd_type == "liveodds" and user_name:
+            return footy_live_odds(user_name)
         elif cmd_type == "todayfixtures" and room and user_name:
             return today_upcoming_fixtures(room.room_name.lower(), user_name)
         elif cmd_type == "goldenboot":

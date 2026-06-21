@@ -321,6 +321,7 @@ FOOTY_STANDINGS_ENDPOINT = f"{FOOTY_BASE_URL}/standings"
 FOOTY_FIXTURE_STATS_ENDPOINT = f"{FOOTY_BASE_URL}/fixtures/statistics"
 FOOTY_ODDS_ENDPOINT = "https://odds.p.rapidapi.com/v1/odds"
 FOOTY_ODDS_ENDPOINT_2 = "https://api-football-v1.p.rapidapi.com/v3/odds"
+FOOTY_LIVE_ODDS_ENDPOINT = f"{FOOTY_BASE_URL}/odds/live"
 FOOTY_XI_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/fixtures/lineups"
 FOOTY_PREDICTS_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/predictions"
 FOOTY_HTTP_HEADERS = {
