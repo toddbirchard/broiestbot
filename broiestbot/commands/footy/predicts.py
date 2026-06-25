@@ -130,6 +130,47 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) 
         LOGGER.error(f"Unexpected error when fetching today's footy fixtures: {e}")
 
 
+def map_odds_by_fixture_id(fixtures_odds: List[dict]) -> dict:
+    """
+    Build a lookup of Match Winner odds keyed by fixture ID.
+
+    The fixtures and odds endpoints are separate API calls whose responses are not
+    guaranteed to be ordered identically, so odds must be matched to a fixture by ID
+    rather than by list position.
+
+    :param List[dict] fixtures_odds: Raw JSON response of today's fixtures' odds.
+
+    :returns: dict
+    """
+    odds_by_fixture_id = {}
+    for odds_entry in fixtures_odds:
+        fixture_id = odds_entry.get("fixture", {}).get("id")
+        bookmakers = odds_entry.get("bookmakers")
+        if fixture_id is None or not bookmakers:
+            continue
+        bets = bookmakers[0].get("bets")
+        if not bets:
+            continue
+        odds_by_fixture_id[fixture_id] = bets[0].get("values", [])
+    return odds_by_fixture_id
+
+
+def get_outcome_odds(values: List[dict], outcome: str) -> str:
+    """
+    Look up the odds for a single match outcome by its name.
+
+    API-Football does not guarantee the ordering of the `values` array, so outcomes
+    must be matched on the `value` field ("Home"/"Draw"/"Away") rather than by index;
+    otherwise home and away odds can be silently swapped.
+
+    :param List[dict] values: List of outcome/odd pairs for a fixture.
+    :param str outcome: Name of the outcome to look up ("Home", "Draw", or "Away").
+
+    :returns: str
+    """
+    return next((value["odd"] for value in values if value.get("value") == outcome), "N/A")
+
+
 def parse_fixture_odds(
     league_name: str, fixtures: dict, fixtures_odds: dict, room: str, username: str
 ) -> Optional[str]:
@@ -145,15 +186,17 @@ def parse_fixture_odds(
     :returns: str
     """
     try:
+        odds_by_fixture_id = map_odds_by_fixture_id(fixtures_odds)
         fixtures_odds_response = f"<b>{league_name}</b>\n"
         for i, fixture in enumerate(fixtures):
-            if fixtures_odds and i < 7:
+            values = odds_by_fixture_id.get(fixture["fixture"]["id"])
+            if values and i < 7:
                 fixture_start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z").time()
                 home_team = abbreviate_team_name(fixture["teams"]["home"]["name"])
                 away_team = abbreviate_team_name(fixture["teams"]["away"]["name"])
-                home_odds = fixtures_odds[i]["bookmakers"][0]["bets"][0]["values"][0]["odd"]
-                draw_odds = fixtures_odds[i]["bookmakers"][0]["bets"][0]["values"][1]["odd"]
-                away_odds = fixtures_odds[i]["bookmakers"][0]["bets"][0]["values"][2]["odd"]
+                home_odds = get_outcome_odds(values, "Home")
+                draw_odds = get_outcome_odds(values, "Draw")
+                away_odds = get_outcome_odds(values, "Away")
                 fixture_odds_summary = f"<b>{away_team} @ {home_team}</b> | <i>{fixture_start_time}</i>\n \
                     {home_team.upper()}: {home_odds}\n \
                     DRAW: {draw_odds}\n \
