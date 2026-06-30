@@ -677,20 +677,24 @@ six = "*"
 
 [[package]]
 name = "cinemagoer"
-version = "2026.6.27"
-description = "Retrieve data from IMDb."
+version = "2023.5.1"
+description = "Python package to access the IMDb's database"
 optional = false
-python-versions = ">=3.10"
+python-versions = "*"
 groups = ["main"]
 markers = "sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
 files = [
-    {file = "cinemagoer-2026.6.27-py3-none-any.whl", hash = "sha256:c2c0c4f544289ed1aaa81b8d4fc8f6a449777f37fe2c31212d5ef6c8bcd37e72"},
-    {file = "cinemagoer-2026.6.27.tar.gz", hash = "sha256:0520db0e199cf4cecac79bedba92db797eb5ac553dc8ec183930ca1fbd4e91b2"},
+    {file = "cinemagoer-2023.5.1-py3-none-any.whl", hash = "sha256:0c6bc00fbc56cbdd58bc3dbf00cf858770fc127929408460fb28ffe2ca99f83a"},
+    {file = "cinemagoer-2023.5.1.tar.gz", hash = "sha256:5ce1d77ae6546701618f11e5b1556a19d18edecad1b6d7d96973ec34941b18f2"},
 ]
 
 [package.dependencies]
-lxml = ">=6.1.1"
-sqlalchemy = ">=2.0.50,<2.1"
+lxml = "*"
+SQLAlchemy = "*"
+
+[package.extras]
+dev = ["flake8", "flake8-isort", "pytest", "pytest-cov", "tox"]
+doc = ["sphinx", "sphinx-rtd-theme"]
 
 [[package]]
 name = "click"
@@ -3984,4 +3988,4 @@ requests = "*"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "aa00d2dcb6fa857fca602dc0bbfa05fbf6bf755b1f6c7c7543df9551c0b769c2"
+content-hash = "666588b4b7c66baab30401838c66c2b08f7dd8902ed92e8839bb1ed66c8a25c9"
