@@ -59,7 +59,7 @@ def footy_all_upcoming_fixtures(room: str, username: str) -> str:
     tz_name = get_preferred_timezone(room, username)
     for league_name, league_id in FOOTY_LEAGUES.items():
         league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
-        if bool(league_fixtures) is False:
+        if league_fixtures is not None:
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             upcoming_fixtures += league_fixtures + "\n"
     if upcoming_fixtures != "\n\n\n":
@@ -100,7 +100,7 @@ def footy_upcoming_fixtures_per_league(
 
 def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> Optional[List[dict]]:
     """
-    Fetch 6 upcoming fixtures for each top league, or 3 for each lower league.
+    Fetch 8 upcoming fixtures for each top league, or 3 for each lower league.
 
     :param str league_name: Name of the league/cup.
     :param int league_id: ID of footy league/cup.
