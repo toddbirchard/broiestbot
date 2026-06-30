@@ -7,7 +7,6 @@ import pytest
 
 from broiestbot.commands.footy.liveodds import fetch_live_odds_per_fixture, footy_live_odds_per_league
 
-
 # ---------------------------------------------------------------------------
 # fetch_live_odds_per_fixture
 # ---------------------------------------------------------------------------
