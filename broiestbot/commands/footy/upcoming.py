@@ -37,7 +37,7 @@ def footy_upcoming_fixtures(room: str, username: str) -> str:
     i = 0
     for league_name, league_id in FOOTY_LEAGUES.items():
         league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
-        if bool(league_fixtures) is not False and i < 10:
+        if league_fixtures is not None and i < 10:
             i += 1
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             upcoming_fixtures += league_fixtures + "\n"
@@ -84,7 +84,7 @@ def footy_upcoming_fixtures_per_league(
     try:
         upcoming_fixtures = ""
         fixtures = upcoming_fixture_fetcher(league_name, league_id, tz_name)
-        if bool(fixtures) is not False:
+        if fixtures is not None:
             for fixture in fixtures:
                 fixture_date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
                 if fixture_date.date() <= datetime.now().date() + timedelta(days=8):
@@ -147,7 +147,7 @@ def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
         if resp.status_code == 200:
             return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError {resp.status_code} while fetching footy fixtures: {e.response.content}")
+        LOGGER.error(f"HTTPError {resp.status_code} while fetching footy fixtures: {e.response}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 

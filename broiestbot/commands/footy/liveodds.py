@@ -89,7 +89,7 @@ def footy_live_odds_per_league(league_id: int, league_name: str, username: str) 
                 f"<b>{away_team} {away_score} @ {home_team} {home_score}</b> <i>({elapsed}')</i>\n"
                 f"{home_team}: {home_odd} \n Draw: {draw_odd} \n {away_team}: {away_odd}\n\n"
             )
- 
+
         if found:
             return league_output
         return None

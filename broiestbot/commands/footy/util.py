@@ -230,7 +230,7 @@ def get_season_year(league_id: int) -> int:
         ELITESERIEN_LEAGUE_ID,
         CLUB_WORLD_CUP_LEAGUE_ID,
         WEUROS_LEAGUE_ID,
-        WORLD_CUP_ID
+        WORLD_CUP_ID,
     ):
         return current_year
     # Exception for leagues that have a nonsensical `season` year.
