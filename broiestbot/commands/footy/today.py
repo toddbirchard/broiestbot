@@ -71,7 +71,7 @@ def today_upcoming_fixtures_per_league(league_name: str, league_id: int, room: s
                     league_upcoming_fixtures += parse_upcoming_fixture(fixture, fixture_start_time, room, username)
             return league_upcoming_fixtures
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
+        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response}")
     except ValueError as e:
         LOGGER.error(f"ValueError while fetching footy fixtures: {e}")
     except Exception as e:
@@ -104,7 +104,7 @@ def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> O
         )
         return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
+        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:

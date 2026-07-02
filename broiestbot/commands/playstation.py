@@ -54,7 +54,9 @@ def create_psn_response(active_friends: List[User]) -> str:
     """
     response = emojize("\n\n:video_game: <b>BROIESTBRO's online PSN friends</b>:\n", language="en")
     for active_friend in active_friends:
-        response += create_active_psn_user_response(active_friend)
+        friend = create_active_psn_user_response(active_friend)
+        if friend:
+            response += friend
     return response
 
 
