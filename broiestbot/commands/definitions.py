@@ -173,10 +173,7 @@ def get_english_translation(language_symbol: str, language_full_name: str, phras
         }
         res = requests.request("POST", url, data=data, headers=headers, timeout=30)
         if res.status_code == 429:
-            return emojize(
-                f":warning: yall translated too much shit this month now google tryna charge me smh :warning:",
-                language="en",
-            )
+            return "⚠️ yall translated too much shit this month now google tryna charge me smh ⚠️"
         language_emoji = language_full_name.split(" ", 1)[0]
         language_name = language_full_name.split(" ", 1)[1].upper()
         return emojize(
@@ -184,11 +181,11 @@ def get_english_translation(language_symbol: str, language_full_name: str, phras
             language="en",
         )
     except HTTPError as e:
-        LOGGER.exception(f"HTTPError while translating `{phrase}`: {e.response.content}")
-        return emojize(":warning: wtf you broke the api? SPEAK ENGLISH :warning:", language="en")
+        LOGGER.exception(f"HTTPError while translating `{phrase}`: {e.response}")
+        return f"⚠️ wtf you broke the api with ur {language_full_name}? SPEAK ENGLISH ⚠️"
     except LookupError as e:
         LOGGER.exception(f"LookupError error while translating `{phrase}`: {e}")
-        return emojize(":warning: mfer you broke bot SPEAK ENGLISH :warning:", language="en")
+        return f"⚠️ mfer you broke bot with ur {language_full_name}? SPEAK ENGLISH ⚠️"
     except Exception as e:
         LOGGER.exception(f"Unexpected error while translating `{phrase}`: {e}")
-        return emojize(":warning: mfer you broke bot SPEAK ENGLISH :warning:", language="en")
+        return f"⚠️ mfer you broke bot with ur {language_full_name}? SPEAK ENGLISH ⚠️"
