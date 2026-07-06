@@ -322,7 +322,7 @@ class Bot(RoomManager):
             preview = generate_youtube_video_preview(chat_message)
             if preview and user_name != "acleebot":
                 room.message(preview, html=True)
-        elif re.match(r"((https?):\/\/)?(www.)?x\.com(\/@?(\w){1,15})\/status\/[0-9]{19}\?", chat_message):
+        elif re.match(r"((https?):\/\/)?(www.)?x\.com(\/@?(\w){1,15})\/status\/[0-9]{19}", chat_message):
             preview = generate_twitter_preview(chat_message)
             if preview:
                 room.message(preview, html=True)

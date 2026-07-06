@@ -120,26 +120,30 @@ def generate_twitter_preview(tweet_url: str) -> Optional[str]:
     :returns: Optional[str]
     """
     try:
-        LOGGER.info(f"Generating Twitter preview for URL: {tweet_url}")
         twitter_preview = "\n\n\n\n"
         url = tweet_url.replace("https://x.com", "https://api.vxtwitter.com")
         resp = requests.get(url, headers=headers, timeout=20)
-        LOGGER.info(f"Twitter API response for URL `{url}`: {resp.status_code}")
         if resp.status_code == 200:
             tweet_data = resp.json()
             tweet_text = tweet_data.get("text")
+            tweet_author = tweet_data.get("user_name")
+            tweet_author_handle = tweet_data.get("user_screen_name")
+            if tweet_author and tweet_author_handle:
+                twitter_preview += f"👤 <b>@{tweet_author_handle}</b> ({tweet_author})\n\n"
             if tweet_text:
                 twitter_preview += f"{tweet_text}\n\n"
             for media in tweet_data["media_extended"]:
                 twitter_preview += f"{media['thumbnail_url']} "
                 twitter_preview += "\n\n"
-            tweet_author = tweet_data.get("user_name")            
-            tweet_author_handle = tweet_data.get("user_screen_name")
-            if tweet_author and tweet_author_handle:
-                twitter_preview += f"👤 <b>@{tweet_author_handle}</b> ({tweet_author})\n"
             tweet_date = tweet_data.get("date").split(" +0000")[0] if tweet_data.get("date") else None
             if tweet_date:
                 twitter_preview += f"🗓️ {tweet_date}\n"
+            tweet_likes = tweet_data.get("likes")
+            if tweet_likes:
+                twitter_preview += f"👍 {tweet_likes} Likes\n"
+            tweet_retweets = tweet_data.get("retweets")
+            if tweet_retweets:
+                twitter_preview += f"🔁 {tweet_retweets} Retweets\n"
         if twitter_preview != "\n\n\n\n":
             return twitter_preview
     except RequestException as e:
