@@ -747,6 +747,11 @@ NBA_API_KEY = getenv("NBA_API_KEY")
 NBA_CONFERENCE_NAMES = ["Eastern Conference", "Western Conference"]
 NBA_SEASON_YEAR = "2024-2025"
 
+# Sumo
+# -------------------------------------------------
+SUMO_API_BASE_URL = "https://sumo-api.com/api"
+SUMO_DIVISION = "Makuuchi"
+
 # Playstation PSN
 # -------------------------------------------------
 PLAYSTATION_SSO_TOKEN = getenv("PLAYSTATION_SSO_TOKEN")

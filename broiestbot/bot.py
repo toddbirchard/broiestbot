@@ -7,7 +7,7 @@ from chatango.ch import Message, Room, RoomManager, User
 from emoji import emojize
 from logger import LOGGER
 
-from broiestbot.commands import (
+from broiestbot.commands import (  # get_crypto_chart,
     all_leagues_golden_boot,
     bach_gang_counter,
     basic_message,
@@ -20,8 +20,8 @@ from broiestbot.commands import (
     fetch_fox_fixtures,
     fetch_latest_image_from_gcs_bucket,
     fetch_random_image_from_gcs_bucket,
-    fetch_sleeper_matchups,
     fetch_redgifs_gif,
+    fetch_sleeper_matchups,
     find_movie,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
@@ -34,8 +34,6 @@ from broiestbot.commands import (
     generate_llm_response,
     generate_twitter_preview,
     generate_youtube_video_preview,
-    search_youtube_video,
-    # get_crypto_chart,
     get_all_live_twitch_streams,
     get_crypto_price,
     get_current_show,
@@ -67,10 +65,12 @@ from broiestbot.commands import (
     spam_random_images_from_gcs_bucket,
     streaming_service_show,
     time_until_wayne,
+    today_sumo_matches,
     today_upcoming_fixtures,
     tovala_counter,
     tuner,
     upcoming_nba_games,
+    upcoming_sumo_matches,
     wiki_summary,
 )
 from config import (
@@ -241,6 +241,10 @@ class Bot(RoomManager):
             return get_current_show(True, room.user.name.lower())
         elif cmd_type == "reserved":
             return None
+        elif cmd_type == "todaysumo":
+            return today_sumo_matches()
+        elif cmd_type == "sumo":
+            return upcoming_sumo_matches()
         elif cmd_type == "nbastandings":
             return nba_standings()
         elif cmd_type == "nbagames":
