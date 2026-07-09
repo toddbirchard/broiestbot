@@ -344,7 +344,8 @@ class Bot(RoomManager):
             ban_word(room, message, user_name, silent=True)
         elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
             ban_word(room, message, user_name, silent=True)
-        elif chat_message.startswith(f"@{CHATANGO_BOT_USERNAME} "):
+        elif re.search(r"@bro(?![a-zA-Z0-9])", chat_message):
+            LOGGER.info(f"Message directed at bot in room {room.room_name} by user {user_name}: {chat_message}")
             return self._respond_llm_prompt(user_name, room)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             ban_word(room, message, user_name, silent=True)
