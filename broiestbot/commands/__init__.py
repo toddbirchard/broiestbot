@@ -1,6 +1,6 @@
 """Construct responses to bot commands from third-party APIs."""
 
-from .afterdark import get_redgifs_gif, fetch_redgifs_gif
+from .afterdark import fetch_redgifs_gif, get_redgifs_gif
 from .definitions import (
     create_wiki_preview,
     get_english_definition,
@@ -69,6 +69,7 @@ from .polls import (
     tovala_counter,
 )
 from .previews import extract_url, generate_twitter_preview
+from .sumo import today_sumo_matches, upcoming_sumo_matches
 from .tuner import get_current_show, tuner
 
 # from .video import search_youtube_for_video
