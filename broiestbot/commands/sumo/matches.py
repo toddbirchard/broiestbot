@@ -9,6 +9,7 @@ from emoji import emojize
 from logger import LOGGER
 from requests.exceptions import HTTPError
 
+from .util import format_rank
 from config import HTTP_REQUEST_TIMEOUT, SUMO_API_BASE_URL, SUMO_DIVISION
 
 # Six honbasho per year, held in odd-numbered months.
@@ -96,17 +97,6 @@ def _parse_basho_date(timestamp: str) -> date:
     return datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").date()
 
 
-def _format_rank(rank: str) -> str:
-    """
-    Strip the East/West suffix from a rikishi rank (`Maegashira 15 East` -> `Maegashira 15`).
-
-    :param str rank: Full rank string from the API.
-
-    :returns: str
-    """
-    return rank.rsplit(" ", 1)[0] if rank.endswith(("East", "West")) else rank
-
-
 def _format_bout(bout: dict) -> str:
     """
     Build a single-line summary of a bout, including the result if it has been fought.
@@ -115,8 +105,8 @@ def _format_bout(bout: dict) -> str:
 
     :returns: str
     """
-    east = f"{bout['eastShikona']} ({_format_rank(bout['eastRank'])})"
-    west = f"{bout['westShikona']} ({_format_rank(bout['westRank'])})"
+    east = f"<b>{bout['eastShikona']}</b> ({format_rank(bout['eastRank'])})"
+    west = f"<b>{bout['westShikona']}</b> ({format_rank(bout['westRank'])})"
     winner = bout.get("winnerEn")
     if winner:
         loser = bout["westShikona"] if winner == bout["eastShikona"] else bout["eastShikona"]
