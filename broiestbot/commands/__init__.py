@@ -1,6 +1,6 @@
 """Construct responses to bot commands from third-party APIs."""
 
-from .afterdark import get_redgifs_gif, fetch_redgifs_gif
+from .afterdark import fetch_redgifs_gif, get_redgifs_gif
 from .definitions import (
     create_wiki_preview,
     get_english_definition,
@@ -16,6 +16,7 @@ from .footy import (
     fetch_fox_fixtures,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
+    footy_live_odds,
     footy_stats_for_live_fixtures,
     footy_team_lineups,
     footy_today_fixtures_odds,
@@ -68,6 +69,7 @@ from .polls import (
     tovala_counter,
 )
 from .previews import extract_url, generate_twitter_preview
+from .sumo import today_sumo_matches, upcoming_sumo_matches
 from .tuner import get_current_show, tuner
 
 # from .video import search_youtube_for_video

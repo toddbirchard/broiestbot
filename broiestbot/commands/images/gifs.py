@@ -37,7 +37,7 @@ def giphy_image_search(query: str) -> Optional[str]:
         if image is not None:
             return image
     except HTTPError as e:
-        LOGGER.error(f"Giphy failed to fetch `{query}`: {e.response.content}")
+        LOGGER.error(f"Giphy failed to fetch `{query}`: {e.response}")
         return emojize(":warning: yoooo giphy is down rn lmao :warning:", language="en")
     except ValueError as e:
         LOGGER.error(f"ValueError while fetching Giphy `{query}`: {e}")
@@ -70,10 +70,11 @@ def klipy_image_search(query: str) -> Optional[str]:
         if resp.status_code == 204:
             return None
         images = resp.json()["data"]["data"]
-        rand = randint(0, len(images) - 1)
-        image = images[rand]["file"]["md"]["gif"].get("url")
-        if image is not None:
-            return image
+        if len(images) > 0:
+            rand = randint(0, len(images) - 1)
+            image = images[rand]["file"]["md"]["gif"].get("url")
+            if image is not None:
+                return image
     except HTTPError as e:
         LOGGER.error(f"Klipy failed to fetch `{query}`: {e.response}")
         return emojize(":warning: yoooo gif API is down rn lmao :warning:", language="en")

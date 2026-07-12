@@ -5,8 +5,9 @@ from typing import Optional
 
 import requests
 from emoji import emojize
-from logger import LOGGER
 from requests.exceptions import HTTPError
+from logger import LOGGER
+
 
 from config import (
     CHATANGO_OBI_ROOM,
@@ -32,14 +33,12 @@ def get_current_weather(location: str, room: str, user: str) -> str:
     try:
         measurement_units = get_user_preferred_units(room, user)
         weather_response = fetch_current_weather_by_location(location, measurement_units)
-        if weather_response.get("current"):
-            return parse_weather_response(weather_response, measurement_units)
+        if weather_response is not None and weather_response.get("current"):
+            return parse_weather_response(weather_response, measurement_units, room, user)
+        return f"😢⛈️ sry @{user} i couldn't find da weather for `{location}` ⛈️😢"
     except Exception as e:
         LOGGER.exception(f"Failed to fetch & parse weather for `{location}`: {e}")
-        return emojize(
-            ":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
-            language="en",
-        )
+        return "⚠️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH ⚠️"
 
 
 def fetch_current_weather_by_location(location: str, measurement_units: str) -> Optional[dict]:
@@ -62,28 +61,21 @@ def fetch_current_weather_by_location(location: str, measurement_units: str) -> 
         resp = requests.get(WEATHERSTACK_API_ENDPOINT, params=params, timeout=HTTP_REQUEST_TIMEOUT)
         return resp.json()
     except HTTPError as e:
-        LOGGER.error(f"Failed to get weather for `{location}`: {e.response.content}")
-        return emojize(":warning:️️ ughhh fgma me the weather API is down or something :warning:", language="en")
+        LOGGER.error(f"Failed to get weather for `{location}`: {e.response}")
     except LookupError as e:
         LOGGER.error(f"KeyError while fetching weather for `{location}`: {e}", language="en")
-        return emojize(
-            ":warning:️️ sry but BROUGH coded this bert like a MORAN and it DIED! :warning:",
-            language="en",
-        )
     except Exception as e:
         LOGGER.exception(f"Failed to get weather for `{location}`: {e}")
-        return emojize(
-            ":warning:️️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH :warning:",
-            language="en",
-        )
 
 
-def parse_weather_response(weather: dict, measurement_units: str) -> str:
+def parse_weather_response(weather: dict, measurement_units: str, room: str, user: str) -> str:
     """
     Parse weather response returned by API.
 
     :param dict resp: Weather response returned by API.
     :param str measurement_units: `Metric` or `Imperial` units.
+    :param room: Chatango room from which request originated.
+    :param str user: User who made the request.
 
     :returns: str
     """
@@ -98,7 +90,9 @@ def parse_weather_response(weather: dict, measurement_units: str) -> str:
         cloud_cover = weather["current"]["cloudcover"]
         humidity = weather["current"]["humidity"]
         wind_speed = weather["current"]["wind_speed"]
-        local_time = datetime.utcfromtimestamp(weather["location"]["localtime_epoch"]).strftime("%I:%M")
+        local_time = datetime.utcfromtimestamp(weather["location"]["localtime_epoch"]).strftime("%I:%M %p").lower()
+        if room == CHATANGO_OBI_ROOM or user in METRIC_SYSTEM_USERS:
+            local_time = datetime.utcfromtimestamp(weather["location"]["localtime_epoch"]).strftime("%R")
         weather_emoji = get_weather_emoji(weather_code, is_day)
         precipitation_emoji = get_precipitation_emoji(weather["current"]["precip"])
         humidity_emoji = get_humidity_emoji(humidity)

@@ -9,7 +9,7 @@ from chatango import Room, RoomMessage
 from emoji import emojize
 from logger import LOGGER
 
-from broiestbot.commands import (
+from broiestbot.commands import (  # get_crypto_chart,
     all_leagues_golden_boot,
     bach_gang_counter,
     basic_message,
@@ -22,11 +22,12 @@ from broiestbot.commands import (
     fetch_fox_fixtures,
     fetch_latest_image_from_gcs_bucket,
     fetch_random_image_from_gcs_bucket,
-    fetch_sleeper_matchups,
     fetch_redgifs_gif,
+    fetch_sleeper_matchups,
     find_movie,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
+    footy_live_odds,
     footy_stats_for_live_fixtures,
     footy_team_lineups,
     footy_today_fixtures_odds,
@@ -67,10 +68,12 @@ from broiestbot.commands import (
     spam_random_images_from_gcs_bucket,
     streaming_service_show,
     time_until_wayne,
+    today_sumo_matches,
     today_upcoming_fixtures,
     tovala_counter,
     tuner,
     upcoming_nba_games,
+    upcoming_sumo_matches,
     wiki_summary,
 )
 from config import (
@@ -220,6 +223,8 @@ class Bot(chatango.Client):
             return footy_stats_for_live_fixtures(room_name, user_name)
         elif cmd_type == "todayfixtures" and room_name and user_name:
             return today_upcoming_fixtures(room_name, user_name)
+       elif cmd_type == "liveodds" and user_name:
+            return footy_live_odds(user_name)
         elif cmd_type == "goldenboot":
             return epl_golden_boot()
         elif cmd_type == "goldenshoe":
@@ -262,6 +267,10 @@ class Bot(chatango.Client):
             return get_current_show(True, bot_username)
         elif cmd_type == "reserved":
             return None
+        elif cmd_type == "todaysumo":
+            return today_sumo_matches()
+        elif cmd_type == "sumo":
+            return upcoming_sumo_matches()
         elif cmd_type == "nbastandings":
             return nba_standings()
         elif cmd_type == "nbagames":

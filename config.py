@@ -18,7 +18,8 @@ HTTP_REQUEST_TIMEOUT = 40
 
 # Chatango
 # -------------------------------------------------
-CHATANGO_BOT_USERNAME = "bro"
+CHATANGO_BOT_USERNAME = "broiestbot"
+CHATANGO_BOT_NICKNAME = "bro"
 CHATANGO_USERS = {
     "BROIESTBOT": {
         "USERNAME": getenv("CHATANGO_BOT_USERNAME"),
@@ -51,12 +52,12 @@ CHATANGO_LMAO_ROOM = getenv("CHATANGO_LMAO_ROOM")
 # Chatango rooms to be joined by the bot
 CHATANGO_ROOMS = [
     # CHATANGO_ACLEE_ROOM,
-    CHATANGO_SIXERS_ROOM,
+    # CHATANGO_SIXERS_ROOM,
     # CHATANGO_PHILLIES_ROOM,
-    CHATANGO_FLYERS_ROOM,
-    CHATANGO_ALT_ROOM,
+    # CHATANGO_FLYERS_ROOM,
+    # CHATANGO_ALT_ROOM,
     # CHATANGO_NFL_ROOM,
-    CHATANGO_OBI_ROOM,
+    # CHATANGO_OBI_ROOM,
     # CHATANGO_TEST_ROOM,
     # CHATANGO_REDZONE_ROOM,
     # CHATANGO_PATREON_ROOM,
@@ -68,7 +69,7 @@ CHATANGO_ROOMS = [
 # Chatango rooms to ban daddy anons from
 CHATANGO_DADDY_ANON_BAN_ROOMS = [
     CHATANGO_LMAO_ROOM,
-    CHATANGO_TEST_ROOM,
+    # CHATANGO_TEST_ROOM,
 ]
 
 
@@ -321,6 +322,7 @@ FOOTY_STANDINGS_ENDPOINT = f"{FOOTY_BASE_URL}/standings"
 FOOTY_FIXTURE_STATS_ENDPOINT = f"{FOOTY_BASE_URL}/fixtures/statistics"
 FOOTY_ODDS_ENDPOINT = "https://odds.p.rapidapi.com/v1/odds"
 FOOTY_ODDS_ENDPOINT_2 = "https://api-football-v1.p.rapidapi.com/v3/odds"
+FOOTY_LIVE_ODDS_ENDPOINT = f"{FOOTY_BASE_URL}/odds/live"
 FOOTY_XI_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/fixtures/lineups"
 FOOTY_PREDICTS_ENDPOINT = "https://api-football-v1.p.rapidapi.com/v3/predictions"
 FOOTY_HTTP_HEADERS = {
@@ -414,6 +416,7 @@ FOOTY_LEAGUES = {
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
+    ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
@@ -437,7 +440,7 @@ FOOTY_LEAGUES = {
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
-    # ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
@@ -445,13 +448,12 @@ FOOTY_LEAGUES = {
     # ":United_States: :woman_medium_skin_tone: NSWL": NWSL_LEAGUE_ID,
     # ":sports_medal: OLYMPICS MEN": OLYMPICS_MEN_LEAGUE_ID,
     # ":sports_medal: OLYMPICS WOMEN": OLYMPICS_WOMEN_LEAGUE_ID,
-    ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
     # ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
-    ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
@@ -497,7 +499,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
@@ -512,9 +514,9 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":European_Union: :baby_light_skin_tone: EUROS U21 2024 QUALIFIERS": UEFA_U21_QUALIFIERS_ID,
     # ":monkey: :globe_showing_Europe-Africa: AFCON QUALIFIERS": AFCON_QUALIFIERS_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
-    ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":Norway: :men’s_room: OBOS LIGAEN": OBOS_LIGAEN_ID,
-    # ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF CHAMPIONS": CONCACAF_CHAMPIONS_LEAGUE_ID,
@@ -560,13 +562,13 @@ FOOTY_XI_LEAGUES = {
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
-    ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":globe_showing_Americas: CONCACAF LEAGUE": CONCACAF_LEAGUE_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
-    # ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 FOOTY_LIVE_ODDS_LEAGUES = {
@@ -597,13 +599,13 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
-    ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
-    # ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
@@ -626,12 +628,12 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
-    # ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
+    ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (EUROPE)": WC_QUALIFIERS_EUROPE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (SOUTH AMERICA)": WC_QUALIFIERS_SOUTHAMERICA_ID,
     # ":globe_showing_Europe-Africa: WC QUALIFIERS (AFRICA)": WC_QUALIFIERS_AFRICA_ID,
-    ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
@@ -639,7 +641,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 # Footy leagues to be considered for "golden shoe" award
@@ -745,6 +747,11 @@ NBA_BASE_URL = "https://api-basketball.p.rapidapi.com"
 NBA_API_KEY = getenv("NBA_API_KEY")
 NBA_CONFERENCE_NAMES = ["Eastern Conference", "Western Conference"]
 NBA_SEASON_YEAR = "2024-2025"
+
+# Sumo
+# -------------------------------------------------
+SUMO_API_BASE_URL = "https://sumo-api.com/api"
+SUMO_DIVISION = "Makuuchi"
 
 # Playstation PSN
 # -------------------------------------------------
