@@ -53,7 +53,7 @@ def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]:
     """
     with Session() as db:
         user = (
-            db.query(ChatangoUser).filter(ChatangoUser.username == username).filter(ChatangoUser.ip is not None).first()
+            db.query(ChatangoUser).filter(ChatangoUser.username == username).filter(ChatangoUser.ip.isnot(None)).first()
         )
     if user and user.time_zone_name is not None:
         # TODO: Prevent fetching for preferred TZ per fixture

@@ -36,6 +36,7 @@ from broiestbot.commands import (  # get_crypto_chart,
     generate_llm_response,
     generate_twitter_preview,
     generate_youtube_video_preview,
+    search_youtube_video,
     get_all_live_twitch_streams,
     get_crypto_price,
     get_current_show,
@@ -219,10 +220,10 @@ class Bot(chatango.Client):
             return footy_stats_for_live_fixtures(room_name, user_name)
         elif cmd_type == "footystats" and room_name and user_name:
             return footy_stats_for_live_fixtures(room_name, user_name)
-        elif cmd_type == "liveodds" and user_name:
-            return footy_live_odds(user_name)
         elif cmd_type == "todayfixtures" and room_name and user_name:
             return today_upcoming_fixtures(room_name, user_name)
+        elif cmd_type == "liveodds" and user_name:
+            return footy_live_odds(user_name)
         elif cmd_type == "goldenboot":
             return epl_golden_boot()
         elif cmd_type == "goldenshoe":
