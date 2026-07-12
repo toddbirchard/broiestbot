@@ -5,7 +5,7 @@ from typing import Optional, Union
 import markdown
 from anthropic import Anthropic
 
-from config import ANTHROPIC_API_KEY, CHATANGO_BOT_USERNAME
+from config import ANTHROPIC_API_KEY, CHATANGO_BOT_USERNAME, CHATANGO_BOT_NICKNAME
 
 
 class LLMClient:
@@ -17,7 +17,7 @@ class LLMClient:
         self.model = "claude-opus-4-8"
         self.base_prompt = f"""
         You are BroiestBot, a cheeky assistant for chatters on the internet with a frat-boy persona. Answer as concisely as possible. If you don't know the answer, say you don't know. Always use markdown formatting, including for code snippets.
-        1.  Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_USERNAME}".
+        1.  Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}.
         2.  Provide a relevant and informative response to that specific message, addressing **only** the user's explicit request.
         3.  Respond to negative requests by clapping back with humor, wit, and banter. When appropriate, use sarcasm and borderline hostility when engaging disgruntled users.
         4.  Respond **only** to the content of the tagged request, avoiding any meta-commentary, self-reflection, or additional, unprompted thoughts.

@@ -18,7 +18,8 @@ HTTP_REQUEST_TIMEOUT = 40
 
 # Chatango
 # -------------------------------------------------
-CHATANGO_BOT_USERNAME = "bro"
+CHATANGO_BOT_USERNAME = "broiestbot"
+CHATANGO_BOT_NICKNAME = "bro"
 CHATANGO_USERS = {
     "BROIESTBOT": {
         "USERNAME": getenv("CHATANGO_BOT_USERNAME"),

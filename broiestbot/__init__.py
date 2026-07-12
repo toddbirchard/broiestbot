@@ -31,8 +31,8 @@ def join_rooms(rooms: List[str]):
     :param List[str] rooms: Chatango rooms to join.
     """
     broiestbot = Bot(
-        CHATANGO_USERS["BROIESTBRO"]["USERNAME"],
-        CHATANGO_USERS["BROIESTBRO"]["PASSWORD"],
+        CHATANGO_USERS["BROIESTBOT"]["USERNAME"],
+        CHATANGO_USERS["BROIESTBOT"]["PASSWORD"],
     )
     try:
         for room in rooms:
