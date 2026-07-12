@@ -21,17 +21,18 @@ def info_log_filepath() -> str:
 
 
 @pytest.fixture
-def error_json_filepath() -> str:
-    """Local filepath to error json file."""
-    return f"{BASE_DIR}/logs/errors.json"
+def json_log_filepath() -> str:
+    """Local filepath to JSON log file."""
+    return f"{BASE_DIR}/logs/info.json"
 
 
-def test_sms_logger(log_local_directory: str, info_log_filepath: str):
+def test_sms_logger(log_local_directory: str, info_log_filepath: str, json_log_filepath: str):
     """
     Create local directory to store logs in development.
 
     :param str log_local_directory: Local directory where `INFO` logs are saved.
     :param str info_log_filepath: Local filepath to `INFO` log.
+    :param str json_log_filepath: Local filepath to JSON log.
 
     :returns: str
     """
@@ -42,7 +43,7 @@ def test_sms_logger(log_local_directory: str, info_log_filepath: str):
     with open(info_log_filepath, "r", encoding="utf-8") as f:
         last_line = f.readlines()[-1]
         assert "TEST_ERROR" in last_line
-    with open(error_json_filepath, "r", encoding="utf-8") as f:
+    with open(json_log_filepath, "r", encoding="utf-8") as f:
         last_line = f.readlines()[-1]
         assert "TEST_ERROR" in last_line
 

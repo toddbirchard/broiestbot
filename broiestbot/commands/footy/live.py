@@ -1,6 +1,6 @@
 """Match breakdown of all live fixtures."""
 
-from typing import Optional
+from typing import List, Optional
 
 import requests
 from emoji import emojize
@@ -73,7 +73,7 @@ def footy_live_fixtures_per_league(league_id: int, league_name: str, username: s
                 return live_fixtures
         return None
     except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching live fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching live fixtures: {e.response}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching live fixtures: {e}")
     except Exception as e:
@@ -100,14 +100,14 @@ def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
         if resp.status_code == 200:
             return resp.json().get("response")
     except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching footy fixtures: {e.response.content}")
+        LOGGER.exception(f"HTTPError while fetching footy fixtures: {e.response}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_events_per_live_fixture(fixture_id: int) -> Optional[dict]:
+def fetch_events_per_live_fixture(fixture_id: int) -> Optional[List[dict]]:
     """
     Construct timeline of events for a single live fixture.
 
@@ -125,14 +125,14 @@ def fetch_events_per_live_fixture(fixture_id: int) -> Optional[dict]:
         )
         return req.json().get("response")
     except HTTPError as e:
-        LOGGER.exception(f"HTTPError while compiling events in live fixture: {e.response.content}")
+        LOGGER.exception(f"HTTPError while compiling events in live fixture: {e.response}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while compiling events in live fixture: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while compiling events in live fixture: {e}")
 
 
-def parse_events_per_live_fixture(events: dict, subs=False) -> Optional[str]:
+def parse_events_per_live_fixture(events: List[dict], subs=False) -> Optional[str]:
     """
     Construct a human-readable timeline of events for a single live fixture.
 
@@ -144,16 +144,14 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> Optional[str]:
     try:
         event_log = "\n"
         for event in events:
-            time_elapsed = event["time"].get("elapsed")
-            player_name = event["player"].get("name")
-            assisting_player = event.get("assist") if event.get("assist") is not None else ""
+            time_elapsed = (event.get("time") or {}).get("elapsed")
+            player_name = (event.get("player") or {}).get("name")
+            assisting_player = (event.get("assist") or {}).get("name") or ""
             event_comments = f" <i>({event['comments']})</i>" if event.get("comments") is not None else ""
-            event_type = event.get("type", "")
-            event_detail = event.get("detail", "")
+            event_type = event.get("type") or ""
+            event_detail = event.get("detail") or ""
             if time_elapsed:
                 time_elapsed = f'{time_elapsed}"'
-            if assisting_player is not None and assisting_player != "":
-                assisting_player = assisting_player.get("name")
             if player_name and time_elapsed:
                 if "Goal" in event_detail and event_type == "Var":
                     event_log += emojize(
@@ -162,17 +160,17 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> Optional[str]:
                     )
                 elif event_detail == "Yellow Card":
                     event_log += emojize(
-                        f":yellow_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
+                        f":yellow_square: {player_name}{event_comments}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Second Yellow card":
                     event_log += emojize(
-                        f":yellow_square::red_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
+                        f":yellow_square::red_square: {player_name}{event_comments}, {time_elapsed}\n",
                         language="en",
                     )
-                elif event_detail == "Red Card" and player_name:
+                elif event_detail == "Red Card":
                     event_log += emojize(
-                        f":red_square: {player_name}{event_comments if not None else ''}, {time_elapsed}\n",
+                        f":red_square: {player_name}{event_comments}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_detail == "Normal Goal":
@@ -186,8 +184,9 @@ def parse_events_per_live_fixture(events: dict, subs=False) -> Optional[str]:
                         language="en",
                     )
                 elif event_detail == "Own Goal":
+                    via_str = f"(via {assisting_player})" if assisting_player else ""
                     event_log += emojize(
-                        f':skull: :soccer_ball: {player_name} {"(via" + assisting_player if not None else ""}), {time_elapsed}\n',
+                        f":skull: :soccer_ball: {player_name} {via_str}, {time_elapsed}\n",
                         language="en",
                     )
                 elif event_type == "subst" and assisting_player and subs is True:

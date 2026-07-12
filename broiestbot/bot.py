@@ -9,7 +9,7 @@ from chatango import Room, RoomMessage
 from emoji import emojize
 from logger import LOGGER
 
-from broiestbot.commands import (
+from broiestbot.commands import (  # get_crypto_chart,
     all_leagues_golden_boot,
     bach_gang_counter,
     basic_message,
@@ -22,11 +22,12 @@ from broiestbot.commands import (
     fetch_fox_fixtures,
     fetch_latest_image_from_gcs_bucket,
     fetch_random_image_from_gcs_bucket,
-    fetch_sleeper_matchups,
     fetch_redgifs_gif,
+    fetch_sleeper_matchups,
     find_movie,
     footy_all_upcoming_fixtures,
     footy_live_fixtures,
+    footy_live_odds,
     footy_stats_for_live_fixtures,
     footy_team_lineups,
     footy_today_fixtures_odds,
@@ -35,7 +36,6 @@ from broiestbot.commands import (
     generate_llm_response,
     generate_twitter_preview,
     generate_youtube_video_preview,
-    search_youtube_video,
     get_all_live_twitch_streams,
     get_crypto_price,
     get_current_show,
@@ -67,15 +67,16 @@ from broiestbot.commands import (
     spam_random_images_from_gcs_bucket,
     streaming_service_show,
     time_until_wayne,
+    today_sumo_matches,
     today_upcoming_fixtures,
     tovala_counter,
     tuner,
     upcoming_nba_games,
+    upcoming_sumo_matches,
     wiki_summary,
 )
 from config import (
     BUND_LEAGUE_ID,
-    CHATANGO_BOT_USERNAME,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
     ELITESERIEN_LEAGUE_ID,
@@ -218,6 +219,8 @@ class Bot(chatango.Client):
             return footy_stats_for_live_fixtures(room_name, user_name)
         elif cmd_type == "footystats" and room_name and user_name:
             return footy_stats_for_live_fixtures(room_name, user_name)
+        elif cmd_type == "liveodds" and user_name:
+            return footy_live_odds(user_name)
         elif cmd_type == "todayfixtures" and room_name and user_name:
             return today_upcoming_fixtures(room_name, user_name)
         elif cmd_type == "goldenboot":
@@ -262,6 +265,10 @@ class Bot(chatango.Client):
             return get_current_show(True, bot_username)
         elif cmd_type == "reserved":
             return None
+        elif cmd_type == "todaysumo":
+            return today_sumo_matches()
+        elif cmd_type == "sumo":
+            return upcoming_sumo_matches()
         elif cmd_type == "nbastandings":
             return nba_standings()
         elif cmd_type == "nbagames":
@@ -275,7 +282,7 @@ class Bot(chatango.Client):
         elif cmd_type == "imagecount":
             return gcs_count_images_in_bucket(content)
         elif cmd_type == "changeorstayvote" and room_name and user_name:
-            return change_or_stay_vote(user_name, content, room)
+            return change_or_stay_vote(user_name, content)
         elif cmd_type == "changeorstay" and user_name:
             return get_live_poll_results(user_name)
         elif cmd_type == "odds":
@@ -341,7 +348,7 @@ class Bot(chatango.Client):
             preview = await asyncio.to_thread(generate_youtube_video_preview, chat_message)
             if preview and user_name != "acleebot":
                 await room.send_message(preview, use_html=True)
-        elif re.match(r"((https?):\/\/)?(www.)?x\.com(\/@?(\w){1,15})\/status\/[0-9]{19}\?", chat_message):
+        elif re.match(r"((https?):\/\/)?(www.)?x\.com(\/@?(\w){1,15})\/status\/[0-9]{19}", chat_message):
             preview = await asyncio.to_thread(generate_twitter_preview, chat_message)
             if preview:
                 await room.send_message(preview, use_html=True)
@@ -359,7 +366,7 @@ class Bot(chatango.Client):
             await ban_word(room, message, user_name, silent=True)
         elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
             await ban_word(room, message, user_name, silent=True)
-        elif chat_message.startswith(f"@{CHATANGO_BOT_USERNAME} "):
+        elif re.search(r"@bro(?![a-zA-Z0-9])", chat_message):
             await self._respond_llm_prompt(user_name, room)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             await ban_word(room, message, user_name, silent=True)

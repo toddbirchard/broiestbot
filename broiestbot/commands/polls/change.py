@@ -12,14 +12,14 @@ from clients import r, redis_scheduler
 from config import CHATANGO_SPECIAL_USERS
 
 
-def change_or_stay_vote(user_name: str, vote: str, room: Room) -> str:
+def change_or_stay_vote(user_name: str, vote: str, room: Optional[Room] = None) -> str:
     """
     Conduct chat-wide vote whether to 'change or stay'.
     Each user may cast a single vote, with the results revealed after a fixed time period.
 
     :param str user_name: Name of user submitting a vote.
     :param str vote: User's submitted vote (either 'change' or 'stay').
-    :param Room room: Chatango chat room.
+    :param Optional[Room] room: Chatango chat room.
 
     :returns: str
     """

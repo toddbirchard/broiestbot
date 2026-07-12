@@ -19,8 +19,8 @@ _bot_task: asyncio.Task = None
 
 async def _run_bot(rooms: List[str]) -> None:
     bot = Bot(
-        username=CHATANGO_USERS["BROIESTBRO"]["USERNAME"],
-        password=CHATANGO_USERS["BROIESTBRO"]["PASSWORD"],
+        username=CHATANGO_USERS["BROIESTBOT"]["USERNAME"],
+        password=CHATANGO_USERS["BROIESTBOT"]["PASSWORD"],
         rooms=rooms,
     )
     try:
