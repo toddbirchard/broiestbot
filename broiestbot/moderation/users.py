@@ -98,6 +98,6 @@ def is_user_anon(user_name: str) -> bool:
 
     :returns: bool
     """
-    if "!anon" in user_name or "#" in user_name:
+    if (user_name.startswith("anon") or "#" in user_name) and user_name != "anon0937":
         return True
     return False

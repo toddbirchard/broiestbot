@@ -69,7 +69,7 @@ CHATANGO_ROOMS = [
 # Chatango rooms to ban daddy anons from
 CHATANGO_DADDY_ANON_BAN_ROOMS = [
     CHATANGO_LMAO_ROOM,
-    # CHATANGO_TEST_ROOM,
+    CHATANGO_TEST_ROOM,
 ]
 
 
