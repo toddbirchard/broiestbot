@@ -3,7 +3,7 @@
 import re
 from typing import Optional
 
-from chatango import Room, RoomMessage
+from chatango import Room, RoomMessage, User
 from emoji import emojize
 from logger import LOGGER
 
@@ -55,24 +55,27 @@ async def check_blacklisted_users(room: Room, user_name: str, message: RoomMessa
         await ban_user(room, message)
 
 
-async def ban_daddy_anons(room: Room, user_name: str, message: RoomMessage) -> None:
+async def ban_daddy_anons(room: Room, user: User, message: RoomMessage) -> None:
     """
     Ban and delete chat history of anons who post from Daddy.
 
     :param Room room: Chatango room in which user appeared.
-    :param str user_name: Chatango username to validate against blacklist.
+    :param User user: Chatango user object to validate against blacklist.
     :param RoomMessage message: User submitted message.
 
     :returns: None
     """
+    user_name = user.name.lower()
     if room.name.lower() in CHATANGO_DADDY_ANON_BAN_ROOMS:
         if is_user_anon(user_name) and re.match(
             r"(.+)?(https?:\/\/)?([a-zA-Z0-9\-]+\.)?daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}(\/[^\s]*)?", message.body
         ):
+            await room.ban_message(message)
+            await room.clear_user(user)
+            await room.ban_user(user.name)
             reply = f"👋🏏 @{user_name} lmao have fun being banned forever 🏏👋"
             LOGGER.warning(f"BANNED Daddy anon user: username={user_name} ip={message.ip}")
             await room.send_message(reply)
-            await room.ban_message(message)
 
 
 def ignored_user(user_name: str, user_ip: str) -> Optional[str]:

@@ -331,7 +331,7 @@ class Bot(chatango.Client):
         room_name = room.name.lower()
         bot_username = self.username.lower()
         await check_blacklisted_users(room, user_name, message)
-        await ban_daddy_anons(room, user_name, message)
+        await ban_daddy_anons(room, user, message)
         self._log_message(room, user_name, message)
         await persist_user_data(room_name, user, message, bot_username)
         await persist_chat_logs(user_name, room_name, chat_message, bot_username)
