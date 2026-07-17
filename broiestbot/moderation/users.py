@@ -67,8 +67,8 @@ async def ban_daddy_anons(room: Room, user: User, message: RoomMessage) -> None:
     """
     user_name = user.name.lower()
     if room.name.lower() in CHATANGO_DADDY_ANON_BAN_ROOMS:
-        if is_user_anon(user_name) and re.match(
-            r"(.+)?(https?:\/\/)?([a-zA-Z0-9\-]+\.)?daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}(\/[^\s]*)?", message.body
+        if is_user_anon(user_name) and re.search(
+            r"daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}", message.body
         ):
             await room.ban_message(message)
             await room.clear_user(user)
