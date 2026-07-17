@@ -69,7 +69,7 @@ CHATANGO_ROOMS = [
 # Chatango rooms to ban daddy anons from
 CHATANGO_DADDY_ANON_BAN_ROOMS = [
     CHATANGO_LMAO_ROOM,
-    # CHATANGO_TEST_ROOM,
+    CHATANGO_TEST_ROOM,
 ]
 
 
@@ -605,7 +605,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
     ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
@@ -641,7 +641,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 # Footy leagues to be considered for "golden shoe" award

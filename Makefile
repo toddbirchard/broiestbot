@@ -34,7 +34,7 @@ $(VIRTUAL_ENVIRONMENT):
 
 .PHONY: run
 run: env
-	$(LOCAL_PYTHON) -m gunicorn --config=gunicorn.conf.py
+	$(LOCAL_PYTHON) -m uvicorn asgi:app --uds $(CURDIR)/broiestbot.sock --lifespan on --workers 1
 
 .PHONY: install
 install: env

@@ -13,8 +13,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base, mapped_column
 from sqlalchemy.sql import func
 
-from database import engine
-
 Base = declarative_base()
 
 
@@ -170,6 +168,3 @@ class League(Base):
 
     def __repr__(self):
         return f"id={self.id}, name={self.name}, country={self.country}, is_active={self.is_active}"
-
-
-Base.metadata.create_all(engine)

@@ -39,7 +39,7 @@ from config import (
     WOMENS_WORLD_CUP_ID,
     WORLD_CUP_ID,
 )
-from database import session
+from database import Session
 from database.models import ChatangoUser
 
 
@@ -51,12 +51,10 @@ def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]:
 
     :returns: Optional[Column[str]]
     """
-    user = (
-        session.query(ChatangoUser)
-        .filter(ChatangoUser.username == username)
-        .filter(ChatangoUser.ip is not None)
-        .first()
-    )
+    with Session() as db:
+        user = (
+            db.query(ChatangoUser).filter(ChatangoUser.username == username).filter(ChatangoUser.ip.isnot(None)).first()
+        )
     if user and user.time_zone_name is not None:
         # TODO: Prevent fetching for preferred TZ per fixture
         # LOGGER.info(f"Found user {username} in database with tz: {user.time_zone_name}")

@@ -3,7 +3,7 @@
 
 def format_rank(rank: str) -> str:
     """
-    Make each Rikishi rank more readable (`Maegashira 15 East` -> `前頭 15`).
+    Make each Rikishi rank more readable (`Maegashira 15 East` -> `前頭 15 東`).
 
     :param str rank: Full rank string from the API.
 
@@ -19,5 +19,5 @@ def format_rank(rank: str) -> str:
     }
     rank_name, _, rank_seed = rank.partition(" ")
     rank_name = rank_abbr_map.get(rank_name, rank_name)
-    rank_seed.replace("East", "東").replace("West", "西")
+    rank_seed = rank_seed.replace("East", "東").replace("West", "西")
     return f"{rank_name} {rank_seed}".strip()

@@ -102,8 +102,8 @@ def test_sumo_matches_formats_bouts_during_basho(basho_july_2026, torikumi_day_3
     # Completed bout shows winner & kimarite.
     assert "Onosato def. Hoshoryu" in result
     assert "yorikiri" in result
-    # Upcoming bout shows both rikishi with ranks (East/West suffix stripped).
-    assert "Dewanoryu (Juryo 3) vs Oshoumi (Maegashira 15)" in result
+    # Upcoming bout shows both rikishi with abbreviated Japanese ranks.
+    assert "<b>Dewanoryu</b> (十両 3 東) vs <b>Oshoumi</b> (前頭 15 西)" in result
     # Marquee (last-listed) bout leads the message.
     assert result.index("Onosato") < result.index("Dewanoryu")
 

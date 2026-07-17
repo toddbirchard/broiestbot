@@ -40,8 +40,8 @@ def test_upcoming_lists_bouts_across_days(basho_july_2026, bout_upcoming, bout_c
     assert "UPCOMING BOUTS" in result
     assert "Day 3" in result
     assert "Day 4" in result
-    assert "Dewanoryu (Juryo 3) vs Oshoumi (Maegashira 15)" in result
-    assert "Kirishima (Ozeki 1) vs Atamifuji (Sekiwake 1)" in result
+    assert "<b>Dewanoryu</b> (十両 3 東) vs <b>Oshoumi</b> (前頭 15 西)" in result
+    assert "<b>Kirishima</b> (大関 1 東) vs <b>Atamifuji</b> (関脇 1 西)" in result
     # Fought bouts are excluded.
     assert "def." not in result
     # Walking stops at the first day without announced torikumi (day 5).
