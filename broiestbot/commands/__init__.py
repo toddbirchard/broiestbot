@@ -9,6 +9,7 @@ from .definitions import (
     wiki_summary,
 )
 from .embeds import create_instagram_preview, generate_twitter_preview
+from .f1 import f1_grand_prix
 from .footy import (
     all_leagues_golden_boot,
     epl_golden_boot,

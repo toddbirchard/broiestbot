@@ -776,6 +776,151 @@ NBA_SEASON_YEAR = "2024-2025"
 SUMO_API_BASE_URL = "https://sumo-api.com/api"
 SUMO_DIVISION = "Makuuchi"
 
+# Formula 1
+# -------------------------------------------------
+F1_BASE_URL = "https://api-formula-1.p.rapidapi.com"
+F1_RACES_ENDPOINT = f"{F1_BASE_URL}/races"
+F1_RACE_RANKINGS_ENDPOINT = f"{F1_BASE_URL}/rankings/races"
+F1_STARTING_GRID_ENDPOINT = f"{F1_BASE_URL}/rankings/startinggrid"
+F1_HTTP_HEADERS = {
+    "content-type": "application/json",
+    "x-rapidapi-key": RAPID_API_KEY,
+    "x-rapidapi-host": "api-formula-1.p.rapidapi.com",
+}
+
+# Pinnacle "outright" markets, which is where race-winner odds live.
+F1_ODDS_SPORTS_ENDPOINT = "https://pinnacle-odds.p.rapidapi.com/kit/v1/sports"
+F1_ODDS_SPECIAL_MARKETS_ENDPOINT = "https://pinnacle-odds.p.rapidapi.com/kit/v1/special-markets"
+F1_ODDS_HTTP_HEADERS = {
+    "x-rapidapi-key": RAPID_API_KEY,
+    "x-rapidapi-host": "pinnacle-odds.p.rapidapi.com",
+}
+# Maximum number of drivers to list when displaying odds (a full grid, ignoring novelty lines).
+F1_ODDS_DRIVER_LIMIT = 20
+
+# A grand prix which started within this many hours is considered live (red flags & all).
+F1_RACE_LIVE_WINDOW_HOURS = 4
+# Starting grids are only published once qualifying has been run, roughly a day before a race.
+F1_QUALIFYING_LOOKAHEAD_HOURS = 48
+
+# Countries which host a grand prix, mapped to ISO 3166-1 alpha-2 codes (for flag emojis).
+F1_COUNTRY_CODES = {
+    "Australia": "AU",
+    "Austria": "AT",
+    "Azerbaijan": "AZ",
+    "Bahrain": "BH",
+    "Belgium": "BE",
+    "Brazil": "BR",
+    "Canada": "CA",
+    "China": "CN",
+    "France": "FR",
+    "Germany": "DE",
+    "Hungary": "HU",
+    "Italy": "IT",
+    "Japan": "JP",
+    "Madrid": "ES",
+    "Mexico": "MX",
+    "Monaco": "MC",
+    "Netherlands": "NL",
+    "Portugal": "PT",
+    "Qatar": "QA",
+    "Russia": "RU",
+    "Saudi Arabia": "SA",
+    "Singapore": "SG",
+    "South Korea": "KR",
+    "Spain": "ES",
+    "Turkey": "TR",
+    "UAE": "AE",
+    "USA": "US",
+    "United Arab Emirates": "AE",
+    "United Kingdom": "GB",
+    "United States": "US",
+    "United-States": "US",
+    "Vietnam": "VN",
+}
+
+# Driver nationalities as reported by the API, mapped to ISO 3166-1 alpha-2 codes.
+F1_NATIONALITY_COUNTRY_CODES = {
+    "American": "US",
+    "Argentine": "AR",
+    "Argentinian": "AR",
+    "Australian": "AU",
+    "Austrian": "AT",
+    "Belgian": "BE",
+    "Brazilian": "BR",
+    "British": "GB",
+    "Canadian": "CA",
+    "Chinese": "CN",
+    "Colombian": "CO",
+    "Czech": "CZ",
+    "Danish": "DK",
+    "Dutch": "NL",
+    "English": "GB",
+    "Estonian": "EE",
+    "Finnish": "FI",
+    "French": "FR",
+    "German": "DE",
+    "Hungarian": "HU",
+    "Indian": "IN",
+    "Indonesian": "ID",
+    "Irish": "IE",
+    "Israeli": "IL",
+    "Italian": "IT",
+    "Japanese": "JP",
+    "Malaysian": "MY",
+    "Mexican": "MX",
+    "Monegasque": "MC",
+    "New Zealander": "NZ",
+    "Norwegian": "NO",
+    "Polish": "PL",
+    "Portuguese": "PT",
+    "Russian": "RU",
+    "South African": "ZA",
+    "Spanish": "ES",
+    "Swedish": "SE",
+    "Swiss": "CH",
+    "Thai": "TH",
+    "Venezuelan": "VE",
+}
+
+# Fallback nationalities keyed by driver surname, used when a response omits `nationality`
+# (rankings, starting grids and bookmakers all return names without one).
+F1_DRIVER_NATIONALITIES = {
+    "albon": "Thai",
+    "alonso": "Spanish",
+    "antonelli": "Italian",
+    "bearman": "British",
+    "bortoleto": "Brazilian",
+    "bottas": "Finnish",
+    "colapinto": "Argentine",
+    "doohan": "Australian",
+    "gasly": "French",
+    "giovinazzi": "Italian",
+    "hadjar": "French",
+    "hamilton": "British",
+    "hulkenberg": "German",
+    "latifi": "Canadian",
+    "lawson": "New Zealander",
+    "leclerc": "Monegasque",
+    "lindblad": "British",
+    "magnussen": "Danish",
+    "norris": "British",
+    "ocon": "French",
+    "perez": "Mexican",
+    "piastri": "Australian",
+    "raikkonen": "Finnish",
+    "ricciardo": "Australian",
+    "russell": "British",
+    "sainz": "Spanish",
+    "sargeant": "American",
+    "schumacher": "German",
+    "stroll": "Canadian",
+    "tsunoda": "Japanese",
+    "verstappen": "Dutch",
+    "vettel": "German",
+    "zhou": "Chinese",
+}
+
 # Playstation PSN
 # -------------------------------------------------
 PLAYSTATION_SSO_TOKEN = getenv("PLAYSTATION_SSO_TOKEN")
