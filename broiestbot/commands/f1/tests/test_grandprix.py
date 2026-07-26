@@ -5,47 +5,31 @@ from unittest.mock import patch
 
 from broiestbot.commands.f1.grandprix import API_ERROR_MESSAGE, f1_grand_prix_at
 
-RACE_WINNER_ODDS = [("Max Verstappen", 1.72), ("Lando Norris", 3.25), ("Charles Leclerc", 4.5)]
+DRIVER_STANDINGS = [
+    {"position": 1, "points": 204, "name": "Andrea Kimi Antonelli", "tla": "ANT", "team": "Mercedes AMG F1 Team"},
+    {"position": 2, "points": 159, "name": "Lewis Hamilton", "tla": "HAM", "team": "Scuderia Ferrari"},
+]
+
 
 # ---------------------------------------------------------------------------
 # Live grand prix
 # ---------------------------------------------------------------------------
 
 
-def test_live_race_lists_drivers_by_position(race_live, race_rankings):
-    """A live race reports its current lap & running order."""
+def test_live_race_reports_championship(race_live, circuit_bahrain):
+    """A live race reports its circuit & the championship standings."""
     with (
         patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_live]),
-        patch("broiestbot.commands.f1.grandprix.fetch_race_rankings", return_value=race_rankings),
-        patch("broiestbot.commands.f1.grandprix.fetch_race_winner_odds") as mock_odds,
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=DRIVER_STANDINGS),
     ):
         result = f1_grand_prix_at(datetime(2026, 3, 8, 16, tzinfo=timezone.utc))
 
     assert "LIVE NOW: BAHRAIN GRAND PRIX" in result
     assert "🇧🇭" in result
     assert "Bahrain International Circuit, Sakhir" in result
-    assert "Lap 32/57" in result
-    assert "<b>1.</b> 🇳🇱 Max Verstappen <i>(Red Bull Racing)</i> 1:02:11.404" in result
-    assert "<b>2.</b> 🇲🇨 Charles Leclerc <i>(Ferrari)</i> +2.104" in result
-    assert "<b>3.</b> 🇬🇧 Lewis Hamilton <i>(Ferrari)</i> +8.921" in result
-    # Positions are listed in running order, not the order the API returned them.
-    assert result.index("Max Verstappen") < result.index("Charles Leclerc") < result.index("Lewis Hamilton")
-    mock_odds.assert_not_called()
-
-
-def test_live_race_falls_back_to_odds_without_positions(race_live):
-    """A live race with no published positions lists drivers by odds instead."""
-    with (
-        patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_live]),
-        patch("broiestbot.commands.f1.grandprix.fetch_race_rankings", return_value=[]),
-        patch("broiestbot.commands.f1.grandprix.fetch_race_winner_odds", return_value=RACE_WINNER_ODDS),
-    ):
-        result = f1_grand_prix_at(datetime(2026, 3, 8, 16, tzinfo=timezone.utc))
-
-    assert "LIVE NOW: BAHRAIN GRAND PRIX" in result
-    assert "Lap 32/57" in result
-    assert "ODDS TO WIN" in result
-    assert "🇳🇱 Max Verstappen: <b>1.72</b>" in result
+    assert "DRIVERS' CHAMPIONSHIP" in result
+    assert "<b>1.</b> 🇮🇹 Andrea Kimi Antonelli <i>(Mercedes AMG F1 Team)</i> — 204 pts" in result
 
 
 # ---------------------------------------------------------------------------
@@ -53,66 +37,33 @@ def test_live_race_falls_back_to_odds_without_positions(race_live):
 # ---------------------------------------------------------------------------
 
 
-def test_upcoming_race_lists_drivers_by_odds(race_completed, race_upcoming):
-    """A race which is still days out is listed with odds to win, favorite first."""
+def test_upcoming_race_reports_championship(race_completed, race_upcoming, circuit_bahrain):
+    """A race which is still days out reports its details & the championship standings."""
     with (
         patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_completed, race_upcoming]),
-        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid") as mock_grid,
-        patch("broiestbot.commands.f1.grandprix.fetch_race_winner_odds", return_value=RACE_WINNER_ODDS),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=DRIVER_STANDINGS),
     ):
         result = f1_grand_prix_at(datetime(2026, 3, 4, 15, tzinfo=timezone.utc))
 
     assert "NEXT UP: BAHRAIN GRAND PRIX" in result
     assert "57 laps, 308.238 km" in result
     assert "Sun Mar 8, 11:00am ET <i>(in 4 days)</i>" in result
-    assert "ODDS TO WIN" in result
-    assert result.index("Max Verstappen") < result.index("Lando Norris") < result.index("Charles Leclerc")
-    assert "🇬🇧 Lando Norris: <b>3.25</b>" in result
-    # Starting grids aren't published this far out, so don't bother asking for one.
-    mock_grid.assert_not_called()
+    assert "DRIVERS' CHAMPIONSHIP" in result
+    assert result.index("Andrea Kimi Antonelli") < result.index("Lewis Hamilton")
 
 
-def test_upcoming_race_lists_starting_grid_after_qualifying(race_upcoming, starting_grid):
-    """Once qualifying is done, drivers are listed by grid position instead of odds."""
+def test_race_without_standings_says_so(race_upcoming, circuit_bahrain):
+    """A race with no available standings still reports the grand prix itself."""
     with (
         patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
-        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=starting_grid),
-        patch("broiestbot.commands.f1.grandprix.fetch_race_winner_odds") as mock_odds,
-    ):
-        result = f1_grand_prix_at(datetime(2026, 3, 7, 18, tzinfo=timezone.utc))
-
-    assert "NEXT UP: BAHRAIN GRAND PRIX" in result
-    assert "STARTING GRID" in result
-    assert "<b>P1</b> 🇳🇱 Max Verstappen <i>(Red Bull Racing)</i> 1:29.179" in result
-    assert "<b>P2</b> 🇩🇪 Nico Hulkenberg <i>(Audi)</i> 1:29.512" in result
-    assert "<b>P3</b> 🇯🇵 Yuki Tsunoda <i>(Racing Bulls)</i> 1:29.740" in result
-    assert "ODDS TO WIN" not in result
-    mock_odds.assert_not_called()
-
-
-def test_imminent_race_without_a_grid_lists_odds(race_upcoming):
-    """A race whose qualifying hasn't run yet still falls back to odds."""
-    with (
-        patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
-        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=[]),
-        patch("broiestbot.commands.f1.grandprix.fetch_race_winner_odds", return_value=RACE_WINNER_ODDS),
-    ):
-        result = f1_grand_prix_at(datetime(2026, 3, 7, 18, tzinfo=timezone.utc))
-
-    assert "STARTING GRID" not in result
-    assert "ODDS TO WIN" in result
-
-
-def test_upcoming_race_without_odds_says_so(race_upcoming):
-    """A race with no odds available still reports the grand prix itself."""
-    with (
-        patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
-        patch("broiestbot.commands.f1.grandprix.fetch_race_winner_odds", return_value=None),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=None),
     ):
         result = f1_grand_prix_at(datetime(2026, 3, 4, 15, tzinfo=timezone.utc))
 
     assert "NEXT UP: BAHRAIN GRAND PRIX" in result
-    assert "no odds available" in result
+    assert "championship standings unavailable" in result
 
 
 # ---------------------------------------------------------------------------
@@ -124,10 +75,10 @@ def test_finished_season_reports_next_season_opener(race_completed, race_upcomin
     """Once every race has been run, the start of next season is reported."""
     next_season_opener = {
         **race_upcoming,
-        "id": 1201,
+        "id": "gp-2027-opener",
+        "name": "Australian Grand Prix",
         "season": 2027,
-        "competition": {"id": 22, "name": "Australia", "location": {"country": "Australia", "city": "Melbourne"}},
-        "date": "2027-03-07T05:00:00+00:00",
+        "date": "2027-03-07T05:00:00Z",
     }
     with patch(
         "broiestbot.commands.f1.grandprix.fetch_season_races",
@@ -136,7 +87,7 @@ def test_finished_season_reports_next_season_opener(race_completed, race_upcomin
         result = f1_grand_prix_at(datetime(2026, 12, 20, tzinfo=timezone.utc))
 
     assert "the 2026 F1 season is over" in result
-    assert "Australia Grand Prix" in result
+    assert "Australian Grand Prix" in result
     assert "kicks off the 2027 season" in result
     assert "Sun Mar 7, 12:00am ET" in result
 
@@ -177,6 +128,7 @@ def test_unexpected_error_returns_error_message(race_upcoming):
     """Unexpected errors are swallowed & reported to the room."""
     with (
         patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
-        patch("broiestbot.commands.f1.grandprix.fetch_race_winner_odds", side_effect=ValueError("boom")),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value={}),
+        patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", side_effect=ValueError("boom")),
     ):
         assert f1_grand_prix_at(datetime(2026, 3, 4, tzinfo=timezone.utc)) == API_ERROR_MESSAGE

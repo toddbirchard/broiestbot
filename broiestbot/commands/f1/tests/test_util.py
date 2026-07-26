@@ -5,18 +5,15 @@ from datetime import datetime, timedelta, timezone
 from broiestbot.commands.f1.util import (
     UNKNOWN_FLAG,
     country_code_to_flag,
-    country_flag,
     driver_flag,
     driver_flag_from_name,
     format_countdown,
-    format_odds,
     format_race_date,
     nationality_flag,
     normalize_name,
     parse_race_date,
 )
 from config import (
-    F1_COUNTRY_CODES,
     F1_DRIVER_NATIONALITIES,
     F1_NATIONALITY_COUNTRY_CODES,
 )
@@ -38,14 +35,6 @@ def test_invalid_country_code_has_no_flag():
     assert country_code_to_flag("") == ""
     assert country_code_to_flag("NLD") == ""
     assert country_code_to_flag("N1") == ""
-
-
-def test_host_country_flag():
-    """Grand prix host countries are matched case-insensitively."""
-    assert country_flag("Bahrain") == "🇧🇭"
-    assert country_flag("united states") == "🇺🇸"
-    assert country_flag("Atlantis") == ""
-    assert country_flag(None) == ""
 
 
 def test_nationality_flag():
@@ -79,8 +68,8 @@ def test_unknown_driver_gets_placeholder_flag():
 
 
 def test_configured_countries_all_have_valid_flags():
-    """Every configured country code resolves to a flag emoji."""
-    for country_code in {**F1_COUNTRY_CODES, **F1_NATIONALITY_COUNTRY_CODES}.values():
+    """Every configured nationality country code resolves to a flag emoji."""
+    for country_code in F1_NATIONALITY_COUNTRY_CODES.values():
         assert country_code_to_flag(country_code) != ""
 
 
@@ -127,12 +116,3 @@ def test_countdown_scales_with_time_remaining():
     assert format_countdown(timedelta(minutes=22)) == "in 22 minutes"
     assert format_countdown(timedelta(seconds=30)) == "in 1 minute"
     assert format_countdown(timedelta(seconds=-60)) == "any moment now"
-
-
-def test_odds_formatting():
-    """Decimal prices keep two decimals, including longshots."""
-    assert format_odds(1.7) == "1.70"
-    assert format_odds(26.0) == "26.00"
-    assert format_odds(2500) == "2500.00"
-    assert format_odds(-140) == "-140"
-    assert format_odds(None) == ""

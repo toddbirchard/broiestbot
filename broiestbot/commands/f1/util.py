@@ -7,7 +7,6 @@ from typing import Optional
 from emoji import emojize
 
 from config import (
-    F1_COUNTRY_CODES,
     F1_DRIVER_NATIONALITIES,
     F1_NATIONALITY_COUNTRY_CODES,
     TIMEZONE_US_EASTERN,
@@ -32,19 +31,6 @@ def country_code_to_flag(country_code: Optional[str]) -> str:
     if len(code) != 2 or not code.isalpha():
         return ""
     return "".join(chr(0x1F1E6 + ord(char) - ord("A")) for char in code)
-
-
-def country_flag(country: Optional[str]) -> str:
-    """
-    Flag emoji of a grand prix' host country.
-
-    :param Optional[str] country: Country hosting a grand prix, ie: `Bahrain`.
-
-    :returns: str
-    """
-    if not country:
-        return ""
-    return country_code_to_flag(F1_COUNTRY_CODES.get(country.strip().title()))
 
 
 def nationality_flag(nationality: Optional[str]) -> str:
@@ -152,21 +138,3 @@ def format_countdown(time_remaining: timedelta) -> str:
         return f"in {hours} hour{'s' if hours > 1 else ''}"
     days = seconds_remaining // 86400
     return f"in {days} day{'s' if days > 1 else ''}"
-
-
-def format_odds(price: Optional[float]) -> str:
-    """
-    Format a bookmaker's price for display.
-
-    Prices arrive as decimal odds (`1.72`), where longshots are simply large numbers.
-    Negative prices only occur in American odds, which are shown as-is.
-
-    :param Optional[float] price: Price of a driver winning.
-
-    :returns: str
-    """
-    if price is None:
-        return ""
-    if price < 0:
-        return f"{int(price)}"
-    return f"{price:.2f}"

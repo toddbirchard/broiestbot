@@ -1,28 +1,24 @@
 """Summarize the state of F1: a live grand prix, the next grand prix, or the offseason."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
 from emoji import emojize
 from logger import LOGGER
 
-from config import F1_ODDS_DRIVER_LIMIT, F1_QUALIFYING_LOOKAHEAD_HOURS
+from config import F1_STANDINGS_LIMIT
 
-from .odds import fetch_race_winner_odds
 from .races import (
-    current_lap,
-    fetch_race_rankings,
+    fetch_circuit,
     fetch_season_races,
-    fetch_starting_grid,
     find_live_race,
     find_next_race,
 )
+from .standings import fetch_driver_standings
 from .util import (
-    country_flag,
-    driver_flag,
+    country_code_to_flag,
     driver_flag_from_name,
     format_countdown,
-    format_odds,
     format_race_date,
     parse_race_date,
 )
@@ -44,11 +40,11 @@ def f1_grand_prix_at(now: datetime) -> str:
             return API_ERROR_MESSAGE
         live_race = find_live_race(races, now)
         if live_race:
-            return live_race_message(live_race)
+            return live_race_message(_with_circuit(live_race))
         next_race = find_next_race(races, now)
         if next_race is None:
             return offseason_message(now.year, now, bool(races))
-        return upcoming_race_message(next_race, now)
+        return upcoming_race_message(_with_circuit(next_race), now)
     except Exception as e:
         LOGGER.exception(f"Unexpected error while building F1 grand prix message: {e}")
         return API_ERROR_MESSAGE
@@ -65,32 +61,22 @@ def f1_grand_prix() -> str:
 
 def live_race_message(race: dict) -> str:
     """
-    Summarize a grand prix which is currently being run, including live driver positions.
+    Summarize a grand prix which is currently being run, with the championship & odds to win.
 
-    :param dict race: Race object returned by the F1 API.
+    :param dict race: Normalized race object.
 
     :returns: str
     """
     message = _race_header(race, ":racing_car:", "LIVE NOW")
     message += _race_details(race)
-    lap = current_lap(race)
-    if lap:
-        message += emojize(f":stopwatch: <b>Lap {lap}</b>\n", language="en")
-    positions = _sort_by_position(fetch_race_rankings(race.get("id")) or [])
-    if positions:
-        message += "\n"
-        for entry in positions:
-            message += _ranking_line(entry)
-        return message
-    # Positions aren't published until a race is properly underway; odds fill the gap until then.
-    return message + _odds_section(race)
+    return message + _driver_sections(race)
 
 
 def upcoming_race_message(race: dict, now: datetime) -> str:
     """
-    Summarize the next grand prix, listing the starting grid if qualifying is done, else odds.
+    Summarize the next grand prix, with the championship standings & odds to win.
 
-    :param dict race: Race object returned by the F1 API.
+    :param dict race: Normalized race object.
     :param datetime now: Current UTC time.
 
     :returns: str
@@ -103,14 +89,7 @@ def upcoming_race_message(race: dict, now: datetime) -> str:
             f":calendar: {format_race_date(start_time)} <i>({format_countdown(start_time - now)})</i>\n",
             language="en",
         )
-    if start_time and start_time - now <= timedelta(hours=F1_QUALIFYING_LOOKAHEAD_HOURS):
-        grid = _sort_by_position(fetch_starting_grid(race.get("id")) or [])
-        if grid:
-            message += emojize("\n:chequered_flag: <b>STARTING GRID</b>\n", language="en")
-            for entry in grid:
-                message += _grid_line(entry)
-            return message
-    return message + _odds_section(race)
+    return message + _driver_sections(race)
 
 
 def offseason_message(season: int, now: datetime, season_had_races: bool = True) -> str:
@@ -143,6 +122,18 @@ def offseason_message(season: int, now: datetime, season_had_races: bool = True)
     return message
 
 
+def _with_circuit(race: dict) -> dict:
+    """
+    Attach a race's circuit details (name, city & flag) ahead of rendering it.
+
+    :param dict race: Normalized race object.
+
+    :returns: dict
+    """
+    race["circuit"] = fetch_circuit(race.get("circuit_id")) or {}
+    return race
+
+
 def _first_race_of_season(races: List[dict]) -> Optional[Tuple[dict, datetime]]:
     """
     Earliest scheduled race of a season, paired with its start time.
@@ -162,14 +153,14 @@ def _race_header(race: dict, icon: str, label: str) -> str:
     """
     Construct the opening line of a grand prix summary.
 
-    :param dict race: Race object returned by the F1 API.
+    :param dict race: Normalized race object.
     :param str icon: Emoji shortcode to lead the message with.
     :param str label: Status of the grand prix, ie: `LIVE NOW`.
 
     :returns: str
     """
-    location = (race.get("competition") or {}).get("location") or {}
-    flag = country_flag(location.get("country"))
+    circuit = race.get("circuit") or {}
+    flag = country_code_to_flag(circuit.get("country_code"))
     return emojize(
         f"\n\n\n{icon} <b>{label}: {_grand_prix_name(race).upper()}</b> {flag}\n",
         language="en",
@@ -178,16 +169,15 @@ def _race_header(race: dict, icon: str, label: str) -> str:
 
 def _race_details(race: dict) -> str:
     """
-    Construct circuit, lap count & weather details of a grand prix.
+    Construct circuit, lap count & distance details of a grand prix.
 
-    :param dict race: Race object returned by the F1 API.
+    :param dict race: Normalized race object.
 
     :returns: str
     """
     details = ""
-    circuit_name = (race.get("circuit") or {}).get("name")
-    location = (race.get("competition") or {}).get("location") or {}
-    venue = ", ".join([detail for detail in (circuit_name, location.get("city")) if detail])
+    circuit = race.get("circuit") or {}
+    venue = ", ".join([detail for detail in (circuit.get("name"), circuit.get("city")) if detail])
     if venue:
         details += f"<i>{venue}</i>\n"
     total_laps = (race.get("laps") or {}).get("total")
@@ -202,88 +192,54 @@ def _race_details(race: dict) -> str:
     return details
 
 
-def _odds_section(race: dict) -> str:
+def _driver_sections(race: dict) -> str:
     """
-    Construct a list of drivers by their odds of winning a grand prix.
+    Construct the driver-facing section of a summary: the drivers' championship standings.
 
-    :param dict race: Race object returned by the F1 API.
+    :param dict race: Normalized race object.
 
     :returns: str
     """
-    odds = fetch_race_winner_odds(race)
-    if not odds:
-        return emojize(":warning: <i>no odds available for this one.</i>", language="en")
-    section = emojize("\n:money_bag: <b>ODDS TO WIN</b>\n", language="en")
-    for driver_name, price in odds[:F1_ODDS_DRIVER_LIMIT]:
-        section += f"{driver_flag_from_name(driver_name)} {driver_name}: <b>{format_odds(price)}</b>\n"
+    standings = _standings_section(race.get("season"))
+    if standings:
+        return standings
+    return emojize(":warning: <i>championship standings unavailable right now.</i>", language="en")
+
+
+def _standings_section(season: Optional[int]) -> str:
+    """
+    Construct the drivers' championship standings, leader first.
+
+    :param Optional[int] season: Year of the season being reported on.
+
+    :returns: str
+    """
+    if season is None:
+        return ""
+    standings = fetch_driver_standings(season)
+    if not standings:
+        return ""
+    section = emojize("\n:trophy: <b>DRIVERS' CHAMPIONSHIP</b>\n", language="en")
+    for entry in standings[:F1_STANDINGS_LIMIT]:
+        name = entry.get("name") or entry.get("tla") or "Unknown"
+        team = f" <i>({entry['team']})</i>" if entry.get("team") else ""
+        points = entry.get("points")
+        points_label = f" — {points:g} pts" if points is not None else ""
+        section += (
+            f"<b>{entry['position']}.</b> {driver_flag_from_name(entry.get('name'))} {name}{team}{points_label}\n"
+        )
     return section
-
-
-def _ranking_line(entry: dict) -> str:
-    """
-    Construct a single driver's line in a live race's running order.
-
-    :param dict entry: Driver ranking returned by the F1 API.
-
-    :returns: str
-    """
-    driver = entry.get("driver") or {}
-    team = (entry.get("team") or {}).get("name")
-    gap = entry.get("gap") or entry.get("time") or ""
-    line = f"<b>{entry['position']}.</b> {driver_flag(driver)} {driver.get('name', 'Unknown')}"
-    if team:
-        line += f" <i>({team})</i>"
-    if gap:
-        line += f" {gap}"
-    return line + "\n"
-
-
-def _grid_line(entry: dict) -> str:
-    """
-    Construct a single driver's line in a starting grid.
-
-    :param dict entry: Starting grid position returned by the F1 API.
-
-    :returns: str
-    """
-    driver = entry.get("driver") or {}
-    team = (entry.get("team") or {}).get("name")
-    lap_time = entry.get("time") or ""
-    line = f"<b>P{entry['position']}</b> {driver_flag(driver)} {driver.get('name', 'Unknown')}"
-    if team:
-        line += f" <i>({team})</i>"
-    if lap_time:
-        line += f" {lap_time}"
-    return line + "\n"
-
-
-def _sort_by_position(entries: List[dict]) -> List[dict]:
-    """
-    Sort driver rankings or grid slots by position, dropping any which lack one.
-
-    :param List[dict] entries: Driver rankings or starting grid positions.
-
-    :returns: List[dict]
-    """
-    positioned_entries = []
-    for entry in entries:
-        try:
-            entry["position"] = int(entry["position"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        positioned_entries.append(entry)
-    return sorted(positioned_entries, key=lambda entry: entry["position"])
 
 
 def _grand_prix_name(race: dict) -> str:
     """
     Full name of a grand prix, ie: `Bahrain Grand Prix`.
 
-    :param dict race: Race object returned by the F1 API.
+    :param dict race: Normalized race object.
 
     :returns: str
     """
-    competition_name = (race.get("competition") or {}).get("name") or "Formula 1"
-    if "grand prix" in competition_name.lower():
-        return competition_name
-    return f"{competition_name} Grand Prix"
+    name = race.get("name") or "Formula 1"
+    if "grand prix" in name.lower():
+        return name
+    return f"{name} Grand Prix"

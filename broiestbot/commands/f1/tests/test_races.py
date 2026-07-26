@@ -1,19 +1,69 @@
-"""Tests for fetching & classifying F1 races."""
+"""Tests for fetching, normalizing & classifying F1 races."""
 
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 from broiestbot.commands.f1.races import (
-    current_lap,
+    fetch_circuit,
     fetch_season_races,
     find_live_race,
     find_next_race,
     is_race_abandoned,
     is_race_finished,
     is_race_live,
+    normalize_race,
 )
 
 RACE_START = datetime(2026, 3, 8, 15, tzinfo=timezone.utc)
+
+# Raw Hyprace grand prix, as returned by /v2/grands-prix.
+HYPRACE_GRAND_PRIX = {
+    "id": "8b17825a",
+    "round": 11,
+    "name": "Hungarian Grand Prix",
+    "officialName": "FORMULA 1 AWS HUNGARIAN GRAND PRIX 2026",
+    "circuitId": "2a1c1543",
+    "season": {"id": "e7d2c760", "year": 2026},
+    "schedule": [
+        {"id": "ae20361c", "type": "MainRace", "startDate": "2026-07-26T13:00:00Z", "endDate": "2026-07-26T15:00:00Z"},
+        {"id": "7c7ba77f", "type": "StandardQualifying", "startDate": "2026-07-25T14:00:00Z"},
+        {"id": "3c705c4d", "type": "FirstPractice", "startDate": "2026-07-24T11:30:00Z"},
+    ],
+    "startDate": "2026-07-24T11:30:00Z",
+    "status": "Active",
+    "scheduledLaps": 70,
+    "scheduledDistance": 306.63,
+}
+
+# ---------------------------------------------------------------------------
+# Normalization
+# ---------------------------------------------------------------------------
+
+
+def test_grand_prix_is_normalized():
+    """A raw Hyprace grand prix is flattened into the shape the command consumes."""
+    race = normalize_race(HYPRACE_GRAND_PRIX)
+    assert race["id"] == "8b17825a"
+    assert race["name"] == "Hungarian Grand Prix"
+    assert race["round"] == 11
+    assert race["season"] == 2026
+    assert race["circuit_id"] == "2a1c1543"
+    # The race session's start time is what matters, not practice/qualifying.
+    assert race["date"] == "2026-07-26T13:00:00Z"
+    assert race["laps"] == {"total": 70, "current": None}
+    assert race["distance"] == "306.63 km"
+
+
+def test_normalization_without_a_race_session_falls_back_to_weekend_start():
+    """A grand prix missing its race session falls back to the weekend's start time."""
+    grand_prix = {**HYPRACE_GRAND_PRIX, "schedule": [{"type": "FirstPractice", "startDate": "2026-07-24T11:30:00Z"}]}
+    assert normalize_race(grand_prix)["date"] == "2026-07-24T11:30:00Z"
+
+
+def test_normalization_without_a_distance():
+    """A grand prix without a scheduled distance omits it rather than printing `None km`."""
+    assert normalize_race({**HYPRACE_GRAND_PRIX, "scheduledDistance": None})["distance"] is None
+
 
 # ---------------------------------------------------------------------------
 # Race state
@@ -26,19 +76,13 @@ def test_race_is_live_once_it_starts(race_live):
 
 
 def test_race_is_not_live_before_lights_out(race_live):
-    """A race which hasn't started yet isn't live."""
+    """A race weekend which is active but whose race hasn't started isn't live."""
     assert is_race_live(race_live, datetime(2026, 3, 8, 14, tzinfo=timezone.utc)) is False
 
 
 def test_race_is_not_live_long_after_it_started(race_live):
     """A race which started well beyond its runtime is no longer considered live."""
     assert is_race_live(race_live, datetime(2026, 3, 8, 23, tzinfo=timezone.utc)) is False
-
-
-def test_live_status_beats_the_clock(race_live):
-    """An explicitly live status is honored regardless of the scheduled start time."""
-    delayed_race = {**race_live, "status": "Live"}
-    assert is_race_live(delayed_race, datetime(2026, 3, 9, 12, tzinfo=timezone.utc)) is True
 
 
 def test_completed_and_cancelled_races_are_never_live(race_completed, race_cancelled):
@@ -72,7 +116,7 @@ def test_no_live_race_between_grand_prix(race_completed, race_upcoming):
 
 def test_next_race_is_the_soonest_scheduled_race(race_completed, race_upcoming, race_cancelled):
     """The next race is the earliest unrun race, ignoring cancelled ones."""
-    later_race = {**race_upcoming, "id": 1150, "date": "2026-04-05T15:00:00+00:00"}
+    later_race = {**race_upcoming, "id": "gp-later", "date": "2026-04-05T15:00:00Z"}
     races = [later_race, race_completed, race_cancelled, race_upcoming]
     assert find_next_race(races, datetime(2026, 3, 4, tzinfo=timezone.utc)) == race_upcoming
 
@@ -82,36 +126,91 @@ def test_no_next_race_once_the_season_ends(race_completed):
     assert find_next_race([race_completed], datetime(2026, 12, 20, tzinfo=timezone.utc)) is None
 
 
-def test_current_lap(race_live, race_upcoming):
-    """Laps are displayed as `current/total`, and omitted before a race starts."""
-    assert current_lap(race_live) == "32/57"
-    assert current_lap(race_upcoming) is None
-    assert current_lap({"laps": {"current": 12, "total": None}}) == "12"
-    assert current_lap({}) is None
-
-
 # ---------------------------------------------------------------------------
 # API requests
 # ---------------------------------------------------------------------------
 
 
-def test_season_races_are_unwrapped_from_response(race_upcoming):
-    """A 200 response returns the `response` array of races."""
-    mock_resp = MagicMock(status_code=200)
-    mock_resp.json.return_value = {"response": [race_upcoming]}
-    with patch("broiestbot.commands.f1.races.requests.get", return_value=mock_resp) as mock_get:
-        assert fetch_season_races(2026) == [race_upcoming]
-    assert mock_get.call_args.kwargs["params"] == {"season": 2026, "type": "Race", "timezone": "UTC"}
+def test_season_races_are_resolved_then_paged():
+    """A season's ID is resolved, then its grands prix are fetched & normalized."""
+    seasons = {"items": [{"id": "season-2026", "year": 2026}]}
+    grands_prix = {"items": [HYPRACE_GRAND_PRIX], "hasNext": False, "totalPages": 1}
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", side_effect=[seasons, grands_prix]) as mock_fetch:
+        races = fetch_season_races(2026)
+
+    assert len(races) == 1
+    assert races[0]["name"] == "Hungarian Grand Prix"
+    # The grands prix are keyed on the resolved season ID, paged via `pageNumber`.
+    assert mock_fetch.call_args_list[1].args[1]["seasonId"] == "season-2026"
+    assert mock_fetch.call_args_list[1].args[1]["pageNumber"] == 1
 
 
-def test_failed_race_request_returns_none():
+def test_season_races_follow_pagination():
+    """Every page of a season's grands prix is gathered, not just the first."""
+    seasons = {"items": [{"id": "season-2026", "year": 2026}]}
+    page_one = {"items": [HYPRACE_GRAND_PRIX], "hasNext": True, "totalPages": 2}
+    page_two = {"items": [{**HYPRACE_GRAND_PRIX, "id": "round-12"}], "hasNext": False, "totalPages": 2}
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", side_effect=[seasons, page_one, page_two]):
+        races = fetch_season_races(2026)
+
+    assert [race["id"] for race in races] == ["8b17825a", "round-12"]
+
+
+def test_pagination_dedupes_repeated_pages():
+    """A page served twice (should the API ignore `pageNumber`) is never double-counted."""
+    seasons = {"items": [{"id": "season-2026", "year": 2026}]}
+    repeated_page = {"items": [HYPRACE_GRAND_PRIX], "hasNext": True, "totalPages": 2}
+    final_page = {"items": [HYPRACE_GRAND_PRIX], "hasNext": False, "totalPages": 2}
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", side_effect=[seasons, repeated_page, final_page]):
+        races = fetch_season_races(2026)
+
+    assert [race["id"] for race in races] == ["8b17825a"]
+
+
+def test_unknown_season_returns_none():
+    """A season the API has no record of yields no races."""
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", return_value={"items": []}):
+        assert fetch_season_races(2099) is None
+
+
+def test_failed_season_request_returns_none():
+    """A failed season lookup is swallowed & reported as no data."""
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", return_value=None):
+        assert fetch_season_races(2026) is None
+
+
+def test_circuit_is_mapped_to_name_city_and_flag():
+    """A circuit response is flattened to the fields a race summary needs."""
+    circuit_response = {
+        "name": "Hungaroring",
+        "place": "Budapest",
+        "country": {"name": "Hungary", "alphaTwoCode": "HU"},
+    }
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", return_value=circuit_response):
+        circuit = fetch_circuit("2a1c1543")
+
+    assert circuit == {"name": "Hungaroring", "city": "Budapest", "country": "Hungary", "country_code": "HU"}
+
+
+def test_circuit_without_an_id_is_skipped():
+    """A race with no circuit ID doesn't trigger a pointless request."""
+    with patch("broiestbot.commands.f1.races._fetch_hyprace") as mock_fetch:
+        assert fetch_circuit(None) is None
+    mock_fetch.assert_not_called()
+
+
+def test_non_200_response_returns_none():
     """Non-200 responses are logged & swallowed."""
+    from broiestbot.commands.f1.races import _fetch_hyprace
+
     mock_resp = MagicMock(status_code=429, text="Too many requests")
     with patch("broiestbot.commands.f1.races.requests.get", return_value=mock_resp):
-        assert fetch_season_races(2026) is None
+        assert _fetch_hyprace("https://hyprace/v2/seasons", {}) is None
 
 
-def test_race_request_exception_returns_none():
+def test_request_exception_returns_none():
     """Connection errors are logged & swallowed."""
+    from broiestbot.commands.f1.races import _fetch_hyprace
+
     with patch("broiestbot.commands.f1.races.requests.get", side_effect=TimeoutError("timed out")):
-        assert fetch_season_races(2026) is None
+        assert _fetch_hyprace("https://hyprace/v2/seasons", {}) is None
