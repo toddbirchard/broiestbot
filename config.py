@@ -794,6 +794,8 @@ F1_HTTP_HEADERS = {
 F1_MAX_PAGES = 20
 # Number of drivers to list in the championship standings.
 F1_STANDINGS_LIMIT = 10
+# Number of drivers to list on the starting grid of an upcoming grand prix.
+F1_GRID_LIMIT = 10
 
 # A grand prix whose race session started within this many hours is considered live (red flags & all).
 F1_RACE_LIVE_WINDOW_HOURS = 4
