@@ -292,6 +292,9 @@ NFL_LIVE_HTTP_HEADERS = {
 # -------------------------------------------------
 ODDS_API_ENDPOINT = "https://pinnacle-odds.p.rapidapi.com/kit/v1/markets"
 
+# SportsGameOdds
+SPORTSGAMEODDS_API_KEY = getenv("SPORTSGAMEODDS_API_KEY")
+
 # Competition IDs
 FOOTY_ODDS_SPORT_ID = 1
 TENNIS_ODDS_SPORT_ID = 2
@@ -605,7 +608,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
     ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
@@ -641,7 +644,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
-    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 # Footy leagues to be considered for "golden shoe" award
@@ -775,6 +778,107 @@ NBA_SEASON_YEAR = "2024-2025"
 # -------------------------------------------------
 SUMO_API_BASE_URL = "https://sumo-api.com/api"
 SUMO_DIVISION = "Makuuchi"
+
+# Formula 1 (Hyprace API)
+# -------------------------------------------------
+F1_BASE_URL = "https://hyprace-api.p.rapidapi.com/v2"
+F1_GRANDS_PRIX_ENDPOINT = f"{F1_BASE_URL}/grands-prix"
+F1_SEASONS_ENDPOINT = f"{F1_BASE_URL}/seasons"
+F1_CIRCUITS_ENDPOINT = f"{F1_BASE_URL}/circuits"
+F1_DRIVER_STANDINGS_ENDPOINT = f"{F1_BASE_URL}/drivers-standings"
+F1_HTTP_HEADERS = {
+    "x-rapidapi-key": RAPID_API_KEY,
+    "x-rapidapi-host": "hyprace-api.p.rapidapi.com",
+}
+# Hyprace pages every collection 10 items at a time (`pageSize` is ignored), keyed on `pageNumber`.
+F1_MAX_PAGES = 20
+# Number of drivers to list in the championship standings.
+F1_STANDINGS_LIMIT = 10
+
+# A grand prix whose race session started within this many hours is considered live (red flags & all).
+F1_RACE_LIVE_WINDOW_HOURS = 4
+
+# Driver nationalities as reported by the API, mapped to ISO 3166-1 alpha-2 codes.
+F1_NATIONALITY_COUNTRY_CODES = {
+    "American": "US",
+    "Argentine": "AR",
+    "Argentinian": "AR",
+    "Australian": "AU",
+    "Austrian": "AT",
+    "Belgian": "BE",
+    "Brazilian": "BR",
+    "British": "GB",
+    "Canadian": "CA",
+    "Chinese": "CN",
+    "Colombian": "CO",
+    "Czech": "CZ",
+    "Danish": "DK",
+    "Dutch": "NL",
+    "English": "GB",
+    "Estonian": "EE",
+    "Finnish": "FI",
+    "French": "FR",
+    "German": "DE",
+    "Hungarian": "HU",
+    "Indian": "IN",
+    "Indonesian": "ID",
+    "Irish": "IE",
+    "Israeli": "IL",
+    "Italian": "IT",
+    "Japanese": "JP",
+    "Malaysian": "MY",
+    "Mexican": "MX",
+    "Monegasque": "MC",
+    "New Zealander": "NZ",
+    "Norwegian": "NO",
+    "Polish": "PL",
+    "Portuguese": "PT",
+    "Russian": "RU",
+    "South African": "ZA",
+    "Spanish": "ES",
+    "Swedish": "SE",
+    "Swiss": "CH",
+    "Thai": "TH",
+    "Venezuelan": "VE",
+}
+
+# Fallback nationalities keyed by driver surname, used when a response omits `nationality`
+# (rankings, starting grids and bookmakers all return names without one).
+F1_DRIVER_NATIONALITIES = {
+    "albon": "Thai",
+    "alonso": "Spanish",
+    "antonelli": "Italian",
+    "bearman": "British",
+    "bortoleto": "Brazilian",
+    "bottas": "Finnish",
+    "colapinto": "Argentine",
+    "doohan": "Australian",
+    "gasly": "French",
+    "giovinazzi": "Italian",
+    "hadjar": "French",
+    "hamilton": "British",
+    "hulkenberg": "German",
+    "latifi": "Canadian",
+    "lawson": "New Zealander",
+    "leclerc": "Monegasque",
+    "lindblad": "British",
+    "magnussen": "Danish",
+    "norris": "British",
+    "ocon": "French",
+    "perez": "Mexican",
+    "piastri": "Australian",
+    "raikkonen": "Finnish",
+    "ricciardo": "Australian",
+    "russell": "British",
+    "sainz": "Spanish",
+    "sargeant": "American",
+    "schumacher": "German",
+    "stroll": "Canadian",
+    "tsunoda": "Japanese",
+    "verstappen": "Dutch",
+    "vettel": "German",
+    "zhou": "Chinese",
+}
 
 # Playstation PSN
 # -------------------------------------------------

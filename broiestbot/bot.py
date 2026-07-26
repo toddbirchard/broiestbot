@@ -18,6 +18,7 @@ from broiestbot.commands import (  # get_crypto_chart,
     covid_cases_usa,
     create_wiki_preview,
     epl_golden_boot,
+    f1_grand_prix,
     fetch_aafk_fixture_data,
     fetch_fox_fixtures,
     fetch_latest_image_from_gcs_bucket,
@@ -36,7 +37,6 @@ from broiestbot.commands import (  # get_crypto_chart,
     generate_llm_response,
     generate_twitter_preview,
     generate_youtube_video_preview,
-    search_youtube_video,
     get_all_live_twitch_streams,
     get_crypto_price,
     get_current_show,
@@ -270,6 +270,8 @@ class Bot(chatango.Client):
             return today_sumo_matches()
         elif cmd_type == "sumo":
             return upcoming_sumo_matches()
+        elif cmd_type == "f1":
+            return f1_grand_prix()
         elif cmd_type == "nbastandings":
             return nba_standings()
         elif cmd_type == "nbagames":
