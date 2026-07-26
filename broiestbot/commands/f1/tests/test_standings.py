@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from broiestbot.commands.f1 import standings as f1_standings
+from broiestbot.commands.f1 import drivers as f1_drivers
 from broiestbot.commands.f1.standings import fetch_driver_standings
 
 # Raw Hyprace drivers-standings response (isLastStanding=true), deliberately out of order.
@@ -54,9 +54,9 @@ ROSTER_RESPONSE = {
 @pytest.fixture(autouse=True)
 def clear_roster_cache():
     """Clear the cached driver roster between tests."""
-    f1_standings._DRIVER_ROSTERS.clear()
+    f1_drivers._DRIVER_ROSTERS.clear()
     yield
-    f1_standings._DRIVER_ROSTERS.clear()
+    f1_drivers._DRIVER_ROSTERS.clear()
 
 
 def test_standings_are_resolved_to_names_and_sorted():
@@ -64,7 +64,7 @@ def test_standings_are_resolved_to_names_and_sorted():
     with (
         patch("broiestbot.commands.f1.standings.resolve_season_id", return_value="season-2026"),
         patch("broiestbot.commands.f1.standings._fetch_hyprace", return_value=STANDINGS_RESPONSE),
-        patch("broiestbot.commands.f1.standings.fetch_all_pages", return_value=ROSTER_RESPONSE["items"]),
+        patch("broiestbot.commands.f1.drivers.fetch_all_pages", return_value=ROSTER_RESPONSE["items"]),
     ):
         standings = fetch_driver_standings(2026)
 
@@ -81,7 +81,7 @@ def test_driver_roster_is_cached():
     with (
         patch("broiestbot.commands.f1.standings.resolve_season_id", return_value="season-2026"),
         patch("broiestbot.commands.f1.standings._fetch_hyprace", return_value=STANDINGS_RESPONSE),
-        patch("broiestbot.commands.f1.standings.fetch_all_pages", return_value=ROSTER_RESPONSE["items"]) as mock_roster,
+        patch("broiestbot.commands.f1.drivers.fetch_all_pages", return_value=ROSTER_RESPONSE["items"]) as mock_roster,
     ):
         fetch_driver_standings(2026)
         fetch_driver_standings(2026)
@@ -94,7 +94,7 @@ def test_unresolved_driver_still_listed():
     with (
         patch("broiestbot.commands.f1.standings.resolve_season_id", return_value="season-2026"),
         patch("broiestbot.commands.f1.standings._fetch_hyprace", return_value=STANDINGS_RESPONSE),
-        patch("broiestbot.commands.f1.standings.fetch_all_pages", return_value=[]),
+        patch("broiestbot.commands.f1.drivers.fetch_all_pages", return_value=[]),
     ):
         standings = fetch_driver_standings(2026)
 

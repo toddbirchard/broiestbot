@@ -10,6 +10,25 @@ DRIVER_STANDINGS = [
     {"position": 2, "points": 159, "name": "Lewis Hamilton", "tla": "HAM", "team": "Scuderia Ferrari"},
 ]
 
+STARTING_GRID = [
+    {
+        "position": 1,
+        "name": "Lewis Hamilton",
+        "tla": "HAM",
+        "team": "Scuderia Ferrari",
+        "time": "1:17.207",
+        "status": "Qualified",
+    },
+    {
+        "position": 2,
+        "name": "Andrea Kimi Antonelli",
+        "tla": "ANT",
+        "team": "Mercedes AMG F1 Team",
+        "time": "1:17.219",
+        "status": "Qualified",
+    },
+]
+
 
 # ---------------------------------------------------------------------------
 # Live grand prix
@@ -21,6 +40,7 @@ def test_live_race_reports_championship(race_live, circuit_bahrain):
     with (
         patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_live]),
         patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=[]),
         patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=DRIVER_STANDINGS),
     ):
         result = f1_grand_prix_at(datetime(2026, 3, 8, 16, tzinfo=timezone.utc))
@@ -42,6 +62,7 @@ def test_upcoming_race_reports_championship(race_completed, race_upcoming, circu
     with (
         patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_completed, race_upcoming]),
         patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=[]),
         patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=DRIVER_STANDINGS),
     ):
         result = f1_grand_prix_at(datetime(2026, 3, 4, 15, tzinfo=timezone.utc))
@@ -53,11 +74,71 @@ def test_upcoming_race_reports_championship(race_completed, race_upcoming, circu
     assert result.index("Andrea Kimi Antonelli") < result.index("Lewis Hamilton")
 
 
+def test_upcoming_race_prefers_the_starting_grid(race_upcoming, circuit_bahrain):
+    """Once qualifying has been run, the grid replaces the championship standings."""
+    with (
+        patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=STARTING_GRID),
+        patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=DRIVER_STANDINGS),
+    ):
+        result = f1_grand_prix_at(datetime(2026, 3, 7, 15, tzinfo=timezone.utc))
+
+    assert "NEXT UP: BAHRAIN GRAND PRIX" in result
+    assert "STARTING GRID" in result
+    assert "DRIVERS' CHAMPIONSHIP" not in result
+    assert "<b>1.</b> 🇬🇧 Lewis Hamilton <i>(Scuderia Ferrari)</i> — 1:17.207" in result
+
+
+def test_live_race_prefers_the_starting_grid(race_live, circuit_bahrain):
+    """A race underway reports the grid it started from rather than the championship."""
+    with (
+        patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_live]),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=STARTING_GRID),
+        patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=DRIVER_STANDINGS),
+    ):
+        result = f1_grand_prix_at(datetime(2026, 3, 8, 16, tzinfo=timezone.utc))
+
+    assert "LIVE NOW: BAHRAIN GRAND PRIX" in result
+    assert "STARTING GRID" in result
+    assert "DRIVERS' CHAMPIONSHIP" not in result
+
+
+def test_grid_reports_a_driver_who_didnt_qualify_normally(race_upcoming, circuit_bahrain):
+    """A penalized or excluded driver has their status shown next to their name."""
+    penalized_grid = [{**STARTING_GRID[0], "status": "Disqualified"}]
+    with (
+        patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=penalized_grid),
+        patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=DRIVER_STANDINGS),
+    ):
+        result = f1_grand_prix_at(datetime(2026, 3, 7, 15, tzinfo=timezone.utc))
+
+    assert "Lewis Hamilton <i>(Scuderia Ferrari)</i> — 1:17.207 <i>(Disqualified)</i>" in result
+
+
+def test_unavailable_grid_falls_back_to_standings(race_upcoming, circuit_bahrain):
+    """A failed grid lookup still reports the championship standings."""
+    with (
+        patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=None),
+        patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=DRIVER_STANDINGS),
+    ):
+        result = f1_grand_prix_at(datetime(2026, 3, 4, 15, tzinfo=timezone.utc))
+
+    assert "DRIVERS' CHAMPIONSHIP" in result
+    assert "STARTING GRID" not in result
+
+
 def test_race_without_standings_says_so(race_upcoming, circuit_bahrain):
     """A race with no available standings still reports the grand prix itself."""
     with (
         patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
         patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=[]),
         patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", return_value=None),
     ):
         result = f1_grand_prix_at(datetime(2026, 3, 4, 15, tzinfo=timezone.utc))
@@ -129,6 +210,7 @@ def test_unexpected_error_returns_error_message(race_upcoming):
     with (
         patch("broiestbot.commands.f1.grandprix.fetch_season_races", return_value=[race_upcoming]),
         patch("broiestbot.commands.f1.grandprix.fetch_circuit", return_value={}),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", return_value=[]),
         patch("broiestbot.commands.f1.grandprix.fetch_driver_standings", side_effect=ValueError("boom")),
     ):
         assert f1_grand_prix_at(datetime(2026, 3, 4, tzinfo=timezone.utc)) == API_ERROR_MESSAGE

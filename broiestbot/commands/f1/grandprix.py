@@ -6,8 +6,9 @@ from typing import List, Optional, Tuple
 from emoji import emojize
 from logger import LOGGER
 
-from config import F1_STANDINGS_LIMIT
+from config import F1_GRID_LIMIT, F1_STANDINGS_LIMIT
 
+from .qualifying import fetch_starting_grid, is_qualified
 from .races import (
     fetch_circuit,
     fetch_season_races,
@@ -194,16 +195,46 @@ def _race_details(race: dict) -> str:
 
 def _driver_sections(race: dict) -> str:
     """
-    Construct the driver-facing section of a summary: the drivers' championship standings.
+    Construct the driver-facing section of a summary.
+
+    Once qualifying has been run, the starting grid is the more interesting read on a race
+    that's about to happen; until then, fall back to the drivers' championship standings.
 
     :param dict race: Normalized race object.
 
     :returns: str
     """
+    grid = _grid_section(race)
+    if grid:
+        return grid
     standings = _standings_section(race.get("season"))
     if standings:
         return standings
     return emojize(":warning: <i>championship standings unavailable right now.</i>", language="en")
+
+
+def _grid_section(race: dict) -> str:
+    """
+    Construct the starting grid of a grand prix, pole first.
+
+    :param dict race: Normalized race object.
+
+    :returns: str
+    """
+    grid = fetch_starting_grid(race.get("id"), race.get("season"))
+    if not grid:
+        return ""
+    section = emojize("\n:stopwatch: <b>STARTING GRID</b>\n", language="en")
+    for entry in grid[:F1_GRID_LIMIT]:
+        name = entry.get("name") or entry.get("tla") or "Unknown"
+        team = f" <i>({entry['team']})</i>" if entry.get("team") else ""
+        lap_time = f" — {entry['time']}" if entry.get("time") else ""
+        status = "" if is_qualified(entry) or not entry.get("status") else f" <i>({entry['status']})</i>"
+        section += (
+            f"<b>{entry['position']}.</b> {driver_flag_from_name(entry.get('name'))} "
+            f"{name}{team}{lap_time}{status}\n"
+        )
+    return section
 
 
 def _standings_section(season: Optional[int]) -> str:
