@@ -344,9 +344,14 @@ class Bot(chatango.Client):
                 await room.send_message(yt_video_result, use_html=True)
         if chat_message.startswith("!"):
             await self._process_command(chat_message, room, user_name, message)
-        if re.match(
-            r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$",
-            chat_message,
+        if (
+            re.search(
+                r"(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/|shorts/)([a-zA-Z0-9_-]{11})",
+                chat_message,
+            )
+            and user_name != bot_username
+            and "bot" not in user_name
+            and "lmao" not in user_name
         ):
             preview = await asyncio.to_thread(generate_youtube_video_preview, chat_message)
             if preview and user_name != "acleebot":
