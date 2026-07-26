@@ -455,7 +455,10 @@ class Bot(chatango.Client):
         """
         cmd, args = self._parse_command(chat_message[1::].strip())
         command = await _db_fetch_command(cmd)
-        if command is not None and command.type != "reserved":
+        if command is not None and command.type == "reserved":
+            LOGGER.info(f"Ignoring reserved command `{cmd}`")
+            return None
+        elif command is not None:
             response = await asyncio.to_thread(
                 self.create_message,
                 command.type,

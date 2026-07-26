@@ -69,9 +69,7 @@ async def ban_daddy_anons(room: Room, user: User, message: RoomMessage) -> None:
     LOGGER.info(f"Checking Daddy anon user: user={user} message={message} room={room}")
     if room.name.lower() in CHATANGO_DADDY_ANON_BAN_ROOMS:
         LOGGER.info(f"Room {room.name} is in the Daddy anon ban rooms list.")
-        if user.isanon and re.search(
-            r"daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}", message.body
-        ):
+        if user.isanon and re.search(r"daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}", message.body):
             LOGGER.success(f"BANNING!!!! user={user}, message={message}, room={room}")
             await room.clear_user(user)
             await room.ban_user(user.name)
