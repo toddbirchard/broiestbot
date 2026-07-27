@@ -17,6 +17,10 @@ from config import (
     TWITCH_CLIENT_SECRET,
     TWITCH_STREAMS_ENDPOINT,
     TWITCH_TOKEN_ENDPOINT,
+    YOUTUBE_SEARCH_ATTEMPTS,
+    YOUTUBE_VIDEO_ID_REGEX,
+    YOUTUBE_VIDEO_SEARCH_URL,
+    YOUTUBE_VIDEO_SHORT_URL,
 )
 
 
@@ -119,6 +123,32 @@ def get_twitch_auth_token() -> Optional[str]:
         LOGGER.exception(f"Unexpected error when fetching Twitch auth token: {e}")
 
 
+def fetch_youtube_video_by_id(video_id: str) -> Optional[dict]:
+    """
+    Look a YouTube video up by its ID, discarding results for any other video.
+
+    YouTube's search resolves a *canonical* watch URL straight to its video; the same
+    URL carrying share params (`?si=`, `&t=`) or a bare video ID does not, and instead
+    ranks as a plain search term which returns an unrelated video or nothing at all.
+    Search occasionally serves a suggestion in place of the video regardless, hence the
+    ID check and the retry.
+
+    :param str video_id: 11-character ID of a YouTube video.
+
+    :returns: Optional[dict]
+    """
+    for _ in range(YOUTUBE_SEARCH_ATTEMPTS):
+        video_results = YoutubeSearch(YOUTUBE_VIDEO_SEARCH_URL.format(video_id=video_id), max_results=1).to_dict()
+        if bool(video_results) is False:
+            LOGGER.warning(f"No YouTube search results found for video `{video_id}`")
+            continue
+        video = video_results[0]
+        if video.get("id") == video_id:
+            return video
+        LOGGER.warning(f"YouTube returned video `{video.get('id')}` while looking up `{video_id}`")
+    return None
+
+
 def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
     """
     Generate a link preview for a Youtube video from its URL.
@@ -127,20 +157,21 @@ def generate_youtube_video_preview(chat_message: str) -> Optional[str]:
 
     :returns: Optional[str]
     """
+    video_id_match = YOUTUBE_VIDEO_ID_REGEX.search(chat_message)
+    if video_id_match is None:
+        return None
+    video_id = video_id_match.group(1)
     try:
-        video_preview = "\n\n\n\n"
-        video_results = YoutubeSearch(chat_message, max_results=1).to_dict()
-        if bool(video_results):
-            video = video_results[0]
-            video_preview += f"{video['thumbnails'][0]}\n \
+        video = fetch_youtube_video_by_id(video_id)
+        if video is None:
+            return None
+        return f"\n\n\n\n{video['thumbnails'][0]}\n \
                 {video['title']}\n\n \
                 ⏳ Duration: {video['duration']} \n \
                 👀 {video['views']} \n \
                 🎦 Channel: {video['channel']}\n \
                 📅 {video['publish_time']}\n\n \
-                {chat_message}"
-            return video_preview
-        return None
+                {YOUTUBE_VIDEO_SHORT_URL.format(video_id=video_id)}"
     except KeyError as e:
         LOGGER.error(f"KeyError while generating YouTube video preview: {e}")
     except Exception as e:

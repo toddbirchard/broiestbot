@@ -1,5 +1,6 @@
 """Bot configuration variables."""
 
+import re
 from os import environ, getenv, path
 
 import pytz
@@ -223,6 +224,21 @@ GENIUS_ACCESS_TOKEN = getenv("GENIUS_KEY_SECRET")
 # Youtube
 # -------------------------------------------------
 YOUTUBE_API_KEY = getenv("YOUTUBE_API_KEY")
+
+# Matches the 11-character video ID in every YouTube URL shape seen in chat: `watch?v=`
+# URLs (with params in any order), `youtu.be` shortlinks, shorts, live streams & embeds.
+YOUTUBE_VIDEO_ID_REGEX = re.compile(
+    r"youtu(?:be(?:-nocookie)?\.com/(?:watch\?(?:[^\s]*&)?v=|(?:embed|shorts|live|e|v)/)|\.be/)([a-zA-Z0-9_-]{11})"
+)
+
+# Canonical URL used to look a video up by ID; extra querystring params break YouTube's search.
+YOUTUBE_VIDEO_SEARCH_URL = "https://www.youtube.com/watch?v={video_id}"
+
+# Times to retry a lookup which returned the wrong video, as YouTube's search is inconsistent.
+YOUTUBE_SEARCH_ATTEMPTS = 2
+
+# Short canonical URL rendered in link previews.
+YOUTUBE_VIDEO_SHORT_URL = "https://youtu.be/{video_id}"
 
 # Anthropic
 # -------------------------------------------------

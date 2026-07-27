@@ -89,6 +89,7 @@ from config import (
     LIGA_LEAGUE_ID,
     LIGUE_ONE_ID,
     PRIMEIRA_LIGA_ID,
+    YOUTUBE_VIDEO_ID_REGEX,
 )
 from database import async_session
 from database.models import Command, Phrase
@@ -345,16 +346,13 @@ class Bot(chatango.Client):
         if chat_message.startswith("!"):
             await self._process_command(chat_message, room, user_name, message)
         if (
-            re.search(
-                r"(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/|shorts/)([a-zA-Z0-9_-]{11})",
-                chat_message,
-            )
+            YOUTUBE_VIDEO_ID_REGEX.search(chat_message)
             and user_name != bot_username
             and "bot" not in user_name
             and "lmao" not in user_name
         ):
             preview = await asyncio.to_thread(generate_youtube_video_preview, chat_message)
-            if preview and user_name != "acleebot":
+            if preview:
                 await room.send_message(preview, use_html=True)
         elif re.match(r"((https?):\/\/)?(www.)?x\.com(\/@?(\w){1,15})\/status\/[0-9]{19}", chat_message):
             preview = await asyncio.to_thread(generate_twitter_preview, chat_message)
