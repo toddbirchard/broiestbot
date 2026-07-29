@@ -18,6 +18,7 @@ from config import (
 from .util import (
     abbreviate_team_name,
     check_fixture_start_date,
+    filter_friendly_fixtures,
     get_current_day,
     get_preferred_time_format,
     get_preferred_timezone,
@@ -102,7 +103,7 @@ def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> O
             params=params,
             timeout=HTTP_REQUEST_TIMEOUT,
         )
-        return resp.json().get("response")
+        return filter_friendly_fixtures(resp.json().get("response"), league_id)
     except HTTPError as e:
         LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response}")
     except KeyError as e:

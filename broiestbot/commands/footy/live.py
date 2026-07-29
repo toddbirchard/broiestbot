@@ -15,6 +15,8 @@ from config import (
     HTTP_REQUEST_TIMEOUT,
 )
 
+from .util import filter_friendly_fixtures
+
 
 def footy_live_fixtures(username: str, subs=False) -> str:
     """
@@ -98,7 +100,7 @@ def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
             timeout=HTTP_REQUEST_TIMEOUT,
         )
         if resp.status_code == 200:
-            return resp.json().get("response")
+            return filter_friendly_fixtures(resp.json().get("response"), league_id)
     except HTTPError as e:
         LOGGER.exception(f"HTTPError while fetching footy fixtures: {e.response}")
     except KeyError as e:

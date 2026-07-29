@@ -445,7 +445,7 @@ FOOTY_LEAGUES = {
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :France: COUPE DE FRANCE": COUPE_DE_FRANCE,
-    # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
+    ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
@@ -503,7 +503,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":France: LIGUE 1": LIGUE_ONE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
-    # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
+    ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
@@ -588,6 +588,7 @@ FOOTY_XI_LEAGUES = {
     ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
     ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
 }
 
 FOOTY_LIVE_ODDS_LEAGUES = {
@@ -610,7 +611,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
-    # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
+    ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
@@ -642,7 +643,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
-    # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
+    ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,

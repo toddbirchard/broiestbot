@@ -1,7 +1,7 @@
 """Helpers for footy commands."""
 
 from datetime import datetime, timedelta, tzinfo
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import pytz
 from pytz import BaseTzInfo
@@ -22,6 +22,7 @@ from config import (
     EPL_SUMMER_SERIES_LEAGUE_ID,
     EUROS_LEAGUE_ID,
     EUROS_QUALIFIERS_ID,
+    FOOTY_FRIENDLY_CLUBS,
     INT_FRIENDLIES_LEAGUE_ID,
     METRIC_SYSTEM_USERS,
     MLS_LEAGUE_ID,
@@ -118,6 +119,38 @@ def get_current_day(room: str) -> datetime:
     return datetime.now(pytz.timezone("America/New_York"))
 
 
+def fixture_features_friendly_club(fixture: dict) -> bool:
+    """
+    Determine whether either side of a fixture is a club we care about.
+
+    :param dict fixture: Single fixture's data.
+
+    :returns: bool
+    """
+    teams = fixture.get("teams") or {}
+    home_team_id = (teams.get("home") or {}).get("id")
+    away_team_id = (teams.get("away") or {}).get("id")
+    return home_team_id in FOOTY_FRIENDLY_CLUBS or away_team_id in FOOTY_FRIENDLY_CLUBS
+
+
+def filter_friendly_fixtures(fixtures: Optional[List[dict]], league_id: int) -> Optional[List[dict]]:
+    """
+    Discard club friendlies which don't feature a club we care about.
+
+    Club friendlies span every club on earth, so friendlies are only kept when either
+    side appears in `FOOTY_FRIENDLY_CLUBS`. Fixtures of any other league pass through
+    untouched.
+
+    :param Optional[List[dict]] fixtures: Fixtures fetched for a single league/cup.
+    :param int league_id: ID of footy league/cup the fixtures belong to.
+
+    :returns: Optional[List[dict]]
+    """
+    if league_id != CLUB_FRIENDLIES_LEAGUE_ID or not fixtures:
+        return fixtures
+    return [fixture for fixture in fixtures if fixture_features_friendly_club(fixture)]
+
+
 def abbreviate_team_name(team_name: str) -> str:
     """
     Abbreviate long team names to make schedules readable.
@@ -199,6 +232,11 @@ def get_season_year(league_id: int) -> int:
     """
     current_year = datetime.now().year
     current_month = datetime.now().month
+    # Exception for leagues that have a nonsensical `season` year: the Summer Series
+    # labels each edition with the previous calendar year (`season` 2025 is played in
+    # July 2026), so requesting the current year returns no fixtures.
+    if league_id == EPL_SUMMER_SERIES_LEAGUE_ID:
+        return current_year - 1
     # Leagues which have a season year that is the same as the current year.
     if league_id in (
         MLS_LEAGUE_ID,
@@ -220,7 +258,6 @@ def get_season_year(league_id: int) -> int:
         INT_FRIENDLIES_LEAGUE_ID,
         USL_LEAGUE_1_ID,
         USL_LEAGUE_2_ID,
-        EPL_SUMMER_SERIES_LEAGUE_ID,
         UEFA_SUPER_CUP_ID,
         U20_ELITE_LEAGUE_ID,
         CONCACAF_NATIONS_LEAGUE_ID,

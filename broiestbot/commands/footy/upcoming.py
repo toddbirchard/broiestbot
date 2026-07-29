@@ -9,6 +9,7 @@ from logger import LOGGER
 from requests.exceptions import HTTPError
 
 from config import (
+    CLUB_FRIENDLIES_LEAGUE_ID,
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LEAGUES,
@@ -18,9 +19,14 @@ from config import (
 from .util import (
     abbreviate_team_name,
     check_fixture_start_date,
+    filter_friendly_fixtures,
     get_preferred_time_format,
     get_preferred_timezone,
+    get_season_year,
 )
+
+# Number of days ahead for which upcoming fixtures are displayed.
+UPCOMING_FIXTURE_WINDOW_DAYS = 8
 
 
 def footy_upcoming_fixtures(room: str, username: str) -> str:
@@ -87,11 +93,13 @@ def footy_upcoming_fixtures_per_league(
         if fixtures is not None:
             for fixture in fixtures:
                 fixture_date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
-                if fixture_date.date() <= datetime.now().date() + timedelta(days=8):
+                if fixture_date.date() <= datetime.now().date() + timedelta(days=UPCOMING_FIXTURE_WINDOW_DAYS):
                     upcoming_fixture = add_upcoming_fixture(fixture, fixture_date, room, username)
                     if upcoming_fixture:
                         upcoming_fixtures += upcoming_fixture
-            return upcoming_fixtures
+            # Avoid rendering a bare league header when every fixture was filtered out.
+            if upcoming_fixtures:
+                return upcoming_fixtures
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
@@ -109,6 +117,8 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> 
     :returns: Optional[List[dict]]
     """
     try:
+        if league_id == CLUB_FRIENDLIES_LEAGUE_ID:
+            return filter_friendly_fixtures(fetch_upcoming_friendlies(tz_name), league_id)
         params = {
             "next": (
                 8
@@ -127,6 +137,31 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> 
         return fetch_upcoming_fixtures_by_league(params)
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+
+
+def fetch_upcoming_friendlies(tz_name: str) -> Optional[List[dict]]:
+    """
+    Fetch club friendlies scheduled within the upcoming fixture window.
+
+    Hundreds of clubs worldwide play friendlies, so the `next` parameter (capped at 99
+    by the API) only ever spans a couple of days — nowhere near the displayed window.
+    Requesting the full date range instead ensures fixtures belonging to
+    `FOOTY_FRIENDLY_CLUBS` aren't truncated away before they can be filtered for.
+
+    :param str tz_name: User's preferred timezone (ie: `America/New_York`).
+
+    :returns: Optional[List[dict]]
+    """
+    today = datetime.now()
+    params = {
+        "league": CLUB_FRIENDLIES_LEAGUE_ID,
+        "season": get_season_year(CLUB_FRIENDLIES_LEAGUE_ID),
+        "from": today.strftime("%Y-%m-%d"),
+        "to": (today + timedelta(days=UPCOMING_FIXTURE_WINDOW_DAYS)).strftime("%Y-%m-%d"),
+        "status": "NS-1H-2H",
+        "timezone": tz_name,
+    }
+    return fetch_upcoming_fixtures_by_league(params)
 
 
 def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
