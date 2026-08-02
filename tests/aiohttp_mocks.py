@@ -42,7 +42,8 @@ class FakeResponse:
 
     def raise_for_status(self) -> None:
         if self.status >= 400:
-            raise ClientResponseError(None, (), status=self.status, message=self.reason)
+            request_info = type("RequestInfo", (), {"real_url": "mock://test"})()
+            raise ClientResponseError(request_info, (), status=self.status, message=self.reason)
 
     async def __aenter__(self) -> "FakeResponse":
         return self
