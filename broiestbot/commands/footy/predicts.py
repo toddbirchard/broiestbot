@@ -3,17 +3,16 @@
 from datetime import datetime
 from typing import List, Optional
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from config import (
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LEAGUES,
     FOOTY_ODDS_ENDPOINT_2,
-    HTTP_REQUEST_TIMEOUT,
 )
 
 from .util import (
@@ -25,7 +24,7 @@ from .util import (
 )
 
 
-def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
+async def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
     """
     Fetch odds for fixtures being played today.
 
@@ -37,11 +36,11 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
     try:
         i = 0
         today_fixtures_odds = "\n\n\n"
-        tz_name = get_preferred_timezone(room, username)
+        tz_name = await get_preferred_timezone(room, username)
         for league_name, league_id in FOOTY_LEAGUES.items():
-            league_fixtures = fetch_today_fixtures_by_league(league_id, room, tz_name)
+            league_fixtures = await fetch_today_fixtures_by_league(league_id, room, tz_name)
             if league_fixtures:
-                league_fixture_odds = fetch_today_fixture_odds_by_league(league_id, room, tz_name)
+                league_fixture_odds = await fetch_today_fixture_odds_by_league(league_id, room, tz_name)
                 if league_fixture_odds is not None and i < 5:
                     fixture_odds = parse_fixture_odds(league_name, league_fixtures, league_fixture_odds, room, username)
                     if fixture_odds:
@@ -55,8 +54,8 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
             ":soccer_ball: :cross_mark: sry no fixtures today :( :cross_mark: :soccer_ball:",
             language="en",
         )
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching today's footy predicts: {e.response.content}")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching today's footy predicts: {e}")
         return emojize(":yellow_square: trash API couldnt find footy odds smdh :yellow_square:", language="en")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching today's footy predicts: {e}")
@@ -66,7 +65,7 @@ def footy_today_fixtures_odds(room: str, username: str) -> Optional[str]:
         return emojize(":yellow_square: trash API couldnt find footy odds smdh :yellow_square:", language="en")
 
 
-def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
+async def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
     """
     Fetch all upcoming fixtures for the current date.
 
@@ -84,22 +83,19 @@ def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> O
             "season": get_season_year(league_id),
             "timezone": tz_name,
         }
-        resp = requests.get(
-            FOOTY_FIXTURES_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        return filter_friendly_fixtures(resp.json().get("response"), league_id)
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            fixtures = await resp.json(content_type=None)
+            return filter_friendly_fixtures(fixtures.get("response"), league_id)
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching footy fixtures: {e}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) -> Optional[dict]:
+async def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) -> Optional[dict]:
     """
     Get all fixtures scheduled for today's date.
 
@@ -119,12 +115,12 @@ def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) 
             "bet": 1,
             "timezone": tz_name,
         }
-        resp = requests.get(
-            FOOTY_ODDS_ENDPOINT_2, params=params, headers=FOOTY_HTTP_HEADERS, timeout=HTTP_REQUEST_TIMEOUT
-        )
-        return resp.json().get("response")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching today's footy fixtures: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(FOOTY_ODDS_ENDPOINT_2, params=params, headers=FOOTY_HTTP_HEADERS) as resp:
+            odds = await resp.json(content_type=None)
+            return odds.get("response")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching today's footy fixtures: {e}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching today's footy fixtures: {e}")
     except Exception as e:

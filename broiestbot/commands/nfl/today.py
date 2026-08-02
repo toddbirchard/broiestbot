@@ -4,22 +4,22 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import pytz
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
-from config import HTTP_REQUEST_TIMEOUT, NFL_GAMES_URL, NFL_HTTP_HEADERS
+from config import NFL_GAMES_URL, NFL_HTTP_HEADERS
 
 
-def get_today_nfl_games() -> str:
+async def get_today_nfl_games() -> str:
     """
     Get summary of all live NFL games, scores and odds.
 
     :returns: str
     """
     try:
-        games = fetch_today_nfl_games()
+        games = await fetch_today_nfl_games()
         if bool(games):
             game_summaries = "\n\n\n\n"
             for game in games:
@@ -35,7 +35,7 @@ def get_today_nfl_games() -> str:
         LOGGER.exception(f"Unexpected error when fetching live NFL games: {e}")
 
 
-def fetch_today_nfl_games() -> Optional[dict]:
+async def fetch_today_nfl_games() -> Optional[dict]:
     """
     Get summary of NFL games scheduled today; includes scores and odds.
 
@@ -44,10 +44,12 @@ def fetch_today_nfl_games() -> Optional[dict]:
     try:
         todays_date = datetime.now(pytz.timezone("America/New_York")).strftime("%Y-%m-%d")
         params = {"league": "NFL", "date": todays_date}
-        resp = requests.get(NFL_GAMES_URL, headers=NFL_HTTP_HEADERS, params=params, timeout=HTTP_REQUEST_TIMEOUT)
-        return resp.json().get("results")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching NFL games: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(NFL_GAMES_URL, headers=NFL_HTTP_HEADERS, params=params) as resp:
+            games = await resp.json(content_type=None)
+            return games.get("results")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching NFL games: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching NFL games: {e}")
 

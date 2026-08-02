@@ -1,11 +1,12 @@
 """Channel tuner/remote."""
 
+import asyncio
 import json
 import time
 from typing import Optional
 
-import requests
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
 
 from config import (
@@ -13,7 +14,6 @@ from config import (
     CHANNEL_LIST_FILEPATH,
     CHANNEL_TUNER_HEADERS,
     CHATANGO_SPECIAL_USERS,
-    HTTP_REQUEST_TIMEOUT,
 )
 
 
@@ -58,7 +58,7 @@ def get_channel_number(channel_name: str) -> int:
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
 
 
-def tuner(channel_name: str, username: str, bot_username: str) -> str:
+async def tuner(channel_name: str, username: str, bot_username: str) -> str:
     """
     Fetch channel by name and tune stream if user is whitelisted.
 
@@ -82,15 +82,16 @@ def tuner(channel_name: str, username: str, bot_username: str) -> str:
                     + current_milli_time()
                     + "}"
                 )
-                requests.post(
+                session = await get_http_session()
+                async with session.post(
                     f"{CHANNEL_HOST}jsonrpc",
                     headers=CHANNEL_TUNER_HEADERS,
                     data=data,
-                    verify=False,
-                    timeout=HTTP_REQUEST_TIMEOUT,
-                )
-                time.sleep(2)
-                on_now = get_current_show(True, bot_username)
+                    ssl=False,
+                ) as resp:
+                    await resp.read()
+                await asyncio.sleep(2)
+                on_now = await get_current_show(True, bot_username)
                 return emojize(f":tv: Tuning to {capped}. On now: {on_now}", language="en")
             return emojize(f":warning: u don't have the poughwer to change da channol :warning:", language="en")
     except LookupError as e:
@@ -117,7 +118,7 @@ def resolve_requested_channel_name(channel_name: str) -> str:
     return channel_name
 
 
-def get_current_show(detailed: bool, bot_username: str) -> Optional[str]:
+async def get_current_show(detailed: bool, bot_username: str) -> Optional[str]:
     """
     Fetch all information of show currently on stream.
 
@@ -130,14 +131,14 @@ def get_current_show(detailed: bool, bot_username: str) -> Optional[str]:
     try:
         if bot_username != "broiestbro":
             data = '{"jsonrpc":"2.0","method":"XBMC.GetInfoLabels","params": {"labels":["VideoPlayer.Title", "VideoPlayer.MovieTitle", "VideoPlayer.TVShowTitle", "VideoPlayer.EpisodeName", "VideoPlayer.Season", "VideoPlayer.Episode", "VideoPlayer.Plot", "VideoPlayer.Genre", "Pvr.EPGEventIcon"]}, "id":1}'
-            resp = requests.post(
+            session = await get_http_session()
+            async with session.post(
                 f"{CHANNEL_HOST}jsonrpc",
                 headers=CHANNEL_TUNER_HEADERS,
                 data=data,
-                verify=False,
-                timeout=HTTP_REQUEST_TIMEOUT,
-            )
-            json = resp.json()["result"]
+                ssl=False,
+            ) as resp:
+                json = (await resp.json(content_type=None))["result"]
             title = json["VideoPlayer.Title"]
             season = json["VideoPlayer.Season"]
             episode = json["VideoPlayer.Episode"]

@@ -38,15 +38,19 @@ The bot is not a web server — uvicorn is used purely as a process manager. `as
    - YouTube/X/Wikipedia URLs → auto-generate link previews
    - `@bro` → LLM response via Anthropic Claude
    - Everything else → `_process_phrase` → DB phrase match
-3. `create_message` is a large **synchronous** `if/elif` dispatch on `cmd_type` (the `type` column of the `commands` table), calling the appropriate function from `broiestbot/commands/`.
+3. `create_message` is a large **async** `if/elif` dispatch on `cmd_type` (the `type` column of the `commands` table), calling the appropriate function from `broiestbot/commands/`.
 
 ### Sync/Async Boundary
 
-Command handlers are blocking (`requests`, SDK calls) and must never run on the event loop directly. `Bot` dispatches them with `asyncio.to_thread(...)` — `create_message`, link previews, and `generate_llm_response` all go through it. Keep new handlers synchronous and let the caller thread them.
+Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `create_message` awaits them directly. Handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb, Anthropic, PSN, Genius, `praw`, `wikipediaapi`, `youtube_search`, `pandas.read_html`) stay synchronous and are dispatched with `asyncio.to_thread(...)` so they never block the event loop.
+
+- **`http_client.py`** owns the process-wide `aiohttp.ClientSession`. Call `get_http_session()` inside a handler rather than creating a session per request; `asgi.py` closes it on lifespan shutdown. Pass `request_timeout(n)` per request only when overriding the session-wide `HTTP_REQUEST_TIMEOUT`.
+- Decode bodies with `await resp.json(content_type=None)` — several of these APIs serve JSON under the wrong content type.
+- Catch `aiohttp.ClientError` (and `ClientResponseError` before it, when the status matters) where `requests.exceptions.HTTPError` used to be caught.
 
 `database/__init__.py` exposes both engines to match:
-- `async_session` (aiomysql, `NullPool`) — for `await`ed DB access on the event loop, e.g. the command/phrase lookups in `bot.py`.
-- `Session` (pymysql) — for the synchronous handlers running inside `to_thread`.
+- `async_session` (aiomysql, `NullPool`) — for `await`ed DB access on the event loop; used by `bot.py`'s command/phrase lookups and by any async handler (`footy/util.py`, `weather.py`).
+- `Session` (pymysql) — for the synchronous handlers running inside `to_thread` (e.g. `polls/`).
 
 ### Package Layout
 
@@ -57,15 +61,16 @@ Command handlers are blocking (`requests`, SDK calls) and must never run on the 
 - **`clients/__init__.py`** — Instantiates all third-party SDK clients at import time (Redis, Twilio, GCS, Wikipedia, IMDB, Reddit, Genius, PSN, Anthropic, Redgifs). Import from here rather than re-instantiating.
 - **`database/models.py`** — ORM models: `Command`, `Phrase`, `Chat`, `ChatangoUser`, `Weather`, `PollResult`, `Sport`, `League`.
 - **`config.py`** — All configuration and constants loaded from `.env`. Includes hundreds of league/team IDs and API endpoints. Import constants from here; never hardcode them.
+- **`http_client.py`** — Shared `aiohttp` session (`get_http_session`, `request_timeout`, `close_http_session`) used by every HTTP-backed command.
 
-Tests live beside the code they cover (`broiestbot/commands/<domain>/tests/`), with DB-level tests in the top-level `tests/`.
+Tests live beside the code they cover (`broiestbot/commands/<domain>/tests/`), with DB-level tests in the top-level `tests/`. Async code is driven with `asyncio.run(...)` rather than a pytest asyncio plugin; `tests/aiohttp_mocks.py` provides `patch_http_session` / `FakeResponse` for faking a command module's HTTP calls.
 
 ### Adding a New Command
 
 1. Add a row to the `commands` DB table with a unique `command`, a `type` string, and an optional `response` value.
-2. Implement a **synchronous** handler in the relevant `broiestbot/commands/<domain>` module.
+2. Implement the handler in the relevant `broiestbot/commands/<domain>` module: `async def` using `get_http_session()` if it calls an HTTP API, otherwise a plain `def`.
 3. Export it from `broiestbot/commands/__init__.py`.
-4. Add an `elif cmd_type == "<your_type>"` branch in `Bot.create_message` (`broiestbot/bot.py`).
+4. Add an `elif cmd_type == "<your_type>"` branch in `Bot.create_message` (`broiestbot/bot.py`) — `await` an async handler, or `await asyncio.to_thread(...)` a blocking one.
 
 `type = "reserved"` is a sentinel meaning "another bot owns this command" — it is matched and ignored, never responded to.
 

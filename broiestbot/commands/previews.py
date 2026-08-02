@@ -3,7 +3,8 @@
 import re
 from typing import Optional, Tuple
 
-import requests
+from aiohttp import ClientError
+from http_client import get_http_session, request_timeout
 from logger import LOGGER
 from metadata_parser import InvalidDocument, MetadataParser
 from requests.exceptions import HTTPError, RequestException
@@ -111,7 +112,7 @@ def parse_scraped_metadata(page_meta: dict) -> Tuple[Optional[str], Optional[str
     return title, description, page_type
 
 
-def generate_twitter_preview(tweet_url: str) -> Optional[str]:
+async def generate_twitter_preview(tweet_url: str) -> Optional[str]:
     """
     Generate a Twitter preview card from a tweet URL.
 
@@ -122,9 +123,10 @@ def generate_twitter_preview(tweet_url: str) -> Optional[str]:
     try:
         twitter_preview = "\n\n\n\n"
         url = tweet_url.replace("https://x.com", "https://api.vxtwitter.com")
-        resp = requests.get(url, headers=headers, timeout=20)
-        if resp.status_code == 200:
-            tweet_data = resp.json()
+        session = await get_http_session()
+        async with session.get(url, headers=headers, timeout=request_timeout(20)) as resp:
+            tweet_data = await resp.json(content_type=None) if resp.status == 200 else None
+        if tweet_data:
             tweet_text = tweet_data.get("text")
             tweet_author = tweet_data.get("user_name")
             tweet_author_handle = tweet_data.get("user_screen_name")
@@ -146,8 +148,8 @@ def generate_twitter_preview(tweet_url: str) -> Optional[str]:
                 twitter_preview += f"🔁 {tweet_retweets} Retweets\n"
         if twitter_preview != "\n\n\n\n":
             return twitter_preview
-    except RequestException as e:
-        LOGGER.error(f"RequestException error while generating Twitter preview for URL `{tweet_url}`: {e}")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while generating Twitter preview for URL `{tweet_url}`: {e}")
     except KeyError as e:
         LOGGER.error(f"KeyError while generating Twitter preview: {e}")
     except Exception as e:

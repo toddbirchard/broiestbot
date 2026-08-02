@@ -1,21 +1,21 @@
 """Fetch all (live & upcoming) NBA games for today."""
 
 from datetime import datetime
+from typing import List, Optional
 
 import pytz
-import requests
+from aiohttp import ClientError
+from http_client import get_http_session
 from logger import LOGGER
-from requests import Response
-from requests.exceptions import HTTPError
 
-from config import HTTP_REQUEST_TIMEOUT, NBA_BASE_URL, NBA_SEASON_YEAR, RAPID_API_KEY
+from config import NBA_BASE_URL, NBA_SEASON_YEAR, RAPID_API_KEY
 
 
-def today_nba_games() -> Response:
+async def today_nba_games() -> Optional[List[dict]]:
     """
     Fetch all NBA games for the current date.
 
-    :returns: Response
+    :returns: Optional[List[dict]]
     """
     try:
         endpoint = f"{NBA_BASE_URL}/games"
@@ -29,10 +29,15 @@ def today_nba_games() -> Response:
             "X-RapidAPI-Host": "api-basketball.p.rapidapi.com",
             "X-RapidAPI-Key": RAPID_API_KEY,
         }
-        return requests.get(endpoint, headers=headers, params=params, timeout=HTTP_REQUEST_TIMEOUT)
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching today's NBA games: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(endpoint, headers=headers, params=params) as resp:
+            if resp.status == 200:
+                games = await resp.json(content_type=None)
+                return games.get("response")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching today's NBA games: {e}")
     except LookupError as e:
         LOGGER.exception(f"LookupError while fetching today's NBA games: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching today's NBA games: {e}")
+    return None

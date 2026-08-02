@@ -3,15 +3,15 @@
 from random import randint
 from typing import Optional
 
-import requests
+from aiohttp import ClientError, ClientResponseError
 from emoji import emojize
-from requests.exceptions import HTTPError
-
-from config import GIPHY_API_KEY, KLIPY_API_KEY, HTTP_REQUEST_TIMEOUT
+from http_client import get_http_session
 from logger import LOGGER
 
+from config import GIPHY_API_KEY, KLIPY_API_KEY
 
-def giphy_image_search(query: str) -> Optional[str]:
+
+async def giphy_image_search(query: str) -> Optional[str]:
     """
     Perform a gif image and return a random result from the top-20 images.
 
@@ -29,25 +29,26 @@ def giphy_image_search(query: str) -> Optional[str]:
         "lang": "en",
     }
     try:
-        resp = requests.get("https://api.giphy.com/v1/gifs/search", params=params, timeout=HTTP_REQUEST_TIMEOUT)
-        images = resp.json()["data"]
+        session = await get_http_session()
+        async with session.get("https://api.giphy.com/v1/gifs/search", params=params) as resp:
+            images = (await resp.json(content_type=None))["data"]
         if len(images) == 0:
             return None
-        image = resp.json()["data"][0]["images"]["downsized"].get("url")
+        image = images[0]["images"]["downsized"].get("url")
         if image is not None:
             return image
-    except HTTPError as e:
-        LOGGER.error(f"Giphy failed to fetch `{query}`: {e.response}")
+    except ClientResponseError as e:
+        LOGGER.error(f"Giphy failed to fetch `{query}`: {e}")
         return emojize(":warning: yoooo giphy is down rn lmao :warning:", language="en")
-    except ValueError as e:
-        LOGGER.error(f"ValueError while fetching Giphy `{query}`: {e}")
+    except (ClientError, ValueError) as e:
+        LOGGER.error(f"Error while fetching Giphy `{query}`: {e}")
         return emojize(":warning: holy sht u broke the bot im telling bro :warning:", language="en")
     except Exception as e:
         LOGGER.error(f"Giphy unexpected error for `{query}`: {e}")
         return emojize(":warning: AAAAAA I'M BROKEN WHAT DID YOU DO :warning:", language="en")
 
 
-def klipy_image_search(query: str) -> Optional[str]:
+async def klipy_image_search(query: str) -> Optional[str]:
     """
     Perform a gif image and return a random result from the top 10 images.
 
@@ -61,25 +62,22 @@ def klipy_image_search(query: str) -> Optional[str]:
         "per_page": 10,
     }
     try:
-        resp = requests.get(
-            f"https://api.klipy.com/api/v1/{KLIPY_API_KEY}/gifs/search",
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        resp.raise_for_status()
-        if resp.status_code == 204:
-            return None
-        images = resp.json()["data"]["data"]
+        session = await get_http_session()
+        async with session.get(f"https://api.klipy.com/api/v1/{KLIPY_API_KEY}/gifs/search", params=params) as resp:
+            resp.raise_for_status()
+            if resp.status == 204:
+                return None
+            images = (await resp.json(content_type=None))["data"]["data"]
         if len(images) > 0:
             rand = randint(0, len(images) - 1)
             image = images[rand]["file"]["md"]["gif"].get("url")
             if image is not None:
                 return image
-    except HTTPError as e:
-        LOGGER.error(f"Klipy failed to fetch `{query}`: {e.response}")
+    except ClientResponseError as e:
+        LOGGER.error(f"Klipy failed to fetch `{query}`: {e}")
         return emojize(":warning: yoooo gif API is down rn lmao :warning:", language="en")
-    except ValueError as e:
-        LOGGER.error(f"ValueError while fetching Klipy `{query}`: {e}")
+    except (ClientError, ValueError) as e:
+        LOGGER.error(f"Error while fetching Klipy `{query}`: {e}")
         return emojize(":warning: holy sht u broke the bot im telling bro :warning:", language="en")
     except Exception as e:
         LOGGER.error(f"Klipy unexpected error for `{query}`: {e}")

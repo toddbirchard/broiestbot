@@ -3,17 +3,16 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from config import (
     CLUB_FRIENDLIES_LEAGUE_ID,
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LEAGUES,
-    HTTP_REQUEST_TIMEOUT,
 )
 
 from .util import (
@@ -29,7 +28,7 @@ from .util import (
 UPCOMING_FIXTURE_WINDOW_DAYS = 8
 
 
-def footy_upcoming_fixtures(room: str, username: str) -> str:
+async def footy_upcoming_fixtures(room: str, username: str) -> str:
     """
     Fetch upcoming fixtures within 1 week for in order of priority.
 
@@ -39,10 +38,10 @@ def footy_upcoming_fixtures(room: str, username: str) -> str:
     :returns: str
     """
     upcoming_fixtures = "\n\n\n"
-    tz_name = get_preferred_timezone(room, username)
+    tz_name = await get_preferred_timezone(room, username)
     i = 0
     for league_name, league_id in FOOTY_LEAGUES.items():
-        league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
+        league_fixtures = await footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
         if league_fixtures is not None and i < 10:
             i += 1
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
@@ -52,7 +51,7 @@ def footy_upcoming_fixtures(room: str, username: str) -> str:
     return emojize(":warning: Couldn't find any upcoming fixtures :warning:", language="en")
 
 
-def footy_all_upcoming_fixtures(room: str, username: str) -> str:
+async def footy_all_upcoming_fixtures(room: str, username: str) -> str:
     """
     Fetch upcoming fixtures within 1 week for ALL leagues.
 
@@ -62,9 +61,9 @@ def footy_all_upcoming_fixtures(room: str, username: str) -> str:
     :returns: str
     """
     upcoming_fixtures = "\n\n\n"
-    tz_name = get_preferred_timezone(room, username)
+    tz_name = await get_preferred_timezone(room, username)
     for league_name, league_id in FOOTY_LEAGUES.items():
-        league_fixtures = footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
+        league_fixtures = await footy_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
         if league_fixtures is not None:
             upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             upcoming_fixtures += league_fixtures + "\n"
@@ -73,7 +72,7 @@ def footy_all_upcoming_fixtures(room: str, username: str) -> str:
     return emojize(":warning: Couldn't find upcoming fixtures for the next week :warning:", language="en")
 
 
-def footy_upcoming_fixtures_per_league(
+async def footy_upcoming_fixtures_per_league(
     league_name, league_id: int, room: str, username: str, tz_name: str
 ) -> Optional[str]:
     """
@@ -89,12 +88,12 @@ def footy_upcoming_fixtures_per_league(
     """
     try:
         upcoming_fixtures = ""
-        fixtures = upcoming_fixture_fetcher(league_name, league_id, tz_name)
+        fixtures = await upcoming_fixture_fetcher(league_name, league_id, tz_name)
         if fixtures is not None:
             for fixture in fixtures:
                 fixture_date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
                 if fixture_date.date() <= datetime.now().date() + timedelta(days=UPCOMING_FIXTURE_WINDOW_DAYS):
-                    upcoming_fixture = add_upcoming_fixture(fixture, fixture_date, room, username)
+                    upcoming_fixture = await add_upcoming_fixture(fixture, fixture_date, room, username)
                     if upcoming_fixture:
                         upcoming_fixtures += upcoming_fixture
             # Avoid rendering a bare league header when every fixture was filtered out.
@@ -106,7 +105,7 @@ def footy_upcoming_fixtures_per_league(
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> Optional[List[dict]]:
+async def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> Optional[List[dict]]:
     """
     Fetch 8 upcoming fixtures for each top league, or 3 for each lower league.
 
@@ -118,7 +117,7 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> 
     """
     try:
         if league_id == CLUB_FRIENDLIES_LEAGUE_ID:
-            return filter_friendly_fixtures(fetch_upcoming_friendlies(tz_name), league_id)
+            return filter_friendly_fixtures(await fetch_upcoming_friendlies(tz_name), league_id)
         params = {
             "next": (
                 8
@@ -134,12 +133,12 @@ def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: str) -> 
             "status": "NS-1H-2H",
             "timezone": tz_name,
         }
-        return fetch_upcoming_fixtures_by_league(params)
+        return await fetch_upcoming_fixtures_by_league(params)
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_upcoming_friendlies(tz_name: str) -> Optional[List[dict]]:
+async def fetch_upcoming_friendlies(tz_name: str) -> Optional[List[dict]]:
     """
     Fetch club friendlies scheduled within the upcoming fixture window.
 
@@ -161,10 +160,10 @@ def fetch_upcoming_friendlies(tz_name: str) -> Optional[List[dict]]:
         "status": "NS-1H-2H",
         "timezone": tz_name,
     }
-    return fetch_upcoming_fixtures_by_league(params)
+    return await fetch_upcoming_fixtures_by_league(params)
 
 
-def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
+async def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
     """
     Fetches upcoming fixtures for a single league.
 
@@ -173,21 +172,18 @@ def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]]:
     :returns: Optional[List[dict]]
     """
     try:
-        resp = requests.get(
-            FOOTY_FIXTURES_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        if resp.status_code == 200:
-            return resp.json().get("response")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError {resp.status_code} while fetching footy fixtures: {e.response}")
+        session = await get_http_session()
+        async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            if resp.status == 200:
+                fixtures = await resp.json(content_type=None)
+                return fixtures.get("response")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str) -> str:
+async def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str) -> str:
     """
     Construct upcoming fixture match-up.
 
@@ -200,7 +196,7 @@ def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str
     """
     home_team = abbreviate_team_name(fixture["teams"]["home"]["name"])
     away_team = abbreviate_team_name(fixture["teams"]["away"]["name"])
-    display_date, tz = get_preferred_time_format(date, room, username)
+    display_date, tz = await get_preferred_time_format(date, room, username)
     display_date = check_fixture_start_date(date, tz, display_date)
     matchup = f"{away_team} @ {home_team}"
     return f"{matchup:<40} | <i>{display_date}</i>\n"

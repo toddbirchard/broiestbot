@@ -13,6 +13,7 @@ from config import (
     CHATANGO_USERS,
     ENVIRONMENT,
 )
+from http_client import close_http_session
 
 _bot_task: asyncio.Task = None
 
@@ -57,6 +58,7 @@ async def _handle_lifespan(receive, send) -> None:
                     await _bot_task
                 except asyncio.CancelledError:
                     pass
+            await close_http_session()
             await send({"type": "lifespan.shutdown.complete"})
             return
 

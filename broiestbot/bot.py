@@ -134,7 +134,7 @@ class Bot(chatango.Client):
                 font_size=11,
             )
 
-    def create_message(
+    async def create_message(
         self,
         cmd_type,
         content,
@@ -146,6 +146,10 @@ class Bot(chatango.Client):
     ) -> Optional[str]:
         """
         Construct a message response based on command type and arguments.
+
+        Handlers which fetch data over HTTP are coroutines (`aiohttp`) and are awaited
+        directly; handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb,
+        Anthropic, etc.) are dispatched with `asyncio.to_thread` to keep the event loop free.
 
         :param str cmd_type: `Type` of command triggered by a user.
         :param str content: Content to be used in response.
@@ -162,153 +166,153 @@ class Bot(chatango.Client):
         elif cmd_type == "random":
             return random_image(content)
         elif cmd_type == "stock" and args:
-            return get_stock(args)
+            return await get_stock(args)
         elif cmd_type == "randomimage":
-            return fetch_random_image_from_gcs_bucket(content)
+            return await asyncio.to_thread(fetch_random_image_from_gcs_bucket, content)
         elif cmd_type == "imagespam":
-            return spam_random_images_from_gcs_bucket(content)
+            return await asyncio.to_thread(spam_random_images_from_gcs_bucket, content)
         elif cmd_type == "crypto" and command:
-            return get_crypto_price(command.lower(), content)
+            return await get_crypto_price(command.lower(), content)
         elif cmd_type == "giphy":
-            return klipy_image_search(content)
+            return await klipy_image_search(content)
         elif cmd_type == "weather" and args and room_name and user_name:
-            return get_current_weather(args, room_name, user_name)
+            return await get_current_weather(args, room_name, user_name)
         elif cmd_type == "wiki" and args:
-            return wiki_summary(args)
+            return await asyncio.to_thread(wiki_summary, args)
         elif cmd_type == "imdb" and args:
-            return find_movie(args)
+            return await find_movie(args)
         elif cmd_type == "streamingshow" and args:
-            return streaming_service_show(args)
+            return await streaming_service_show(args)
         elif cmd_type == "urban" and args:
-            return get_urban_definition(args)
+            return await get_urban_definition(args)
         elif cmd_type == "420" and args is None:
             return blaze_time_remaining()
         elif cmd_type == "nontent" and user_name:
             return nontent_time_remaining(user_name)
         elif cmd_type == "sms" and args and user_name and content:
-            return send_text_message(args, user_name, content)
+            return await asyncio.to_thread(send_text_message, args, user_name, content)
         elif cmd_type == "epltable":
-            return league_table_standings(EPL_LEAGUE_ID)
+            return await league_table_standings(EPL_LEAGUE_ID)
         elif cmd_type == "ligatable":
-            return league_table_standings(LIGA_LEAGUE_ID)
+            return await league_table_standings(LIGA_LEAGUE_ID)
         elif cmd_type == "bundtable":
-            return league_table_standings(BUND_LEAGUE_ID)
+            return await league_table_standings(BUND_LEAGUE_ID)
         elif cmd_type == "efltable":
-            return league_table_standings(ENGLISH_CHAMPIONSHIP_LEAGUE_ID)
+            return await league_table_standings(ENGLISH_CHAMPIONSHIP_LEAGUE_ID)
         elif cmd_type == "eng1table":
-            return league_table_standings(ENGLISH_LEAGUE_ONE_ID)
+            return await league_table_standings(ENGLISH_LEAGUE_ONE_ID)
         elif cmd_type == "eng2table":
-            return league_table_standings(ENGLISH_LEAGUE_TWO_ID)
+            return await league_table_standings(ENGLISH_LEAGUE_TWO_ID)
         elif cmd_type == "engnationaltable":
-            return league_table_standings(ENGLISH_NATIONAL_LEAGUE_ID)
+            return await league_table_standings(ENGLISH_NATIONAL_LEAGUE_ID)
         elif cmd_type == "liguetable":
-            return league_table_standings(LIGUE_ONE_ID)
+            return await league_table_standings(LIGUE_ONE_ID)
         elif cmd_type == "primeratable":
-            return league_table_standings(PRIMEIRA_LIGA_ID)
+            return await league_table_standings(PRIMEIRA_LIGA_ID)
         elif cmd_type == "estable":
-            return league_table_standings(ELITESERIEN_LEAGUE_ID)
+            return await league_table_standings(ELITESERIEN_LEAGUE_ID)
         elif cmd_type == "mlstable":
-            return mls_standings()
+            return await mls_standings()
         elif cmd_type == "fixtures" and room_name and user_name:
-            return footy_upcoming_fixtures(room_name, user_name)
+            return await footy_upcoming_fixtures(room_name, user_name)
         elif cmd_type == "allfixtures" and room_name and user_name:
-            return footy_all_upcoming_fixtures(room_name, user_name)
+            return await footy_all_upcoming_fixtures(room_name, user_name)
         elif cmd_type == "livefixtures" and user_name:
-            return footy_live_fixtures(user_name, subs=True)
+            return await footy_live_fixtures(user_name, subs=True)
         elif cmd_type == "livefixtureswithsubs" and user_name:
-            return footy_live_fixtures(user_name, subs=True)
+            return await footy_live_fixtures(user_name, subs=True)
         elif cmd_type == "livefixturestats" and room_name and user_name:
-            return footy_stats_for_live_fixtures(room_name, user_name)
+            return await footy_stats_for_live_fixtures(room_name, user_name)
         elif cmd_type == "footystats" and room_name and user_name:
-            return footy_stats_for_live_fixtures(room_name, user_name)
+            return await footy_stats_for_live_fixtures(room_name, user_name)
         elif cmd_type == "todayfixtures" and room_name and user_name:
-            return today_upcoming_fixtures(room_name, user_name)
+            return await today_upcoming_fixtures(room_name, user_name)
         elif cmd_type == "liveodds" and user_name:
-            return footy_live_odds(user_name)
+            return await footy_live_odds(user_name)
         elif cmd_type == "goldenboot":
-            return epl_golden_boot()
+            return await epl_golden_boot()
         elif cmd_type == "goldenshoe":
-            return all_leagues_golden_boot()
+            return await all_leagues_golden_boot()
         elif cmd_type == "footypredicts" and room_name and user_name:
-            return footy_today_fixtures_odds(room_name, user_name)
+            return await footy_today_fixtures_odds(room_name, user_name)
         elif cmd_type == "foxtures" and room_name and user_name:
-            return fetch_fox_fixtures(room_name, user_name)
+            return await fetch_fox_fixtures(room_name, user_name)
         elif cmd_type == "aafkxtures" and room_name and user_name:
-            return fetch_aafk_fixture_data(room_name, user_name)
+            return await fetch_aafk_fixture_data(room_name, user_name)
         elif cmd_type == "footyxi" and room_name and user_name:
-            return footy_team_lineups(room_name, user_name)
+            return await footy_team_lineups(room_name, user_name)
         elif cmd_type == "covid":
-            return covid_cases_usa()
+            return await covid_cases_usa()
         elif cmd_type == "lyrics" and args:
-            return get_song_lyrics(args)
+            return await asyncio.to_thread(get_song_lyrics, args)
         elif cmd_type == "entranslation" and command and args:
-            return get_english_translation(command, content, args)
+            return await get_english_translation(command, content, args)
         elif cmd_type == "olympics":
-            return get_summer_olympic_medals()
+            return await asyncio.to_thread(get_summer_olympic_medals)
         elif cmd_type in ("wolympics", "winterolympics"):
-            return get_winter_olympic_medals()
+            return await asyncio.to_thread(get_winter_olympic_medals)
         elif cmd_type == "footyodds" and room_name and user_name:
-            return footy_today_fixtures_odds(room_name, user_name)
+            return await footy_today_fixtures_odds(room_name, user_name)
         elif cmd_type == "twitch":
-            return get_all_live_twitch_streams()
+            return await get_all_live_twitch_streams()
         elif cmd_type == "todaynfl":
-            return get_today_nfl_games()
+            return await get_today_nfl_games()
         elif cmd_type == "livenfl" and user_name:
-            return get_live_nfl_game_summaries(user_name)
+            return await get_live_nfl_game_summaries(user_name)
         elif cmd_type == "topcrypto":
-            return get_top_crypto()
+            return await get_top_crypto()
         elif cmd_type == "define" and args and user_name:
-            return get_english_definition(user_name, args)
+            return await asyncio.to_thread(get_english_definition, user_name, args)
         elif cmd_type == "tune" and args and user_name and bot_username:
-            return tuner(args, user_name, bot_username)
+            return await tuner(args, user_name, bot_username)
         elif cmd_type == "wayne" and user_name:
             return time_until_wayne(user_name)
         elif cmd_type == "np" and bot_username:
-            return get_current_show(True, bot_username)
+            return await get_current_show(True, bot_username)
         elif cmd_type == "reserved":
             return None
         elif cmd_type == "todaysumo":
-            return today_sumo_matches()
+            return await today_sumo_matches()
         elif cmd_type == "sumo":
-            return upcoming_sumo_matches()
+            return await upcoming_sumo_matches()
         elif cmd_type == "f1":
-            return f1_grand_prix()
+            return await f1_grand_prix()
         elif cmd_type == "nbastandings":
-            return nba_standings()
+            return await nba_standings()
         elif cmd_type == "nbagames":
-            return upcoming_nba_games()
+            return await upcoming_nba_games()
         elif cmd_type == "nbalive":
-            return live_nba_games()
+            return await live_nba_games()
         elif cmd_type == "livenba":
-            return live_nba_games()
+            return await live_nba_games()
         elif cmd_type == "tovala" and user_name:
-            return tovala_counter(user_name)
+            return await asyncio.to_thread(tovala_counter, user_name)
         elif cmd_type == "imagecount":
-            return gcs_count_images_in_bucket(content)
+            return await asyncio.to_thread(gcs_count_images_in_bucket, content)
         elif cmd_type == "changeorstayvote" and room_name and user_name:
-            return change_or_stay_vote(user_name, content)
+            return await asyncio.to_thread(change_or_stay_vote, user_name, content)
         elif cmd_type == "changeorstay" and user_name:
-            return get_live_poll_results(user_name)
+            return await asyncio.to_thread(get_live_poll_results, user_name)
         elif cmd_type == "odds":
-            return get_odds(content)
+            return await get_odds(content)
         elif cmd_type == "bachcount" and args and user_name:
-            return bach_gang_counter(user_name, args)
+            return await asyncio.to_thread(bach_gang_counter, user_name, args)
         elif cmd_type == "latestimage":
-            return fetch_latest_image_from_gcs_bucket(content)
+            return await asyncio.to_thread(fetch_latest_image_from_gcs_bucket, content)
         elif cmd_type == "psntrophies":
-            return get_psn_game_trophies()
+            return await asyncio.to_thread(get_psn_game_trophies)
         elif cmd_type == "bropsn":
-            return get_titles_with_stats()
+            return await asyncio.to_thread(get_titles_with_stats)
         elif cmd_type == "sleeper" and user_name:
-            return fetch_sleeper_matchups(user_name)
+            return await fetch_sleeper_matchups(user_name)
         # elif cmd_type == "cryptochart" and args:
-        #     return get_crypto_chart(args)
+        #     return await get_crypto_chart(args)
         elif cmd_type == "lesbians" and user_name:
-            return fetch_redgifs_gif("lesbians", user_name)
+            return await asyncio.to_thread(fetch_redgifs_gif, "lesbians", user_name)
         elif cmd_type == "nsfw" and args and user_name:
-            return fetch_redgifs_gif(args, user_name, after_dark_only=True)
+            return await asyncio.to_thread(fetch_redgifs_gif, args, user_name, True)
         elif cmd_type == "psn":
-            return get_psn_online_friends()
+            return await asyncio.to_thread(get_psn_online_friends)
         # elif cmd_type == "philliesgames":
         #    return today_phillies_games(
         # elif cmd_type == "youtube" and args:
@@ -355,11 +359,11 @@ class Bot(chatango.Client):
             if preview:
                 await room.send_message(preview, use_html=True)
         elif re.match(r"((https?):\/\/)?(www.)?x\.com(\/@?(\w){1,15})\/status\/[0-9]{19}", chat_message):
-            preview = await asyncio.to_thread(generate_twitter_preview, chat_message)
+            preview = await generate_twitter_preview(chat_message)
             if preview:
                 await room.send_message(preview, use_html=True)
         elif re.match(r".+(wikipedia.org)", chat_message):
-            preview = await asyncio.to_thread(create_wiki_preview, chat_message)
+            preview = await create_wiki_preview(chat_message)
             if preview:
                 await room.send_message(preview, use_html=True)
         elif "https://i.imgur.com/wppfinC.png" in chat_message:
@@ -464,8 +468,7 @@ class Bot(chatango.Client):
             LOGGER.info(f"Ignoring reserved command `{cmd}`")
             return None
         elif command is not None:
-            response = await asyncio.to_thread(
-                self.create_message,
+            response = await self.create_message(
                 command.type,
                 command.response,
                 command=cmd,
@@ -506,7 +509,7 @@ class Bot(chatango.Client):
         """
         query = message.replace("!", "").lower().strip()
         if len(query) > 1:
-            image = await asyncio.to_thread(klipy_image_search, query)
+            image = await klipy_image_search(query)
             if image:
                 await room.send_message(image)
 

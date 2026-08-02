@@ -3,9 +3,9 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-import requests
+from aiohttp import ClientError
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from config import (
     F1_CIRCUITS_ENDPOINT,
@@ -14,7 +14,6 @@ from config import (
     F1_MAX_PAGES,
     F1_RACE_LIVE_WINDOW_HOURS,
     F1_SEASONS_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
 )
 
 from .util import parse_race_date
@@ -27,7 +26,7 @@ RACE_FINISHED_STATUSES = ("finished", "completed")
 RACE_ABANDONED_STATUSES = ("cancelled", "canceled", "postponed", "abandoned")
 
 
-def fetch_season_races(season: int) -> Optional[List[dict]]:
+async def fetch_season_races(season: int) -> Optional[List[dict]]:
     """
     Fetch & normalize every grand prix scheduled for a given season.
 
@@ -35,16 +34,16 @@ def fetch_season_races(season: int) -> Optional[List[dict]]:
 
     :returns: Optional[List[dict]]
     """
-    season_id = resolve_season_id(season)
+    season_id = await resolve_season_id(season)
     if season_id is None:
         return None
-    grands_prix = fetch_all_pages(F1_GRANDS_PRIX_ENDPOINT, {"seasonId": season_id})
+    grands_prix = await fetch_all_pages(F1_GRANDS_PRIX_ENDPOINT, {"seasonId": season_id})
     if grands_prix is None:
         return None
     return [normalize_race(grand_prix) for grand_prix in grands_prix]
 
 
-def fetch_circuit(circuit_id: Optional[str]) -> Optional[dict]:
+async def fetch_circuit(circuit_id: Optional[str]) -> Optional[dict]:
     """
     Fetch a circuit's name, host city & country (the source of a grand prix' flag).
 
@@ -54,7 +53,7 @@ def fetch_circuit(circuit_id: Optional[str]) -> Optional[dict]:
     """
     if not circuit_id:
         return None
-    data = _fetch_hyprace(f"{F1_CIRCUITS_ENDPOINT}/{circuit_id}", {})
+    data = await _fetch_hyprace(f"{F1_CIRCUITS_ENDPOINT}/{circuit_id}", {})
     if not data:
         return None
     country = data.get("country") or {}
@@ -109,7 +108,7 @@ def _main_race_start(grand_prix: dict) -> Optional[str]:
     return grand_prix.get("startDate")
 
 
-def resolve_season_id(season: int) -> Optional[str]:
+async def resolve_season_id(season: int) -> Optional[str]:
     """
     Look up Hyprace's internal ID for a season, which its schedule & standings are keyed on.
 
@@ -117,7 +116,7 @@ def resolve_season_id(season: int) -> Optional[str]:
 
     :returns: Optional[str]
     """
-    data = _fetch_hyprace(F1_SEASONS_ENDPOINT, {"year": season})
+    data = await _fetch_hyprace(F1_SEASONS_ENDPOINT, {"year": season})
     if not data:
         return None
     for item in data.get("items") or []:
@@ -126,7 +125,7 @@ def resolve_season_id(season: int) -> Optional[str]:
     return None
 
 
-def fetch_all_pages(endpoint: str, base_params: dict) -> Optional[List[dict]]:
+async def fetch_all_pages(endpoint: str, base_params: dict) -> Optional[List[dict]]:
     """
     Fetch every item from a paginated Hyprace collection, following pages to the last one.
 
@@ -141,7 +140,7 @@ def fetch_all_pages(endpoint: str, base_params: dict) -> Optional[List[dict]]:
     items: List[dict] = []
     seen_ids = set()
     for page in range(1, F1_MAX_PAGES + 1):
-        data = _fetch_hyprace(endpoint, {**base_params, "pageNumber": page})
+        data = await _fetch_hyprace(endpoint, {**base_params, "pageNumber": page})
         if data is None:
             # Surface a total failure, but keep whatever earlier pages we managed to gather.
             return None if page == 1 else items
@@ -157,7 +156,7 @@ def fetch_all_pages(endpoint: str, base_params: dict) -> Optional[List[dict]]:
     return items
 
 
-def _fetch_hyprace(endpoint: str, params: dict) -> Optional[dict]:
+async def _fetch_hyprace(endpoint: str, params: dict) -> Optional[dict]:
     """
     Fetch & parse a JSON response from the Hyprace API.
 
@@ -167,18 +166,15 @@ def _fetch_hyprace(endpoint: str, params: dict) -> Optional[dict]:
     :returns: Optional[dict]
     """
     try:
-        resp = requests.get(
-            endpoint,
-            headers=F1_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        if resp.status_code == 200:
-            data = resp.json()
-            return data if isinstance(data, dict) else None
-        LOGGER.warning(f"Non-200 response from Hyprace `{endpoint}` {params}: {resp.status_code} {resp.text[:300]}")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching F1 data from `{endpoint}`: {getattr(e.response, 'content', e)}")
+        session = await get_http_session()
+        async with session.get(endpoint, headers=F1_HTTP_HEADERS, params=params) as resp:
+            if resp.status == 200:
+                data = await resp.json(content_type=None)
+                return data if isinstance(data, dict) else None
+            body = await resp.text()
+            LOGGER.warning(f"Non-200 response from Hyprace `{endpoint}` {params}: {resp.status} {body[:300]}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching F1 data from `{endpoint}`: {e}")
     except ValueError as e:
         LOGGER.exception(f"Malformed JSON returned by Hyprace `{endpoint}`: {e}")
     except Exception as e:

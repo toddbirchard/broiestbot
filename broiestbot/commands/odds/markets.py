@@ -1,12 +1,12 @@
 """Fetch sports betting markets."""
 
-import requests
+from http_client import get_http_session, request_timeout
 from logger import LOGGER
 
 from config import ODDS_API_ENDPOINT, RAPID_API_KEY
 
 
-def get_odds(sport_id: str) -> str:
+async def get_odds(sport_id: str) -> str:
     """
     Get and format odds for games of a given sport.
 
@@ -16,7 +16,7 @@ def get_odds(sport_id: str) -> str:
     """
     try:
         response = "\n\n\n\n"
-        events = fetch_odds_for_sport(sport_id)
+        events = await fetch_odds_for_sport(sport_id)
         if events:
             for event in events:
                 LOGGER.info(f"event: {event}")
@@ -47,7 +47,7 @@ def get_odds(sport_id: str) -> str:
         return "I couldn't fetch the odds at this time."
 
 
-def fetch_odds_for_sport(sport_id: str) -> dict:
+async def fetch_odds_for_sport(sport_id: str) -> dict:
     """
     Fetch raw odds data for a given sport.
 
@@ -58,6 +58,9 @@ def fetch_odds_for_sport(sport_id: str) -> dict:
     url = ODDS_API_ENDPOINT
     params = {"sport_id": sport_id, "league_ids": "2635", "event_type": "live", "is_have_odds": "true"}
     headers = {"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": "pinnacle-odds.p.rapidapi.com"}
-    resp = requests.get(url, headers=headers, params=params, timeout=20)
-    LOGGER.info(f"Response from odds API: {resp.status_code} {resp.reason} {resp.text}")
-    return resp.json().get("events")
+    session = await get_http_session()
+    async with session.get(url, headers=headers, params=params, timeout=request_timeout(20)) as resp:
+        body = await resp.text()
+        LOGGER.info(f"Response from odds API: {resp.status} {resp.reason} {body}")
+        events = await resp.json(content_type=None)
+    return events.get("events")

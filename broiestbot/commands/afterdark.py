@@ -5,16 +5,14 @@ from random import randint
 from typing import Optional
 
 import pytz
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 from redgifs import Order
 
 from clients import redgifs_client
-
 from config import (
-    HTTP_REQUEST_TIMEOUT,
     REDGIFS_ACCESS_KEY,
     REDGIFS_IMAGE_SEARCH_ENDPOINT,
     REDGIFS_TOKEN_ENDPOINT,
@@ -75,7 +73,7 @@ def fetch_redgifs_gif(query: str, username: str, after_dark_only: bool = False) 
         return f"⚠️ @{username} dude u must b a freak cuz that just broke bot ⚠️"
 
 
-def get_redgifs_gif(query: str, username: str, after_dark_only: bool = False) -> Optional[str]:
+async def get_redgifs_gif(query: str, username: str, after_dark_only: bool = False) -> Optional[str]:
     """
     Fetch a special kind of gif, if you know what I mean ;).
 
@@ -88,13 +86,16 @@ def get_redgifs_gif(query: str, username: str, after_dark_only: bool = False) ->
     try:
         night_mode = is_after_dark()
         if (after_dark_only and night_mode) or after_dark_only is False:
-            token = redgifs_auth_token()
+            token = await redgifs_auth_token()
             endpoint = REDGIFS_IMAGE_SEARCH_ENDPOINT
             params = {"search_text": query.title(), "order": "trending", "count": 80}
             headers = {"Authorization": f"Bearer {token}"}
-            resp = requests.get(endpoint, params=params, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-            results = resp.json().get("gifs", None)
-            if resp.status_code == 200 and results is not None:
+            session = await get_http_session()
+            async with session.get(endpoint, params=params, headers=headers) as resp:
+                status = resp.status
+                body = await resp.json(content_type=None)
+            results = body.get("gifs", None)
+            if status == 200 and results is not None:
                 results = [result for result in results if result["urls"].get("sd") is not None]
                 if bool(results):
                     rand = randint(0, len(results) - 1)
@@ -113,14 +114,14 @@ def get_redgifs_gif(query: str, username: str, after_dark_only: bool = False) ->
                         language="en",
                     )
             else:
-                LOGGER.error(f"Error {resp.status_code} fetching NSFW gif: {resp.content}")
+                LOGGER.error(f"Error {status} fetching NSFW gif: {body}")
                 return emojize(
                     f":warning: omfg @{username} u broke bot with ur kinky ass bs smfh :warning:",
                     language="en",
                 )
         return "https://i.imgur.com/oGMHkqT.jpg"
-    except HTTPError as e:
-        LOGGER.warning(f"HTTPError while fetching nsfw image for `{query}`: {e.response.content}")
+    except ClientError as e:
+        LOGGER.warning(f"ClientError while fetching nsfw image for `{query}`: {e}")
         return emojize(f":warning: yea nah idk wtf ur searching for :warning:", language="en")
     except IndexError as e:
         LOGGER.warning(f"IndexError while fetching nsfw image for `{query}`: {e}")
@@ -152,7 +153,7 @@ def get_full_gif_metadata(image: dict) -> str:
         return emojize(":warning: dude u must b a freak cuz that just broke bot :warning:", language="en")
 
 
-def redgifs_auth_token() -> Optional[str]:
+async def redgifs_auth_token() -> Optional[str]:
     """
     Authenticate with redgifs to receive access token.
 
@@ -162,12 +163,13 @@ def redgifs_auth_token() -> Optional[str]:
     body = {"access_key": REDGIFS_ACCESS_KEY}
     headers = {"Content-Type": "application/json"}
     try:
-        resp = requests.post(endpoint, json=body, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-        if resp.status_code == 200:
-            return resp.json().get("access_token")
-        else:
-            LOGGER.error(f"Failed to get Redgifs token with status code {resp.status_code}: {resp.json()}")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError when fetching Redgifs auth token: {e.response.content}")
+        session = await get_http_session()
+        async with session.post(endpoint, json=body, headers=headers) as resp:
+            token_response = await resp.json(content_type=None)
+            if resp.status == 200:
+                return token_response.get("access_token")
+            LOGGER.error(f"Failed to get Redgifs token with status code {resp.status}: {token_response}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError when fetching Redgifs auth token: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Redgifs auth token: {e}")

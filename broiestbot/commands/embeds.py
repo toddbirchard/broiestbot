@@ -3,23 +3,16 @@
 import re
 from typing import Optional
 
-import requests
+from aiohttp import ClientError
 from bs4 import BeautifulSoup
 from emoji import emojize
+from http_client import get_http_session, request_timeout
 from logger import LOGGER
-from requests import Response
-from requests.exceptions import HTTPError
-from requests.models import Request
 
-from config import (
-    HTTP_REQUEST_TIMEOUT,
-    INSTAGRAM_APP_ID,
-    TWITTER_API_V1_ENDPOINT,
-    TWITTER_BEARER_TOKEN,
-)
+from config import INSTAGRAM_APP_ID, TWITTER_API_V1_ENDPOINT, TWITTER_BEARER_TOKEN
 
 
-def generate_twitter_preview(message: str) -> Optional[str]:
+async def generate_twitter_preview(message: str) -> Optional[str]:
     """
     Check chat message for Twitter URL and generate preview.
 
@@ -32,7 +25,7 @@ def generate_twitter_preview(message: str) -> Optional[str]:
         if twitter_url_match:
             tweet_id = twitter_url_match.group(1)
             if tweet_id is not None:
-                tweet_data = fetch_tweet_by_id(tweet_id)
+                tweet_data = await fetch_tweet_by_id(tweet_id)
                 if tweet_data:
                     return parse_tweet_preview(tweet_data)
         return None
@@ -40,7 +33,7 @@ def generate_twitter_preview(message: str) -> Optional[str]:
         LOGGER.exception(f"Unexpected error while creating Twitter embed: {e}")
 
 
-def fetch_tweet_by_id(tweet_id: str) -> Optional[dict]:
+async def fetch_tweet_by_id(tweet_id: str) -> Optional[dict]:
     """
     Fetch Tweet JSON by Tweet ID.
 
@@ -55,14 +48,16 @@ def fetch_tweet_by_id(tweet_id: str) -> Optional[dict]:
             "include_entities": "true",
         }
         headers = {"Authorization": f"Bearer {TWITTER_BEARER_TOKEN}"}
-        resp = requests.get(endpoint, headers=headers, params=params, timeout=30)
-        if resp.status_code == 200:
-            return resp.json()[0]
-        LOGGER.warning(
-            f"Got unexpected status code while fetching Tweet by ID `{tweet_id}`: {resp.status_code}, {resp.content}"
-        )
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError error while fetching Tweet by ID `{tweet_id}`: {e}")
+        session = await get_http_session()
+        async with session.get(endpoint, headers=headers, params=params, timeout=request_timeout(30)) as resp:
+            if resp.status == 200:
+                return (await resp.json(content_type=None))[0]
+            LOGGER.warning(
+                f"Got unexpected status code while fetching Tweet by ID `{tweet_id}`: "
+                f"{resp.status}, {await resp.text()}"
+            )
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching Tweet by ID `{tweet_id}`: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching Tweet by ID `{tweet_id}`: {e}")
 
@@ -131,20 +126,7 @@ def parse_tweet_thumbnails(tweet: dict) -> Optional[str]:
         return f"\n{' '.join(tweet_image_urls)}\n\n"
 
 
-def twitter_bearer_oauth(req: Request) -> Request:
-    """
-    Method required by bearer token authentication.
-
-    :param Request req: Prepared API request to fetch Tweet from Twitter API.
-
-    :returns: Request
-    """
-    req.headers["Authorization"] = f"Bearer {TWITTER_BEARER_TOKEN}"
-    req.headers["User-Agent"] = "v2TweetLookupPython"
-    return req
-
-
-def create_instagram_preview(url: str) -> Optional[str]:
+async def create_instagram_preview(url: str) -> Optional[str]:
     """
     Generate link preview for Instagram post URLs.
 
@@ -160,32 +142,36 @@ def create_instagram_preview(url: str) -> Optional[str]:
             "Access-Control-Max-Age": "3600",
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0",
         }
-        req = requests.get(url, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-        html = BeautifulSoup(req.content, "html.parser")
+        session = await get_http_session()
+        async with session.get(url, headers=headers) as resp:
+            page_html = await resp.read()
+        html = BeautifulSoup(page_html, "html.parser")
         img_tag = html.find("meta", property="og:image")
         if img_tag is not None:
             img = img_tag.get("content")
             description = html.find("title").get_text()
             return f"{img} {description}"
         return None
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching Instagram URL `{url}`: {e.response.content}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching Instagram URL `{url}`: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while creating Instagram embed: {e}")
 
 
-def get_instagram_token() -> Optional[Response]:
+async def get_instagram_token() -> Optional[dict]:
     """
     Generate Instagram OAuth token.
 
-    :returns: Optional[Response]
+    :returns: Optional[dict]
     """
     try:
         params = {
             "client_id": INSTAGRAM_APP_ID,
         }
-        return requests.post("https://www.facebook.com/x/oauth/status", params=params, timeout=HTTP_REQUEST_TIMEOUT)
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching Instagram token: {e.response.content}")
+        session = await get_http_session()
+        async with session.post("https://www.facebook.com/x/oauth/status", params=params) as resp:
+            return await resp.json(content_type=None)
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching Instagram token: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Instagram token: {e}")

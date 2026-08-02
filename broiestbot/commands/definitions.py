@@ -1,18 +1,18 @@
 """Lookup definitions via Wikipedia, Urban Dictionary, etc"""
 
+import asyncio
 from typing import Optional
 
-import requests
+from aiohttp import ClientError
 from bs4 import BeautifulSoup
 from emoji import emojize
+from http_client import get_http_session, request_timeout
 from logger import LOGGER
 from PyMultiDictionary import MultiDictionary
-from requests.exceptions import HTTPError
 
 from clients import wiki
 from config import (
     GOOGLE_TRANSLATE_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
     RAPID_API_KEY,
     URBAN_DICTIONARY_ENDPOINT,
 )
@@ -48,7 +48,7 @@ def get_english_definition(user_name: str, word: str) -> str:
         return emojize(":warning: mfer you broke bot :warning:", language="en")
 
 
-def get_urban_definition(term: str) -> str:
+async def get_urban_definition(term: str) -> str:
     """
     Fetch Urban Dictionary definition for a given phrase or word.
 
@@ -59,13 +59,9 @@ def get_urban_definition(term: str) -> str:
     params = {"term": term}
     headers = {"Content-Type": "application/json"}
     try:
-        req = requests.get(
-            URBAN_DICTIONARY_ENDPOINT,
-            params=params,
-            headers=headers,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        results = req.json().get("list")
+        session = await get_http_session()
+        async with session.get(URBAN_DICTIONARY_ENDPOINT, params=params, headers=headers) as resp:
+            results = (await resp.json(content_type=None)).get("list")
         if results:
             word = term.upper()
             results = sorted(results, key=lambda i: i["thumbs_down"], reverse=True)
@@ -76,8 +72,8 @@ def get_urban_definition(term: str) -> str:
                 return f"{word}:\n\n {definition} \n\n EXAMPLE: {example}"
             return f"{word}:\n\n {definition}"
         return emojize(":warning: idk wtf ur trying to search for tbh :warning:", language="en")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while trying to get Urban definition for `{term}`: {e.response.content}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while trying to get Urban definition for `{term}`: {e}")
         return emojize(":warning: wtf urban dictionary is down :warning:", language="en")
     except LookupError as e:
         LOGGER.exception(f"LookupError error when fetching Urban definition for `{term}`: {e}")
@@ -113,7 +109,7 @@ def wiki_summary(query: str) -> str:
         )
 
 
-def create_wiki_preview(url: str) -> Optional[str]:
+async def create_wiki_preview(url: str) -> Optional[str]:
     """
     Create a link preview for a Wikipedia URL.
 
@@ -129,11 +125,14 @@ def create_wiki_preview(url: str) -> Optional[str]:
             "Access-Control-Max-Age": "3600",
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0",
         }
-        req = requests.get(url, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
+        session = await get_http_session()
+        async with session.get(url, headers=headers) as resp:
+            page_html = await resp.read()
         wiki_preview = "\n\n\n\n"
         page_title = url.split("/")[-1]
-        page = wiki.page(page_title)
-        html = BeautifulSoup(req.content, "html.parser")
+        # `wikipediaapi` is a blocking SDK, so keep it off the event loop.
+        page = await asyncio.to_thread(wiki.page, page_title)
+        html = BeautifulSoup(page_html, "html.parser")
         img_tag = html.find("meta", property="og:image")
         wiki_preview += f"<b>{page.displaytitle}</b>\n\n"
         wiki_preview += f"{page.summary}\n\n"
@@ -148,7 +147,7 @@ def create_wiki_preview(url: str) -> Optional[str]:
         return None
 
 
-def get_english_translation(language_symbol: str, language_full_name: str, phrase: str) -> str:
+async def get_english_translation(language_symbol: str, language_full_name: str, phrase: str) -> str:
     """
     Translate a non-english phrase into English.
 
@@ -171,17 +170,19 @@ def get_english_translation(language_symbol: str, language_full_name: str, phras
             "X-RapidAPI-Key": RAPID_API_KEY,
             "X-RapidAPI-Host": "google-translate1.p.rapidapi.com",
         }
-        res = requests.request("POST", url, data=data, headers=headers, timeout=30)
-        if res.status_code == 429:
-            return "⚠️ yall translated too much shit this month now google tryna charge me smh ⚠️"
+        session = await get_http_session()
+        async with session.post(url, data=data, headers=headers, timeout=request_timeout(30)) as resp:
+            if resp.status == 429:
+                return "⚠️ yall translated too much shit this month now google tryna charge me smh ⚠️"
+            translation = await resp.json(content_type=None)
         language_emoji = language_full_name.split(" ", 1)[0]
         language_name = language_full_name.split(" ", 1)[1].upper()
         return emojize(
-            f'{language_emoji} <b>{language_name} TRANSLATION</b>: {res.json()["data"]["translations"][0]["translatedText"]}',
+            f'{language_emoji} <b>{language_name} TRANSLATION</b>: {translation["data"]["translations"][0]["translatedText"]}',
             language="en",
         )
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while translating `{phrase}`: {e.response}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while translating `{phrase}`: {e}")
         return f"⚠️ wtf you broke the api with ur {language_full_name}? SPEAK ENGLISH ⚠️"
     except LookupError as e:
         LOGGER.exception(f"LookupError error while translating `{phrase}`: {e}")

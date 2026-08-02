@@ -1,6 +1,7 @@
 """Tests for fetching the F1 drivers' championship standings."""
 
-from unittest.mock import patch
+import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -62,11 +63,17 @@ def clear_roster_cache():
 def test_standings_are_resolved_to_names_and_sorted():
     """Championship rows are resolved to driver names & teams, leader first."""
     with (
-        patch("broiestbot.commands.f1.standings.resolve_season_id", return_value="season-2026"),
-        patch("broiestbot.commands.f1.standings._fetch_hyprace", return_value=STANDINGS_RESPONSE),
-        patch("broiestbot.commands.f1.drivers.fetch_all_pages", return_value=ROSTER_RESPONSE["items"]),
+        patch("broiestbot.commands.f1.standings.resolve_season_id", new_callable=AsyncMock, return_value="season-2026"),
+        patch(
+            "broiestbot.commands.f1.standings._fetch_hyprace", new_callable=AsyncMock, return_value=STANDINGS_RESPONSE
+        ),
+        patch(
+            "broiestbot.commands.f1.drivers.fetch_all_pages",
+            new_callable=AsyncMock,
+            return_value=ROSTER_RESPONSE["items"],
+        ),
     ):
-        standings = fetch_driver_standings(2026)
+        standings = asyncio.run(fetch_driver_standings(2026))
 
     assert [(entry["position"], entry["name"], entry["points"]) for entry in standings] == [
         (1, "Andrea Kimi Antonelli", 204),
@@ -79,12 +86,18 @@ def test_standings_are_resolved_to_names_and_sorted():
 def test_driver_roster_is_cached():
     """The season roster is fetched once & reused across standings lookups."""
     with (
-        patch("broiestbot.commands.f1.standings.resolve_season_id", return_value="season-2026"),
-        patch("broiestbot.commands.f1.standings._fetch_hyprace", return_value=STANDINGS_RESPONSE),
-        patch("broiestbot.commands.f1.drivers.fetch_all_pages", return_value=ROSTER_RESPONSE["items"]) as mock_roster,
+        patch("broiestbot.commands.f1.standings.resolve_season_id", new_callable=AsyncMock, return_value="season-2026"),
+        patch(
+            "broiestbot.commands.f1.standings._fetch_hyprace", new_callable=AsyncMock, return_value=STANDINGS_RESPONSE
+        ),
+        patch(
+            "broiestbot.commands.f1.drivers.fetch_all_pages",
+            new_callable=AsyncMock,
+            return_value=ROSTER_RESPONSE["items"],
+        ) as mock_roster,
     ):
-        fetch_driver_standings(2026)
-        fetch_driver_standings(2026)
+        asyncio.run(fetch_driver_standings(2026))
+        asyncio.run(fetch_driver_standings(2026))
 
     mock_roster.assert_called_once()
 
@@ -92,11 +105,13 @@ def test_driver_roster_is_cached():
 def test_unresolved_driver_still_listed():
     """A championship row whose driver isn't in the roster is kept, just without a name."""
     with (
-        patch("broiestbot.commands.f1.standings.resolve_season_id", return_value="season-2026"),
-        patch("broiestbot.commands.f1.standings._fetch_hyprace", return_value=STANDINGS_RESPONSE),
-        patch("broiestbot.commands.f1.drivers.fetch_all_pages", return_value=[]),
+        patch("broiestbot.commands.f1.standings.resolve_season_id", new_callable=AsyncMock, return_value="season-2026"),
+        patch(
+            "broiestbot.commands.f1.standings._fetch_hyprace", new_callable=AsyncMock, return_value=STANDINGS_RESPONSE
+        ),
+        patch("broiestbot.commands.f1.drivers.fetch_all_pages", new_callable=AsyncMock, return_value=[]),
     ):
-        standings = fetch_driver_standings(2026)
+        standings = asyncio.run(fetch_driver_standings(2026))
 
     assert standings[0]["position"] == 1
     assert standings[0]["name"] is None
@@ -104,23 +119,23 @@ def test_unresolved_driver_still_listed():
 
 def test_unknown_season_has_no_standings():
     """A season with no resolvable ID yields no standings."""
-    with patch("broiestbot.commands.f1.standings.resolve_season_id", return_value=None):
-        assert fetch_driver_standings(2099) is None
+    with patch("broiestbot.commands.f1.standings.resolve_season_id", new_callable=AsyncMock, return_value=None):
+        assert asyncio.run(fetch_driver_standings(2099)) is None
 
 
 def test_empty_standings_response_returns_none():
     """A standings response with no snapshots is swallowed."""
     with (
-        patch("broiestbot.commands.f1.standings.resolve_season_id", return_value="season-2026"),
-        patch("broiestbot.commands.f1.standings._fetch_hyprace", return_value={"items": []}),
+        patch("broiestbot.commands.f1.standings.resolve_season_id", new_callable=AsyncMock, return_value="season-2026"),
+        patch("broiestbot.commands.f1.standings._fetch_hyprace", new_callable=AsyncMock, return_value={"items": []}),
     ):
-        assert fetch_driver_standings(2026) is None
+        assert asyncio.run(fetch_driver_standings(2026)) is None
 
 
 def test_failed_standings_request_returns_none():
     """A failed standings request is swallowed & reported as no data."""
     with (
-        patch("broiestbot.commands.f1.standings.resolve_season_id", return_value="season-2026"),
-        patch("broiestbot.commands.f1.standings._fetch_hyprace", return_value=None),
+        patch("broiestbot.commands.f1.standings.resolve_season_id", new_callable=AsyncMock, return_value="season-2026"),
+        patch("broiestbot.commands.f1.standings._fetch_hyprace", new_callable=AsyncMock, return_value=None),
     ):
-        assert fetch_driver_standings(2026) is None
+        assert asyncio.run(fetch_driver_standings(2026)) is None

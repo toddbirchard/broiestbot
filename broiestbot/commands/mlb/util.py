@@ -6,7 +6,7 @@ from .live import parse_live_mlb_game
 from .upcoming import parse_upcoming_mlb_game
 
 
-def parse_mlb_game(game: dict) -> Optional[str]:
+async def parse_mlb_game(game: dict) -> Optional[str]:
     """
     Parse MLB gae response depending on game's status.
 
@@ -19,7 +19,7 @@ def parse_mlb_game(game: dict) -> Optional[str]:
         if status in ("Postponed", "Canceled"):
             return None
         if status == "Not Started":
-            return parse_upcoming_mlb_game(game)
+            return await parse_upcoming_mlb_game(game)
         if "Inning" in status:
             return parse_live_mlb_game(game)
     except Exception as e:

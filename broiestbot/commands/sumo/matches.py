@@ -4,13 +4,14 @@ from datetime import date, datetime
 from typing import Optional
 
 import pytz
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
+
+from config import SUMO_API_BASE_URL, SUMO_DIVISION
 
 from .util import format_rank
-from config import HTTP_REQUEST_TIMEOUT, SUMO_API_BASE_URL, SUMO_DIVISION
 
 # Six honbasho per year, held in odd-numbered months.
 SUMO_BASHO_MONTHS = (1, 3, 5, 7, 9, 11)
@@ -25,7 +26,7 @@ SUMO_BASHO_NAMES = {
 SUMO_BASHO_FINAL_DAY = 15
 
 
-def fetch_basho(basho_id: str) -> Optional[dict]:
+async def fetch_basho(basho_id: str) -> Optional[dict]:
     """
     Fetch metadata (start/end dates) for a basho.
 
@@ -34,19 +35,20 @@ def fetch_basho(basho_id: str) -> Optional[dict]:
     :returns: Optional[dict]
     """
     try:
-        resp = requests.get(f"{SUMO_API_BASE_URL}/basho/{basho_id}", timeout=HTTP_REQUEST_TIMEOUT)
-        if resp.status_code == 200:
-            basho = resp.json()
-            # Unknown basho IDs still return 200 with an empty `date` field.
-            if basho.get("date"):
-                return basho
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching sumo basho `{basho_id}`: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(f"{SUMO_API_BASE_URL}/basho/{basho_id}") as resp:
+            if resp.status == 200:
+                basho = await resp.json(content_type=None)
+                # Unknown basho IDs still return 200 with an empty `date` field.
+                if basho.get("date"):
+                    return basho
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching sumo basho `{basho_id}`: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching sumo basho `{basho_id}`: {e}")
 
 
-def fetch_torikumi(basho_id: str, day: int) -> Optional[dict]:
+async def fetch_torikumi(basho_id: str, day: int) -> Optional[dict]:
     """
     Fetch top-division bout schedule/results for a given day of a basho.
 
@@ -57,16 +59,17 @@ def fetch_torikumi(basho_id: str, day: int) -> Optional[dict]:
     """
     try:
         endpoint = f"{SUMO_API_BASE_URL}/basho/{basho_id}/torikumi/{SUMO_DIVISION}/{day}"
-        resp = requests.get(endpoint, timeout=HTTP_REQUEST_TIMEOUT)
-        if resp.status_code == 200:
-            return resp.json()
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching sumo torikumi for `{basho_id}` day {day}: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(endpoint) as resp:
+            if resp.status == 200:
+                return await resp.json(content_type=None)
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching sumo torikumi for `{basho_id}` day {day}: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching sumo torikumi for `{basho_id}` day {day}: {e}")
 
 
-def get_current_or_next_basho(today: date) -> Optional[dict]:
+async def get_current_or_next_basho(today: date) -> Optional[dict]:
     """
     Find the basho currently underway, or the next upcoming one.
 
@@ -78,7 +81,7 @@ def get_current_or_next_basho(today: date) -> Optional[dict]:
     if month not in SUMO_BASHO_MONTHS:
         month += 1
     for _ in range(3):
-        basho = fetch_basho(f"{year}{month:02d}")
+        basho = await fetch_basho(f"{year}{month:02d}")
         if basho and _parse_basho_date(basho["endDate"]) >= today:
             return basho
         month += 2
@@ -114,7 +117,7 @@ def _format_bout(bout: dict) -> str:
     return f"{east} vs {west}"
 
 
-def sumo_matches_for_date(today: date) -> str:
+async def sumo_matches_for_date(today: date) -> str:
     """
     Build chat message of top-division sumo bouts for a given date.
 
@@ -123,7 +126,7 @@ def sumo_matches_for_date(today: date) -> str:
     :returns: str
     """
     try:
-        basho = get_current_or_next_basho(today)
+        basho = await get_current_or_next_basho(today)
         if basho is None:
             return emojize(":crying_face: no sumo basho on the schedule... check back later BROH", language="en")
         basho_start = _parse_basho_date(basho["startDate"])
@@ -134,7 +137,7 @@ def sumo_matches_for_date(today: date) -> str:
                 language="en",
             )
         day = min((today - basho_start).days + 1, SUMO_BASHO_FINAL_DAY)
-        torikumi = fetch_torikumi(basho["date"], day)
+        torikumi = await fetch_torikumi(basho["date"], day)
         bouts = torikumi.get("torikumi") if torikumi else None
         if not bouts:
             return emojize(
@@ -152,10 +155,10 @@ def sumo_matches_for_date(today: date) -> str:
         return emojize(":warning: idk the sumo API shit the bed, try again later.", language="en")
 
 
-def today_sumo_matches() -> str:
+async def today_sumo_matches() -> str:
     """
     Fetch today's top-division sumo bouts for the current (or next) basho.
 
     :returns: str
     """
-    return sumo_matches_for_date(datetime.now(pytz.timezone("Asia/Tokyo")).date())
+    return await sumo_matches_for_date(datetime.now(pytz.timezone("Asia/Tokyo")).date())

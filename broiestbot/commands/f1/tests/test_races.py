@@ -1,7 +1,8 @@
 """Tests for fetching, normalizing & classifying F1 races."""
 
+import asyncio
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from broiestbot.commands.f1.races import (
     fetch_circuit,
@@ -13,6 +14,7 @@ from broiestbot.commands.f1.races import (
     is_race_live,
     normalize_race,
 )
+from tests.aiohttp_mocks import FakeResponse, patch_http_session
 
 RACE_START = datetime(2026, 3, 8, 15, tzinfo=timezone.utc)
 
@@ -135,8 +137,10 @@ def test_season_races_are_resolved_then_paged():
     """A season's ID is resolved, then its grands prix are fetched & normalized."""
     seasons = {"items": [{"id": "season-2026", "year": 2026}]}
     grands_prix = {"items": [HYPRACE_GRAND_PRIX], "hasNext": False, "totalPages": 1}
-    with patch("broiestbot.commands.f1.races._fetch_hyprace", side_effect=[seasons, grands_prix]) as mock_fetch:
-        races = fetch_season_races(2026)
+    with patch(
+        "broiestbot.commands.f1.races._fetch_hyprace", AsyncMock(side_effect=[seasons, grands_prix])
+    ) as mock_fetch:
+        races = asyncio.run(fetch_season_races(2026))
 
     assert len(races) == 1
     assert races[0]["name"] == "Hungarian Grand Prix"
@@ -150,8 +154,8 @@ def test_season_races_follow_pagination():
     seasons = {"items": [{"id": "season-2026", "year": 2026}]}
     page_one = {"items": [HYPRACE_GRAND_PRIX], "hasNext": True, "totalPages": 2}
     page_two = {"items": [{**HYPRACE_GRAND_PRIX, "id": "round-12"}], "hasNext": False, "totalPages": 2}
-    with patch("broiestbot.commands.f1.races._fetch_hyprace", side_effect=[seasons, page_one, page_two]):
-        races = fetch_season_races(2026)
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", AsyncMock(side_effect=[seasons, page_one, page_two])):
+        races = asyncio.run(fetch_season_races(2026))
 
     assert [race["id"] for race in races] == ["8b17825a", "round-12"]
 
@@ -161,22 +165,24 @@ def test_pagination_dedupes_repeated_pages():
     seasons = {"items": [{"id": "season-2026", "year": 2026}]}
     repeated_page = {"items": [HYPRACE_GRAND_PRIX], "hasNext": True, "totalPages": 2}
     final_page = {"items": [HYPRACE_GRAND_PRIX], "hasNext": False, "totalPages": 2}
-    with patch("broiestbot.commands.f1.races._fetch_hyprace", side_effect=[seasons, repeated_page, final_page]):
-        races = fetch_season_races(2026)
+    with patch(
+        "broiestbot.commands.f1.races._fetch_hyprace", AsyncMock(side_effect=[seasons, repeated_page, final_page])
+    ):
+        races = asyncio.run(fetch_season_races(2026))
 
     assert [race["id"] for race in races] == ["8b17825a"]
 
 
 def test_unknown_season_returns_none():
     """A season the API has no record of yields no races."""
-    with patch("broiestbot.commands.f1.races._fetch_hyprace", return_value={"items": []}):
-        assert fetch_season_races(2099) is None
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", AsyncMock(return_value={"items": []})):
+        assert asyncio.run(fetch_season_races(2099)) is None
 
 
 def test_failed_season_request_returns_none():
     """A failed season lookup is swallowed & reported as no data."""
-    with patch("broiestbot.commands.f1.races._fetch_hyprace", return_value=None):
-        assert fetch_season_races(2026) is None
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", AsyncMock(return_value=None)):
+        assert asyncio.run(fetch_season_races(2026)) is None
 
 
 def test_circuit_is_mapped_to_name_city_and_flag():
@@ -186,16 +192,16 @@ def test_circuit_is_mapped_to_name_city_and_flag():
         "place": "Budapest",
         "country": {"name": "Hungary", "alphaTwoCode": "HU"},
     }
-    with patch("broiestbot.commands.f1.races._fetch_hyprace", return_value=circuit_response):
-        circuit = fetch_circuit("2a1c1543")
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", AsyncMock(return_value=circuit_response)):
+        circuit = asyncio.run(fetch_circuit("2a1c1543"))
 
     assert circuit == {"name": "Hungaroring", "city": "Budapest", "country": "Hungary", "country_code": "HU"}
 
 
 def test_circuit_without_an_id_is_skipped():
     """A race with no circuit ID doesn't trigger a pointless request."""
-    with patch("broiestbot.commands.f1.races._fetch_hyprace") as mock_fetch:
-        assert fetch_circuit(None) is None
+    with patch("broiestbot.commands.f1.races._fetch_hyprace", AsyncMock()) as mock_fetch:
+        assert asyncio.run(fetch_circuit(None)) is None
     mock_fetch.assert_not_called()
 
 
@@ -203,14 +209,13 @@ def test_non_200_response_returns_none():
     """Non-200 responses are logged & swallowed."""
     from broiestbot.commands.f1.races import _fetch_hyprace
 
-    mock_resp = MagicMock(status_code=429, text="Too many requests")
-    with patch("broiestbot.commands.f1.races.requests.get", return_value=mock_resp):
-        assert _fetch_hyprace("https://hyprace/v2/seasons", {}) is None
+    with patch_http_session("broiestbot.commands.f1.races", FakeResponse(status=429, text="Too many requests")):
+        assert asyncio.run(_fetch_hyprace("https://hyprace/v2/seasons", {})) is None
 
 
 def test_request_exception_returns_none():
     """Connection errors are logged & swallowed."""
     from broiestbot.commands.f1.races import _fetch_hyprace
 
-    with patch("broiestbot.commands.f1.races.requests.get", side_effect=TimeoutError("timed out")):
-        assert _fetch_hyprace("https://hyprace/v2/seasons", {}) is None
+    with patch_http_session("broiestbot.commands.f1.races", TimeoutError("timed out")):
+        assert asyncio.run(_fetch_hyprace("https://hyprace/v2/seasons", {})) is None

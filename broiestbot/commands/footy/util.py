@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 
 import pytz
 from pytz import BaseTzInfo
-from sqlalchemy import Column
+from sqlalchemy import Column, select
 
 from config import (
     AFCON_CUP_ID,
@@ -40,11 +40,11 @@ from config import (
     WOMENS_WORLD_CUP_ID,
     WORLD_CUP_ID,
 )
-from database import Session
+from database import async_session
 from database.models import ChatangoUser
 
 
-def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]:
+async def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]:
     """
     Lookup user to determine preferred timezone.
 
@@ -52,17 +52,18 @@ def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]:
 
     :returns: Optional[Column[str]]
     """
-    with Session() as db:
-        user = (
-            db.query(ChatangoUser).filter(ChatangoUser.username == username).filter(ChatangoUser.ip.isnot(None)).first()
+    async with async_session() as db:
+        result = await db.execute(
+            select(ChatangoUser).where(ChatangoUser.username == username).where(ChatangoUser.ip.isnot(None))
         )
+        user = result.scalars().first()
     if user and user.time_zone_name is not None:
         # TODO: Prevent fetching for preferred TZ per fixture
         # LOGGER.info(f"Found user {username} in database with tz: {user.time_zone_name}")
         return user.time_zone_name
 
 
-def get_preferred_timezone(room: str, username: str) -> str:
+async def get_preferred_timezone(room: str, username: str) -> str:
     """
     Display fixture dates depending on preferred timezone of requesting user.
 
@@ -74,13 +75,13 @@ def get_preferred_timezone(room: str, username: str) -> str:
     if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
         return "UTC"
     if "anon" not in username:
-        tz_string = lookup_user_preferred_timezone(username)
+        tz_string = await lookup_user_preferred_timezone(username)
         if tz_string:
             return tz_string
     return "America/New_York"
 
 
-def get_preferred_time_format(start_time: datetime, room: str, username: str) -> Tuple[str, BaseTzInfo]:
+async def get_preferred_time_format(start_time: datetime, room: str, username: str) -> Tuple[str, BaseTzInfo]:
     """
     Display fixture times depending on preferred timezone of requesting user/room.
 
@@ -90,7 +91,7 @@ def get_preferred_time_format(start_time: datetime, room: str, username: str) ->
 
     :returns: Tuple[str, BaseTzInfo]
     """
-    timezone_name = get_preferred_timezone(room, username)
+    timezone_name = await get_preferred_timezone(room, username)
     if "America" in timezone_name:
         return (
             start_time.strftime("%b %d, %l:%M%p").replace("AM", "am").replace("PM", "pm"),
@@ -203,7 +204,7 @@ def check_fixture_start_date(fixture_start_date: datetime, tz: tzinfo, display_d
     return display_date
 
 
-def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str) -> str:
+async def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str) -> str:
     """
     Construct upcoming fixture match-up.
 
@@ -216,7 +217,7 @@ def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str
     """
     home_team = abbreviate_team_name(fixture["teams"]["home"]["name"])
     away_team = abbreviate_team_name(fixture["teams"]["away"]["name"])
-    display_date, tz = get_preferred_time_format(date, room, username)
+    display_date, tz = await get_preferred_time_format(date, room, username)
     display_date = check_fixture_start_date(date, tz, display_date)
     matchup = f"{away_team} @ {home_team}"
     return f"{matchup:<30} | <i>{display_date}</i>\n"

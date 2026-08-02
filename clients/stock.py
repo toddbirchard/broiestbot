@@ -5,9 +5,9 @@ from typing import Optional
 
 import chart_studio.plotly as py
 import plotly.graph_objects as go
-import requests
+from aiohttp import ClientError
 from emoji import emojize
-from requests.exceptions import HTTPError
+from http_client import get_http_session
 
 
 class StockChartHandler:
@@ -17,9 +17,9 @@ class StockChartHandler:
         self.token = token
         self.endpoint = endpoint
 
-    def get_chart(self, symbol: str) -> str:
+    async def get_chart(self, symbol: str) -> str:
         """Create chart of a company's 30-day stock performance."""
-        message = self.get_price(symbol)
+        message = await self.get_price(symbol)
         if message:
             return message
         return emojize("⚠️ dats nought a stock symbol u MORAN :@ ⚠️", language="en")
@@ -34,36 +34,40 @@ class StockChartHandler:
             return message
         return emojize("⚠️ dats nought a stock symbol u RETART :@ ⚠️", language="en")'''
 
-    def get_price(self, symbol: str) -> Optional[str]:
+    async def get_price(self, symbol: str) -> Optional[str]:
         """Get daily price summary."""
         params = {"token": self.token}
         try:
-            req = requests.get(f"{self.endpoint}{symbol}/quote", params=params)
-            if req.status_code == 200:
-                price = req.json().get("latestPrice", None)
-                company_name = req.json().get("companyName", None)
-                change = req.json().get("ytdChange", None)
-                if price and company_name:
-                    message = f"{company_name}: Current price of ${price:.2f}."
-                    if change:
-                        message = f"{company_name}: Current price of ${price:.2f} (24-hour change of {change:.2f}%)"
-                    return message
-        except HTTPError as e:
-            raise HTTPError(f"Failed to fetch stock price for `{symbol}`: {e.response.content}")
+            session = await get_http_session()
+            async with session.get(f"{self.endpoint}{symbol}/quote", params=params) as resp:
+                if resp.status == 200:
+                    quote = await resp.json(content_type=None)
+                    price = quote.get("latestPrice", None)
+                    company_name = quote.get("companyName", None)
+                    change = quote.get("ytdChange", None)
+                    if price and company_name:
+                        message = f"{company_name}: Current price of ${price:.2f}."
+                        if change:
+                            message = f"{company_name}: Current price of ${price:.2f} (24-hour change of {change:.2f}%)"
+                        return message
+        except ClientError as e:
+            raise ClientError(f"Failed to fetch stock price for `{symbol}`: {e}")
         except Exception as e:
             raise Exception(f"Unexpected error while fetching stock price for `{symbol}`: {e}")
         return None
 
-    def _get_chart_data(self, symbol: str) -> Optional[bytes]:
+    async def _get_chart_data(self, symbol: str) -> Optional[bytes]:
         """Fetch 30-day performance data from API."""
         params = {"token": self.token, "includeToday": "true"}
         url = f"{self.endpoint}{symbol}/chart/1m"
         try:
-            req = requests.get(url, params=params)
-            if req.status_code == 200 and req.content:
-                return req.content
-        except HTTPError as e:
-            raise HTTPError(f"Failed to fetch stock timeseries data for `{symbol}`: {e.response.content}")
+            session = await get_http_session()
+            async with session.get(url, params=params) as resp:
+                content = await resp.read()
+                if resp.status == 200 and content:
+                    return content
+        except ClientError as e:
+            raise ClientError(f"Failed to fetch stock timeseries data for `{symbol}`: {e}")
         except Exception as e:
             raise Exception(f"Unexpected error while fetching stock timeseries data for `{symbol}`: {e}")
         return None

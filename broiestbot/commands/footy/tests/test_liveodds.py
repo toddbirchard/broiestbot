@@ -1,11 +1,13 @@
 """Tests for live footy odds parsing logic."""
 
-from typing import List
-from unittest.mock import MagicMock, patch
+import asyncio
+from unittest.mock import AsyncMock, patch
 
-import pytest
-
-from broiestbot.commands.footy.liveodds import fetch_live_odds_per_fixture, footy_live_odds_per_league
+from broiestbot.commands.footy.liveodds import (
+    fetch_live_odds_per_fixture,
+    footy_live_odds_per_league,
+)
+from tests.aiohttp_mocks import FakeResponse, patch_http_session
 
 # ---------------------------------------------------------------------------
 # fetch_live_odds_per_fixture
@@ -14,37 +16,27 @@ from broiestbot.commands.footy.liveodds import fetch_live_odds_per_fixture, foot
 
 def test_fetch_live_odds_per_fixture_returns_response(live_odds_response_fixture):
     """fetch_live_odds_per_fixture returns the response list on HTTP 200."""
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = {"response": live_odds_response_fixture}
-
-    with patch("broiestbot.commands.footy.liveodds.requests.get", return_value=mock_resp):
-        result = fetch_live_odds_per_fixture(1489392)
+    with patch_http_session(
+        "broiestbot.commands.footy.liveodds",
+        FakeResponse(json_data={"response": live_odds_response_fixture}),
+    ):
+        result = asyncio.run(fetch_live_odds_per_fixture(1489392))
 
     assert result == live_odds_response_fixture
 
 
 def test_fetch_live_odds_per_fixture_returns_none_on_non_200():
     """fetch_live_odds_per_fixture returns None for non-200 status codes."""
-    mock_resp = MagicMock()
-    mock_resp.status_code = 403
-    mock_resp.text = "Forbidden"
-
-    with patch("broiestbot.commands.footy.liveodds.requests.get", return_value=mock_resp):
-        result = fetch_live_odds_per_fixture(1489392)
+    with patch_http_session("broiestbot.commands.footy.liveodds", FakeResponse(status=403, text="Forbidden")):
+        result = asyncio.run(fetch_live_odds_per_fixture(1489392))
 
     assert result is None
 
 
 def test_fetch_live_odds_per_fixture_returns_empty_list_on_empty_response():
     """fetch_live_odds_per_fixture returns [] when the API reports 200 but no odds exist."""
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = {"response": []}
-    mock_resp.text = '{"response": []}'
-
-    with patch("broiestbot.commands.footy.liveodds.requests.get", return_value=mock_resp):
-        result = fetch_live_odds_per_fixture(1489392)
+    with patch_http_session("broiestbot.commands.footy.liveodds", FakeResponse(json_data={"response": []})):
+        result = asyncio.run(fetch_live_odds_per_fixture(1489392))
 
     assert result == []
 
@@ -103,14 +95,16 @@ def test_footy_live_odds_per_league_formats_output(live_fixture, live_odds_respo
     with (
         patch(
             "broiestbot.commands.footy.liveodds.fetch_live_fixtures",
+            new_callable=AsyncMock,
             return_value=[live_fixture],
         ),
         patch(
             "broiestbot.commands.footy.liveodds.fetch_live_odds_per_fixture",
+            new_callable=AsyncMock,
             return_value=live_odds_response_fixture,
         ),
     ):
-        result = footy_live_odds_per_league(1, "WORLD CUP", "testuser")
+        result = asyncio.run(footy_live_odds_per_league(1, "WORLD CUP", "testuser"))
 
     assert result is not None
     assert "3.20" in result
@@ -120,8 +114,8 @@ def test_footy_live_odds_per_league_formats_output(live_fixture, live_odds_respo
 
 def test_footy_live_odds_per_league_returns_none_when_no_fixtures():
     """footy_live_odds_per_league returns None when there are no live fixtures."""
-    with patch("broiestbot.commands.footy.liveodds.fetch_live_fixtures", return_value=[]):
-        result = footy_live_odds_per_league(1, "WORLD CUP", "testuser")
+    with patch("broiestbot.commands.footy.liveodds.fetch_live_fixtures", new_callable=AsyncMock, return_value=[]):
+        result = asyncio.run(footy_live_odds_per_league(1, "WORLD CUP", "testuser"))
 
     assert result is None
 
@@ -131,13 +125,15 @@ def test_footy_live_odds_per_league_returns_none_when_no_odds(live_fixture):
     with (
         patch(
             "broiestbot.commands.footy.liveodds.fetch_live_fixtures",
+            new_callable=AsyncMock,
             return_value=[live_fixture],
         ),
         patch(
             "broiestbot.commands.footy.liveodds.fetch_live_odds_per_fixture",
+            new_callable=AsyncMock,
             return_value=[],
         ),
     ):
-        result = footy_live_odds_per_league(1, "WORLD CUP", "testuser")
+        result = asyncio.run(footy_live_odds_per_league(1, "WORLD CUP", "testuser"))
 
     assert result is None
