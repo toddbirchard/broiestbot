@@ -142,16 +142,12 @@ async def get_weather_emoji(weather_code: int, is_day: str) -> str:
     async with async_session() as db:
         result = await db.execute(select(Weather).where(Weather.code == weather_code))
         weather_emoji = result.scalars().one_or_none()
-    if weather_emoji is not None:
-        return weather_emoji.icon
-    elif is_day == "no" and weather_emoji.group in [
-        "sun",
-        None,
-    ]:
+    if weather_emoji is None:
+        return ":sun:"
+    # A sun after dark makes no sense, so sun-group conditions get a night sky instead.
+    if is_day == "no" and weather_emoji.group in ("sun", None):
         return emojize(":night_with_stars:", language="en")
-    elif weather_emoji.icon and is_day == "no":
-        return weather_emoji.icon
-    return ":sun:"
+    return weather_emoji.icon
 
 
 def get_precipitation_emoji(precipitation: int) -> str:
