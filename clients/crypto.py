@@ -6,7 +6,6 @@ from typing import Optional
 import chart_studio
 import chart_studio.plotly as py
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 from aiohttp import ClientError
 from emoji import emojize
