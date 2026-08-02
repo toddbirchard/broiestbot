@@ -46,9 +46,10 @@ async def find_movie(movie_title: str) -> str:
             imdb_url = movie.get("imdbID")
             if title and year:
                 title = f"{title}, {year} <i>({rated})</i>"
-            if ratings:
-                ratings = [rating for rating in ratings if rating.get("Source") == "Rotten Tomatoes"]
-                rating = ratings[0].get("Value")
+            # OMDb serves no `Ratings` at all for some titles, and omits the Rotten
+            # Tomatoes entry for plenty more; neither should sink the whole lookup.
+            rating = next((r.get("Value") for r in ratings or [] if r.get("Source") == "Rotten Tomatoes"), None)
+            if rating:
                 rating = f"🍅 <b>Rotten Tomatos</b>: {rating}"
             if cast:
                 cast = f":people_hugging: <b>Starring</b>: {cast}"
