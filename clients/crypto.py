@@ -28,14 +28,6 @@ class CryptoChartHandler:
 
     async def get_coin_price(self, symbol: str, endpoint: str) -> str:
         """
-        Get crypto data and generate Plotly chart.
-
-        :param str symbol: Crypto symbol to fetch price performance for.
-        :param str endpoint: Endpoint for the requested crypto.
-
-        :returns: str
-        """
-        """
         Get crypto price for provided ticker label.
 
         :param str symbol: Crypto symbol to fetch price performance for.
