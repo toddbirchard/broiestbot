@@ -44,6 +44,10 @@ class CryptoChartHandler:
         :returns: str
         """
         prices = await self._fetch_price_data(symbol, endpoint)
+        if isinstance(prices, str):
+            return prices
+        if not prices:
+            return emojize("⚠️ dats nought a COIN u RETART :@ ⚠️", language="en")
         percentage = prices["change"]["percentage"] * 100
         if prices.get("last") > 1:
             return emojize(
