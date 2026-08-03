@@ -1,14 +1,14 @@
 """Parse live NBA scores, or fallback to upcoming games."""
 
+from aiohttp import ClientError
 from emoji import emojize
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from .today import today_nba_games
 from .upcoming import upcoming_nba_games
 
 
-def live_nba_games() -> str:
+async def live_nba_games() -> str:
     """
     Fetch all live NBA games.
 
@@ -16,12 +16,10 @@ def live_nba_games() -> str:
     """
     try:
         games = "\n\n\n"
-        resp = today_nba_games()
-        if resp.status_code == 200:
+        today_games = await today_nba_games()
+        if today_games:
             live_games = [
-                game
-                for game in resp.json().get("response")
-                if game["status"]["short"] != "NS" and game["status"]["short"] != "FT"
+                game for game in today_games if game["status"]["short"] != "NS" and game["status"]["short"] != "FT"
             ]
             if len(live_games) > 0:
                 games += emojize(":basketball: <b>Live NBA Games:</b>\n", language="en")
@@ -35,13 +33,13 @@ def live_nba_games() -> str:
                         f"{away_team} <b>{away_team_score}</b> @ {home_team} <b>{home_team_score}</b>\n{game_clock}"
                     )
                 return games
-            elif len(resp.json().get("response")) > 0:
-                upcoming_games = upcoming_nba_games()
+            elif len(today_games) > 0:
+                upcoming_games = await upcoming_nba_games()
                 games += "No live NBA games. Upcoming games today:\n"
                 games += upcoming_games
                 return games
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching NBA games: {e.response.content}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching NBA games: {e}")
     except LookupError as e:
         LOGGER.exception(f"LookupError while fetching NBA games: {e}")
     except Exception as e:

@@ -4,40 +4,34 @@ from datetime import datetime
 from typing import Optional
 
 import pytz
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
-from config import (
-    HTTP_REQUEST_TIMEOUT,
-    MLB_BASE_ENDPOINT,
-    MLB_LEAGUE_ID,
-    MLB_PHILLIES_ID,
-    RAPID_API_KEY,
-)
+from config import MLB_BASE_ENDPOINT, MLB_LEAGUE_ID, MLB_PHILLIES_ID, RAPID_API_KEY
 
 from .util import parse_mlb_game
 
 
-def today_phillies_games() -> str:
+async def today_phillies_games() -> str:
     """
     Fetch live or upcoming Phillies games for the current date.
 
     :returns: str
     """
     today_games_response = "\n\n\n\n"
-    today_games = get_today_games()
+    today_games = await get_today_games()
     if bool(today_games):
         for game in today_games:
-            mlb_game = parse_mlb_game(game)
+            mlb_game = await parse_mlb_game(game)
             if mlb_game is not None:
-                today_games_response += parse_mlb_game(game)
+                today_games_response += mlb_game
                 return today_games_response
     return emojize(":warning: Couldn't find any MLB games :warning:", language="en")
 
 
-def get_today_games() -> Optional[dict]:
+async def get_today_games() -> Optional[dict]:
     """
     Fetch Phillies games scheduled for the current date.
 
@@ -57,11 +51,13 @@ def get_today_games() -> Optional[dict]:
             "X-RapidAPI-Host": "api-baseball.p.rapidapi.com",
             "X-RapidAPI-Key": RAPID_API_KEY,
         }
-        resp = requests.get(url, headers=headers, params=params, timeout=HTTP_REQUEST_TIMEOUT)
-        if resp.status_code == 200 and resp.json():
-            return resp.json().get("response")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching MLB games: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(url, headers=headers, params=params) as resp:
+            games = await resp.json(content_type=None) if resp.status == 200 else None
+            if games:
+                return games.get("response")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching MLB games: {e}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching MLB games: {e}")
     except Exception as e:

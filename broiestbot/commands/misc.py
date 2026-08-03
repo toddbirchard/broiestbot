@@ -6,15 +6,14 @@ from math import floor
 from typing import Optional
 
 import pytz
-import requests
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
 
 from clients import sms
 from config import (
     CHATANGO_SPECIAL_USERS,
     COVID_API_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
     RAPID_API_KEY,
     TIMEZONE_US_EASTERN,
     TWILIO_PHONE_NUMBERS,
@@ -167,7 +166,7 @@ def time_until_wayne(user_name: str) -> str:
         )
 
 
-def covid_cases_usa() -> str:
+async def covid_cases_usa() -> str:
     """
     Retrieve reported COVID-19 cases and deaths in the US.
 
@@ -182,10 +181,12 @@ def covid_cases_usa() -> str:
             "x-rapidapi-key": RAPID_API_KEY,
             "x-rapidapi-host": "covid-19-data.p.rapidapi.com",
         }
-        resp = requests.get(COVID_API_ENDPOINT, headers=headers, params=params, timeout=HTTP_REQUEST_TIMEOUT).json()[0]
-        deaths = resp["deaths"]
-        critical = resp["critical"]
-        cases = resp["confirmed"]
+        session = await get_http_session()
+        async with session.get(COVID_API_ENDPOINT, headers=headers, params=params) as resp:
+            covid_data = (await resp.json(content_type=None))[0]
+        deaths = covid_data["deaths"]
+        critical = covid_data["critical"]
+        cases = covid_data["confirmed"]
         covid_summary = (
             f"\n\n\n"
             f":United_States: :eagle: USA! USA! USA! USA! :eagle: :United_States:\n"

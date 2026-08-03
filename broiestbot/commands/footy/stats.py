@@ -2,8 +2,9 @@
 
 from typing import Optional, Tuple
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
 
 from config import (
@@ -11,14 +12,13 @@ from config import (
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LIVE_STATS_LEAGUES,
-    HTTP_REQUEST_TIMEOUT,
 )
 
 from .live import fetch_live_fixtures
 from .util import get_preferred_timezone
 
 
-def footy_stats_for_live_fixtures(room: str, username: str):
+async def footy_stats_for_live_fixtures(room: str, username: str):
     """
     Fetch live fixture odds for EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
 
@@ -28,16 +28,16 @@ def footy_stats_for_live_fixtures(room: str, username: str):
     """
     try:
         live_fixture_stats_response = "\n\n\n"
-        tz_name = get_preferred_timezone(room, username)
+        tz_name = await get_preferred_timezone(room, username)
         for league_name, league_id in FOOTY_LIVE_STATS_LEAGUES.items():
-            live_league_fixtures = fetch_live_fixtures(league_id, tz_name)
+            live_league_fixtures = await fetch_live_fixtures(league_id, tz_name)
             if live_league_fixtures and bool(live_league_fixtures) and live_league_fixtures != []:
                 live_fixture_stats_response += f"<b>{league_name}</b>\n"
                 for fixture in live_league_fixtures:
                     if fixture.get("fixture"):
                         fixture_id = fixture["fixture"]["id"]
-                        raw_live_fixture_stats = fetch_stats_per_live_fixture(fixture_id)
-                        live_fixture_score = get_fixture_score(fixture_id)
+                        raw_live_fixture_stats = await fetch_stats_per_live_fixture(fixture_id)
+                        live_fixture_score = await get_fixture_score(fixture_id)
                         if raw_live_fixture_stats and live_fixture_score:
                             live_fixture_stats = parse_live_fixture_stats(raw_live_fixture_stats, live_fixture_score)
                             if live_fixture_stats:
@@ -50,7 +50,7 @@ def footy_stats_for_live_fixtures(room: str, username: str):
         LOGGER.error(f"Unexpected error when serving live fixture stats: {e}")
 
 
-def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[dict]:
+async def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[dict]:
     """
     Construct fixture stats for a single live fixture.
 
@@ -60,15 +60,12 @@ def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[dict]:
     """
     try:
         params = {"fixture": fixture_id}
-        resp = requests.get(
-            FOOTY_FIXTURE_STATS_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        return resp.json()["response"]
-    except requests.HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching live fixtures: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(FOOTY_FIXTURE_STATS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            fixture_stats = await resp.json(content_type=None)
+            return fixture_stats["response"]
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching live fixtures: {e}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching live fixtures: {e}")
     except Exception as e:
@@ -124,7 +121,7 @@ def unpack_team_statistics(team_stats_list: list) -> dict:
     return team_stats
 
 
-def get_fixture_score(fixture_id: int) -> Optional[Tuple[int, int]]:
+async def get_fixture_score(fixture_id: int) -> Optional[Tuple[int, int]]:
     """
     Fetch the current score for a given fixture.
 
@@ -134,21 +131,17 @@ def get_fixture_score(fixture_id: int) -> Optional[Tuple[int, int]]:
     """
     try:
         params = {"id": fixture_id}
-        resp = requests.get(
-            FOOTY_FIXTURES_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        fixture_data = resp.json()["response"]
+        session = await get_http_session()
+        async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            fixture_data = (await resp.json(content_type=None))["response"]
         if fixture_data and len(fixture_data) > 0:
             goals = fixture_data[0].get("goals", {})
             home_goals = goals.get("home", 0)
             away_goals = goals.get("away", 0)
             return home_goals, away_goals
         return 0, 0
-    except requests.HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching fixture score: {e.response.content}")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching fixture score: {e}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching fixture score: {e}")
     except Exception as e:

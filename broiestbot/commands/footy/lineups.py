@@ -4,17 +4,16 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 import pytz
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from config import (
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_XI_ENDPOINT,
     FOOTY_XI_LEAGUES,
-    HTTP_REQUEST_TIMEOUT,
 )
 
 from .util import (
@@ -28,7 +27,7 @@ from .util import (
 
 
 @LOGGER.catch
-def footy_team_lineups(room: str, username: str) -> Optional[str]:
+async def footy_team_lineups(room: str, username: str) -> Optional[str]:
     """
     Fetch starting lineups by team for immediate or live fixtures.
 
@@ -40,9 +39,9 @@ def footy_team_lineups(room: str, username: str) -> Optional[str]:
     try:
         i = 0
         today_fixture_lineups = "\n\n\n"
-        tz_name = get_preferred_timezone(room, username)
+        tz_name = await get_preferred_timezone(room, username)
         for league_name, league_id in FOOTY_XI_LEAGUES.items():
-            league_fixtures = get_today_live_or_upcoming_fixtures(league_id, room, tz_name)
+            league_fixtures = await get_today_live_or_upcoming_fixtures(league_id, room, tz_name)
             league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures, tz_name)
             if bool(league_fixtures_with_lineups) and i <= 3:
                 i += 1
@@ -50,8 +49,8 @@ def footy_team_lineups(room: str, username: str) -> Optional[str]:
                 for fixture_xi in league_fixtures_with_lineups:
                     if bool(fixture_xi):
                         fixture_id = fixture_xi["fixture"]["id"]
-                        fixture_summary = build_fixture_summary(fixture_xi, room, username)
-                        fixture_lineups = fetch_lineups_per_fixture(fixture_id)
+                        fixture_summary = await build_fixture_summary(fixture_xi, room, username)
+                        fixture_lineups = await fetch_lineups_per_fixture(fixture_id)
                         if fixture_lineups == []:
                             today_fixture_lineups += f"{fixture_summary} \
                                 <i>(Lineups not yet available)</i>\n\n"
@@ -65,7 +64,7 @@ def footy_team_lineups(room: str, username: str) -> Optional[str]:
 
 
 @LOGGER.catch
-def fetch_lineups_per_fixture(fixture_id: int) -> Optional[List[dict]]:
+async def fetch_lineups_per_fixture(fixture_id: int) -> Optional[List[dict]]:
     """
     Get team lineup for given fixture.
 
@@ -75,15 +74,12 @@ def fetch_lineups_per_fixture(fixture_id: int) -> Optional[List[dict]]:
     """
     try:
         params = {"fixture": fixture_id}
-        resp = requests.get(
-            FOOTY_XI_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        return resp.json().get("response")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy XIs: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(FOOTY_XI_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            lineups = await resp.json(content_type=None)
+            return lineups.get("response")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching footy XIs: {e}")
     except ValueError as e:
         LOGGER.error(f"ValueError while fetching footy XIs: {e}")
     except Exception as e:
@@ -126,7 +122,7 @@ def get_fixture_xis(teams: dict) -> Optional[str]:
 
 
 @LOGGER.catch
-def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
+async def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
     """
     Get fixtures for a league for the current day (live or upcoming).
 
@@ -145,15 +141,12 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name: str)
             "status": "NS-1H-2H",
             "timezone": tz_name,
         }
-        resp = requests.get(
-            FOOTY_FIXTURES_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        return filter_friendly_fixtures(resp.json().get("response"), league_id)
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy fixtures: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            fixtures = await resp.json(content_type=None)
+            return filter_friendly_fixtures(fixtures.get("response"), league_id)
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching footy fixtures: {e}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
@@ -161,7 +154,7 @@ def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name: str)
 
 
 @LOGGER.catch
-def build_fixture_summary(fixture: dict, room: str, username: str) -> Optional[str]:
+async def build_fixture_summary(fixture: dict, room: str, username: str) -> Optional[str]:
     """
     Summarize basic details about a fixture.
 
@@ -176,7 +169,7 @@ def build_fixture_summary(fixture: dict, room: str, username: str) -> Optional[s
         status_detail = fixture["fixture"]["status"]["long"]
         elapsed = fixture["fixture"]["status"]["elapsed"]
         date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
-        display_date, tz = get_preferred_time_format(date, room, username)
+        display_date, tz = await get_preferred_time_format(date, room, username)
         display_date = check_fixture_start_date(date, tz, display_date)
         if status == "FT":
             return f"<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({status})</i>\n"

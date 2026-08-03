@@ -2,23 +2,22 @@
 
 from typing import List, Optional
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from config import (
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT,
     FOOTY_LIVE_SCORED_LEAGUES,
-    HTTP_REQUEST_TIMEOUT,
 )
 
 from .util import filter_friendly_fixtures
 
 
-def footy_live_fixtures(username: str, subs=False) -> str:
+async def footy_live_fixtures(username: str, subs=False) -> str:
     """
     Fetch live fixtures for EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
 
@@ -30,7 +29,7 @@ def footy_live_fixtures(username: str, subs=False) -> str:
     live_fixtures = "\n\n\n"
     i = 0
     for league_name, league_id in FOOTY_LIVE_SCORED_LEAGUES.items():
-        live_league_fixtures = footy_live_fixtures_per_league(league_id, league_name, username, subs=subs)
+        live_league_fixtures = await footy_live_fixtures_per_league(league_id, league_name, username, subs=subs)
         if live_league_fixtures is not None and i < 6:
             i += 1
             live_fixtures += live_league_fixtures + "\n"
@@ -39,7 +38,7 @@ def footy_live_fixtures(username: str, subs=False) -> str:
     return live_fixtures
 
 
-def footy_live_fixtures_per_league(league_id: int, league_name: str, username: str, subs=False) -> Optional[str]:
+async def footy_live_fixtures_per_league(league_id: int, league_name: str, username: str, subs=False) -> Optional[str]:
     """
     Construct summary of events for all live fixtures in a given league.
 
@@ -52,7 +51,7 @@ def footy_live_fixtures_per_league(league_id: int, league_name: str, username: s
     """
     try:
         live_fixtures = "\n\n\n\n"
-        fixtures = fetch_live_fixtures(league_id, username)
+        fixtures = await fetch_live_fixtures(league_id, username)
         if fixtures:
             live_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
             for i, fixture in enumerate(fixtures):
@@ -64,7 +63,7 @@ def footy_live_fixtures_per_league(league_id: int, league_name: str, username: s
                 venue = fixture["fixture"]["venue"].get("name", "")
                 live_fixture = f'<b>{away_team} {away_score} @ {home_team} {home_score}</b>\n<i>{venue}, {elapsed}"</i>'
                 live_fixtures += live_fixture
-                fixture_events_response = fetch_events_per_live_fixture(fixture["fixture"]["id"])
+                fixture_events_response = await fetch_events_per_live_fixture(fixture["fixture"]["id"])
                 if fixture_events_response:
                     live_fixture_events = parse_events_per_live_fixture(fixture_events_response, subs=subs)
                     if live_fixture_events is not None:
@@ -74,15 +73,15 @@ def footy_live_fixtures_per_league(league_id: int, league_name: str, username: s
             if live_fixtures != "\n\n\n\n":
                 return live_fixtures
         return None
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching live fixtures: {e.response}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching live fixtures: {e}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching live fixtures: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching live fixtures: {e}")
 
 
-def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
+async def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
     """
     Fetch live footy fixtures across EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
 
@@ -93,23 +92,20 @@ def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
     """
     try:
         params = {"league": league_id, "live": "all", "timezone": tz_name}
-        resp = requests.get(
-            FOOTY_FIXTURES_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        if resp.status_code == 200:
-            return filter_friendly_fixtures(resp.json().get("response"), league_id)
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching footy fixtures: {e.response}")
+        session = await get_http_session()
+        async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            if resp.status == 200:
+                fixtures = await resp.json(content_type=None)
+                return filter_friendly_fixtures(fixtures.get("response"), league_id)
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching footy fixtures: {e}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-def fetch_events_per_live_fixture(fixture_id: int) -> Optional[List[dict]]:
+async def fetch_events_per_live_fixture(fixture_id: int) -> Optional[List[dict]]:
     """
     Construct timeline of events for a single live fixture.
 
@@ -119,15 +115,12 @@ def fetch_events_per_live_fixture(fixture_id: int) -> Optional[List[dict]]:
     """
     try:
         params = {"fixture": fixture_id}
-        req = requests.get(
-            FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        return req.json().get("response")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while compiling events in live fixture: {e.response}")
+        session = await get_http_session()
+        async with session.get(FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            events = await resp.json(content_type=None)
+            return events.get("response")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while compiling events in live fixture: {e}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while compiling events in live fixture: {e}")
     except Exception as e:

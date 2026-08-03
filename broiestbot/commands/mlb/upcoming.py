@@ -3,20 +3,15 @@
 from datetime import datetime
 from typing import Optional, Tuple
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
-from config import (
-    HTTP_REQUEST_TIMEOUT,
-    MLB_BASE_ENDPOINT,
-    RAPID_API_KEY,
-    TIMEZONE_US_EASTERN,
-)
+from config import MLB_BASE_ENDPOINT, RAPID_API_KEY, TIMEZONE_US_EASTERN
 
 
-def parse_upcoming_mlb_game(game: dict) -> Optional[str]:
+async def parse_upcoming_mlb_game(game: dict) -> Optional[str]:
     """
     Fetch upcoming MLB match-up scheduled for the current date.
 
@@ -27,7 +22,7 @@ def parse_upcoming_mlb_game(game: dict) -> Optional[str]:
     try:
         home_name = game["teams"]["home"]["name"]
         away_name = game["teams"]["away"]["name"]
-        away_stats, home_stats = get_team_stats(game)
+        away_stats, home_stats = await get_team_stats(game)
         now = datetime.now(tz=TIMEZONE_US_EASTERN)
         start_time_hour = int(game["time"].split(":")[0])
         start_time_minute = int(game["time"].split(":")[0])
@@ -45,12 +40,12 @@ def parse_upcoming_mlb_game(game: dict) -> Optional[str]:
         LOGGER.exception(f"Unexpected error while parsing upcoming Phillies game: {e}")
 
 
-def get_team_stats(game: dict) -> Tuple[str, str]:
+async def get_team_stats(game: dict) -> Tuple[str, str]:
     try:
         away_id = str(game["teams"]["away"]["id"])
         home_id = str(game["teams"]["home"]["id"])
-        away_stats = fetch_team_statistics(away_id)
-        home_stats = fetch_team_statistics(home_id)
+        away_stats = await fetch_team_statistics(away_id)
+        home_stats = await fetch_team_statistics(home_id)
         away_wins = away_stats["games"]["wins"]["all"]["total"]
         away_losses = away_stats["games"]["loses"]["all"]["total"]
         away_win_pct = away_stats["games"]["wins"]["all"]["percentage"]
@@ -67,7 +62,7 @@ def get_team_stats(game: dict) -> Tuple[str, str]:
         LOGGER.error(f"Unexpected error while parsing MLB team stats: {e}")
 
 
-def fetch_team_statistics(team_id: str) -> Optional[dict]:
+async def fetch_team_statistics(team_id: str) -> Optional[dict]:
     """
     Fetch high-level team stats for upcoming match-up.
 
@@ -82,11 +77,13 @@ def fetch_team_statistics(team_id: str) -> Optional[dict]:
             "X-RapidAPI-Host": "api-baseball.p.rapidapi.com",
             "X-RapidAPI-Key": RAPID_API_KEY,
         }
-        resp = requests.get(url, headers=headers, params=querystring, timeout=HTTP_REQUEST_TIMEOUT)
-        if resp.status_code == 200 and resp.json():
-            return resp.json().get("response")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching MLB team stats: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(url, headers=headers, params=querystring) as resp:
+            stats = await resp.json(content_type=None) if resp.status == 200 else None
+            if stats:
+                return stats.get("response")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching MLB team stats: {e}")
     except ValueError as e:
         LOGGER.exception(f"ValueError while fetching MLB team stats: {e}")
     except Exception as e:

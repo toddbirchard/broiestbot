@@ -10,7 +10,7 @@ from .drivers import driver_roster
 from .races import _fetch_hyprace, resolve_season_id
 
 
-def fetch_driver_standings(season: int) -> Optional[List[dict]]:
+async def fetch_driver_standings(season: int) -> Optional[List[dict]]:
     """
     Fetch the current drivers' championship standings, resolved to names & teams.
 
@@ -19,16 +19,16 @@ def fetch_driver_standings(season: int) -> Optional[List[dict]]:
     :returns: Optional[List[dict]]
     """
     try:
-        season_id = resolve_season_id(season)
+        season_id = await resolve_season_id(season)
         if season_id is None:
             return None
-        data = _fetch_hyprace(F1_DRIVER_STANDINGS_ENDPOINT, {"seasonId": season_id, "isLastStanding": "true"})
+        data = await _fetch_hyprace(F1_DRIVER_STANDINGS_ENDPOINT, {"seasonId": season_id, "isLastStanding": "true"})
         if not data:
             return None
         items = data.get("items") or []
         if not items:
             return None
-        roster = driver_roster(season_id)
+        roster = await driver_roster(season_id)
         standings = []
         for row in items[0].get("standings") or []:
             position = row.get("position")

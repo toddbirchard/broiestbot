@@ -2,22 +2,17 @@
 
 from typing import Optional
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
-from config import (
-    FOOTY_HTTP_HEADERS,
-    FOOTY_STANDINGS_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
-    MLS_LEAGUE_ID,
-)
+from config import FOOTY_HTTP_HEADERS, FOOTY_STANDINGS_ENDPOINT, MLS_LEAGUE_ID
 
 from .util import abbreviate_team_name, get_season_year
 
 
-def league_table_standings(league_id: int) -> Optional[str]:
+async def league_table_standings(league_id: int) -> Optional[str]:
     """
     Get table standings for a given league.
 
@@ -26,7 +21,7 @@ def league_table_standings(league_id: int) -> Optional[str]:
     :returns: Optional[str]
     """
     try:
-        league_table_response = fetch_league_table_standings(league_id)
+        league_table_response = await fetch_league_table_standings(league_id)
         if league_table_response:
             standings_table = "\n\n\n\n"
             standings = league_table_response[0]["league"]["standings"][0]
@@ -49,7 +44,7 @@ def league_table_standings(league_id: int) -> Optional[str]:
         LOGGER.exception(f"Unexpected error when fetching {league_id} standings: {e}")
 
 
-def fetch_league_table_standings(league_id: int) -> Optional[dict]:
+async def fetch_league_table_standings(league_id: int) -> Optional[dict]:
     """
     Fetch league table standings for a given league.
 
@@ -59,41 +54,38 @@ def fetch_league_table_standings(league_id: int) -> Optional[dict]:
     """
     try:
         params = {"league": league_id, "season": get_season_year(league_id)}
-        resp = requests.get(
-            FOOTY_STANDINGS_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        if resp.status_code == 200:
-            return resp.json().get("response")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching {league_id} standings: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(FOOTY_STANDINGS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            if resp.status == 200:
+                standings = await resp.json(content_type=None)
+                return standings.get("response")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching {league_id} standings: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching {league_id} standings: {e}")
 
 
-def mls_standings() -> Optional[str]:
+async def mls_standings() -> Optional[str]:
     """
     Fetch and parse standings for MLS (regular season).
 
     :returns: Optional[str]
     """
     try:
-        mls_standings_response = fetch_league_table_standings(MLS_LEAGUE_ID)
+        mls_standings_response = await fetch_league_table_standings(MLS_LEAGUE_ID)
         if mls_standings_response:
             standings_table = "\n\n\n\n"
             for i, conference in enumerate(mls_standings_response[0]["league"]["standings"]):
-                mls_conference_standings = mls_conference_standings(conference)
-                if mls_conference_standings:
-                    standings_table += mls_conference_standings
+                conference_table = mls_conference_standings(conference)
+                if conference_table:
+                    standings_table += conference_table
                 if i == 0:
                     standings_table += "\n\n"
                 elif standings_table != "\n\n\n\n":
                     return emojize(standings_table, language="en")
         return emojize(":warning: Couldn't fetch standings :warning:", language="en")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching {MLS_LEAGUE_ID} standings: {e.response.content}")
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching {MLS_LEAGUE_ID} standings: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching {MLS_LEAGUE_ID} standings: {e}")
 

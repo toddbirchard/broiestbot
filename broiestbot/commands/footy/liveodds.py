@@ -2,23 +2,22 @@
 
 from typing import Optional
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from config import (
     FOOTY_HTTP_HEADERS,
     FOOTY_LIVE_ODDS_ENDPOINT,
     FOOTY_LIVE_ODDS_LEAGUES,
-    HTTP_REQUEST_TIMEOUT,
 )
 
 from .live import fetch_live_fixtures
 from .util import abbreviate_team_name
 
 
-def footy_live_odds(username: str) -> str:
+async def footy_live_odds(username: str) -> str:
     """
     Fetch and display live betting odds for all active fixtures.
 
@@ -29,7 +28,7 @@ def footy_live_odds(username: str) -> str:
     all_odds = "\n\n\n"
     i = 0
     for league_name, league_id in FOOTY_LIVE_ODDS_LEAGUES.items():
-        league_odds = footy_live_odds_per_league(league_id, league_name, username)
+        league_odds = await footy_live_odds_per_league(league_id, league_name, username)
         if league_odds is not None and i < 6:
             i += 1
             all_odds += league_odds + "\n"
@@ -38,7 +37,7 @@ def footy_live_odds(username: str) -> str:
     return all_odds
 
 
-def footy_live_odds_per_league(league_id: int, league_name: str, username: str) -> Optional[str]:
+async def footy_live_odds_per_league(league_id: int, league_name: str, username: str) -> Optional[str]:
     """
     Fetch and format live 1X2 odds for all active fixtures in a given league.
 
@@ -49,14 +48,14 @@ def footy_live_odds_per_league(league_id: int, league_name: str, username: str) 
     :returns: Optional[str]
     """
     try:
-        fixtures = fetch_live_fixtures(league_id, username)
+        fixtures = await fetch_live_fixtures(league_id, username)
         if not fixtures:
             return None
 
         odds_by_fixture = {}
         for fixture in fixtures:
             fixture_id = fixture["fixture"]["id"]
-            fixture_odds = fetch_live_odds_per_fixture(fixture_id)
+            fixture_odds = await fetch_live_odds_per_fixture(fixture_id)
             if not fixture_odds:
                 continue
             for entry in fixture_odds:
@@ -93,15 +92,15 @@ def footy_live_odds_per_league(league_id: int, league_name: str, username: str) 
         if found:
             return league_output
         return None
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching live footy odds: {getattr(e.response, 'content', e)}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching live footy odds: {e}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching live footy odds: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching live footy odds: {e}")
 
 
-def fetch_live_odds_per_fixture(fixture_id: int) -> Optional[list]:
+async def fetch_live_odds_per_fixture(fixture_id: int) -> Optional[list]:
     """
     Fetch live 1X2 odds for a specific fixture.
 
@@ -111,20 +110,17 @@ def fetch_live_odds_per_fixture(fixture_id: int) -> Optional[list]:
     """
     try:
         params = {"fixture": fixture_id}
-        resp = requests.get(
-            FOOTY_LIVE_ODDS_ENDPOINT,
-            headers=FOOTY_HTTP_HEADERS,
-            params=params,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        if resp.status_code == 200:
-            data = resp.json().get("response", [])
-            if not data:
-                LOGGER.warning(f"Empty live odds response for fixture {fixture_id}: {resp.text[:300]}")
-            return data
-        LOGGER.warning(f"Non-200 live odds response for fixture {fixture_id}: {resp.status_code} {resp.text[:300]}")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError fetching live odds for fixture {fixture_id}: {getattr(e.response, 'content', e)}")
+        session = await get_http_session()
+        async with session.get(FOOTY_LIVE_ODDS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            body = await resp.text()
+            if resp.status == 200:
+                data = (await resp.json(content_type=None)).get("response", [])
+                if not data:
+                    LOGGER.warning(f"Empty live odds response for fixture {fixture_id}: {body[:300]}")
+                return data
+            LOGGER.warning(f"Non-200 live odds response for fixture {fixture_id}: {resp.status} {body[:300]}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError fetching live odds for fixture {fixture_id}: {e}")
     except Exception as e:
         LOGGER.exception(f"Error fetching live odds for fixture {fixture_id}: {e}")
     return None

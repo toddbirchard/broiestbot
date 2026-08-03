@@ -421,17 +421,17 @@ DFB_POKAL_CUP_ID = 81
 
 # Footy Leagues, cups and tournaments
 FOOTY_LEAGUES = {
-    # ":lion: EPL": EPL_LEAGUE_ID,
+    ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
     # ":trophy: :England: FA CUP": FA_CUP_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
-    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
@@ -445,7 +445,7 @@ FOOTY_LEAGUES = {
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :France: COUPE DE FRANCE": COUPE_DE_FRANCE,
-    ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
+    # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
@@ -488,7 +488,7 @@ FOOTY_LEAGUES = {
 # Footy leagues with "live scoring" enabled
 FOOTY_LIVE_SCORED_LEAGUES = {
     # ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
-    # ":lion: EPL": EPL_LEAGUE_ID,
+    ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
@@ -548,7 +548,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
 # Footy leagues with "lineups" enabled
 FOOTY_XI_LEAGUES = {
     # ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
-    # ":lion: EPL": EPL_LEAGUE_ID,
+    ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
@@ -593,14 +593,14 @@ FOOTY_XI_LEAGUES = {
 
 FOOTY_LIVE_ODDS_LEAGUES = {
     # ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
-    # ":lion: EPL": EPL_LEAGUE_ID,
+    ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":trophy: :England: FA CUP": FA_CUP_ID,
     # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
@@ -611,7 +611,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
-    ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
+    # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
@@ -630,7 +630,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
 
 FOOTY_LIVE_STATS_LEAGUES = {
     # ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
-    # ":lion: EPL": EPL_LEAGUE_ID,
+    ":lion: EPL": EPL_LEAGUE_ID,
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
@@ -693,6 +693,9 @@ SOUTHHAMPTON_TEAM_ID = 41
 WOLVES_TEAM_ID = 39
 FULHAM_TEAM_ID = 36
 BOURNEMOUTH_TEAM_ID = 35
+ATLETICO_MADRID_TEAM_ID = 530
+REAL_MADRID_TEAM_ID = 541
+BARCELONA_TEAM_ID = 529
 
 WREXHAM_TEAM_ID = 1837
 BENFICA_TEAM_ID = 211
@@ -721,6 +724,9 @@ FOOTY_FRIENDLY_CLUBS = [
     AALESUND_TEAM_ID,
     BODO_GLIMT_TEAM_ID,
     HEARTS_TEAM_ID,
+    BARCELONA_TEAM_ID,
+    REAL_MADRID_TEAM_ID,
+    ATLETICO_MADRID_TEAM_ID,
 ]
 
 # Specify team IDs to be prioritized whe fetching starting XIs

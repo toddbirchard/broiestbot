@@ -29,7 +29,7 @@ def _is_listable(bout: dict) -> bool:
     return bool(bout.get("eastShikona") and bout.get("westShikona") and not bout.get("winnerEn"))
 
 
-def upcoming_sumo_matches_for_date(today: date) -> str:
+async def upcoming_sumo_matches_for_date(today: date) -> str:
     """
     Build chat message of all known upcoming top-division bouts, grouped by basho day.
 
@@ -41,7 +41,7 @@ def upcoming_sumo_matches_for_date(today: date) -> str:
     :returns: str
     """
     try:
-        basho = get_current_or_next_basho(today)
+        basho = await get_current_or_next_basho(today)
         if basho is None:
             return emojize(":crying_face: no sumo basho on the schedule... check back later BROH", language="en")
         basho_start = _parse_basho_date(basho["startDate"])
@@ -49,7 +49,7 @@ def upcoming_sumo_matches_for_date(today: date) -> str:
         first_day = max((today - basho_start).days + 1, 1)
         bouts_by_day = ""
         for day in range(first_day, SUMO_BASHO_FINAL_DAY + 1):
-            torikumi = fetch_torikumi(basho["date"], day)
+            torikumi = await fetch_torikumi(basho["date"], day)
             bouts = torikumi.get("torikumi") if torikumi else None
             if not bouts:
                 break
@@ -82,10 +82,10 @@ def upcoming_sumo_matches_for_date(today: date) -> str:
         return emojize(":warning: idk the sumo API shit the bed, try again later.", language="en")
 
 
-def upcoming_sumo_matches() -> str:
+async def upcoming_sumo_matches() -> str:
     """
     Fetch all announced upcoming top-division bouts for the current (or next) basho.
 
     :returns: str
     """
-    return upcoming_sumo_matches_for_date(datetime.now(pytz.timezone("Asia/Tokyo")).date())
+    return await upcoming_sumo_matches_for_date(datetime.now(pytz.timezone("Asia/Tokyo")).date())

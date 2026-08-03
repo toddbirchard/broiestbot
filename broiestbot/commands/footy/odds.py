@@ -2,15 +2,15 @@
 
 from typing import List, Optional
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
-from config import FOOTY_ODDS_ENDPOINT_2, HTTP_REQUEST_TIMEOUT, RAPID_API_KEY
+from config import FOOTY_ODDS_ENDPOINT_2, RAPID_API_KEY
 
 
-def get_today_footy_odds_for_league(league_id: int):
+async def get_today_footy_odds_for_league(league_id: int):
     """
     Get odds for today's fixtures for a given league.
 
@@ -20,7 +20,7 @@ def get_today_footy_odds_for_league(league_id: int):
     """
     try:
         all_fixture_odds = "\n\n\n"
-        odds_response = fetch_today_footy_odds_for_league(league_id)
+        odds_response = await fetch_today_footy_odds_for_league(league_id)
         if odds_response.get("data") is not None:
             fixtures_odds = odds_response.get("data")[::5]
             if odds_response.get("success"):
@@ -33,7 +33,7 @@ def get_today_footy_odds_for_league(league_id: int):
 
 
 @DeprecationWarning
-def fetch_today_footy_odds_for_league(league_id: int):
+async def fetch_today_footy_odds_for_league(league_id: int):
     """
     Get odds for today's fixtures for a given league.
 
@@ -54,10 +54,11 @@ def fetch_today_footy_odds_for_league(league_id: int):
             "x-rapidapi-host": "odds.p.rapidapi.com",
             "x-rapidapi-key": RAPID_API_KEY,
         }
-        resp = requests.get(url, headers=headers, params=querystring, timeout=HTTP_REQUEST_TIMEOUT)
-        return resp.json()
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError while fetching footy odds: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(url, headers=headers, params=querystring) as resp:
+            return await resp.json(content_type=None)
+    except ClientError as e:
+        LOGGER.error(f"ClientError while fetching footy odds: {e}")
         return emojize(":yellow_square: trash API couldnt find footy odds smdh :yellow_square:", language="en")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy odds: {e}")

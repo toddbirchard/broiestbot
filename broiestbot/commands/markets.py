@@ -1,19 +1,15 @@
 """Fetch crypto or stock market data."""
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from clients import cch, sch
-from config import (
-    COINMARKETCAP_API_KEY,
-    COINMARKETCAP_LATEST_ENDPOINT,
-    HTTP_REQUEST_TIMEOUT,
-)
+from config import COINMARKETCAP_API_KEY, COINMARKETCAP_LATEST_ENDPOINT
 
 
-def get_crypto_chart(symbol: str) -> str:
+async def get_crypto_chart(symbol: str) -> str:
     """
     Fetch crypto price and generate 60-day performance chart.
 
@@ -22,9 +18,9 @@ def get_crypto_chart(symbol: str) -> str:
     :returns: str
     """
     try:
-        return cch.get_crypto_chart(symbol)
-    except HTTPError as e:
-        LOGGER.exception("HTTPError {e.response.status_code} while fetching crypto price for `{symbol}`: {e}")
+        return await cch.get_crypto_chart(symbol)
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching crypto price for `{symbol}`: {e}")
         return emojize(f":warning: omg the internet died AAAAA :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching crypto price for `{symbol}`: {e}")
@@ -34,7 +30,7 @@ def get_crypto_chart(symbol: str) -> str:
         )
 
 
-def get_crypto_price(symbol: str, endpoint) -> str:
+async def get_crypto_price(symbol: str, endpoint) -> str:
     """
     Fetch crypto price for a given coin symbol.
 
@@ -44,9 +40,9 @@ def get_crypto_price(symbol: str, endpoint) -> str:
     :returns: str
     """
     try:
-        return cch.get_coin_price(symbol, endpoint)
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError {e.response.status_code} while fetching crypto price for `{symbol}`: {e}")
+        return await cch.get_coin_price(symbol, endpoint)
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching crypto price for `{symbol}`: {e}")
         return emojize(":warning: omg the internet died AAAAA :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching crypto price for `{symbol}`: {e}")
@@ -56,7 +52,7 @@ def get_crypto_price(symbol: str, endpoint) -> str:
         )
 
 
-def get_stock(symbol: str) -> str:
+async def get_stock(symbol: str) -> str:
     """
     Fetch stock price and generate 30-day performance chart.
 
@@ -66,16 +62,16 @@ def get_stock(symbol: str) -> str:
     """
     try:
         # chart = sch.get_chart(symbol)
-        return sch.get_price(symbol)
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching stock price for `{symbol}`: {e}")
+        return await sch.get_price(symbol)
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching stock price for `{symbol}`: {e}")
         return emojize(":warning: ough nough da site i get stocks from died :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching stock price for `{symbol}`: {e}")
         return emojize(":warning: i broke bc im a shitty bot :warning:", language="en")
 
 
-def get_top_crypto() -> str:
+async def get_top_crypto() -> str:
     """
     Fetch top 10 crypto coin performance.
 
@@ -87,17 +83,13 @@ def get_top_crypto() -> str:
             "Accepts": "application/json",
             "X-CMC_PRO_API_KEY": COINMARKETCAP_API_KEY,
         }
-        resp = requests.get(
-            COINMARKETCAP_LATEST_ENDPOINT,
-            params=params,
-            headers=headers,
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        if resp.status_code == 200:
-            coins = resp.json().get("data")
-            return format_top_crypto_response(coins)
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError while fetching top coins: {e.response.content}")
+        session = await get_http_session()
+        async with session.get(COINMARKETCAP_LATEST_ENDPOINT, params=params, headers=headers) as resp:
+            if resp.status == 200:
+                coins = (await resp.json(content_type=None)).get("data")
+                return format_top_crypto_response(coins)
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching top coins: {e}")
         return emojize(":warning: FUCK the bot broke :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected exception while fetching top coins: {e}")

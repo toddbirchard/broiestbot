@@ -8,7 +8,7 @@ from logger import LOGGER
 from .today import today_nba_games
 
 
-def upcoming_nba_games() -> str:
+async def upcoming_nba_games() -> str:
     """
     Fetch all NBA games for the current date.
 
@@ -16,12 +16,12 @@ def upcoming_nba_games() -> str:
     """
     try:
         games = "\n\n\n"
-        resp = today_nba_games()
-        if resp.status_code == 200:
-            upcoming_games = [game for game in resp.json()["response"] if game["status"]["short"] == "NS"]
+        today_games = await today_nba_games()
+        if today_games:
+            upcoming_games = [game for game in today_games if game["status"]["short"] == "NS"]
             if len(upcoming_games) > 0:
                 games += emojize(":basketball: <b>NBA Games Today:</b>\n", language="en")
-                for game in resp.json().get("response"):
+                for game in today_games:
                     if game["status"]["short"] != "FT":
                         away_team = game["teams"]["away"]["name"]
                         home_team = game["teams"]["home"]["name"]

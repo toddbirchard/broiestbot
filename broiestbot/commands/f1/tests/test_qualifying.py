@@ -1,6 +1,7 @@
 """Tests for fetching the starting grid of a grand prix."""
 
-from unittest.mock import patch
+import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -58,12 +59,15 @@ def test_grid_is_resolved_to_names_and_sorted():
     with (
         patch(
             "broiestbot.commands.f1.qualifying._fetch_hyprace",
+            new_callable=AsyncMock,
             side_effect=[SPRINT_WEEKEND_SESSIONS, QUALIFYING_RESULTS],
         ),
-        patch("broiestbot.commands.f1.qualifying.resolve_season_id", return_value="season-2026"),
-        patch("broiestbot.commands.f1.qualifying.driver_roster", return_value=ROSTER),
+        patch(
+            "broiestbot.commands.f1.qualifying.resolve_season_id", new_callable=AsyncMock, return_value="season-2026"
+        ),
+        patch("broiestbot.commands.f1.qualifying.driver_roster", new_callable=AsyncMock, return_value=ROSTER),
     ):
-        grid = fetch_starting_grid("gp-hungary", 2026)
+        grid = asyncio.run(fetch_starting_grid("gp-hungary", 2026))
 
     assert [(entry["position"], entry["name"], entry["time"]) for entry in grid] == [
         (1, "Andrea Kimi Antonelli", "1:17.207"),
@@ -78,12 +82,15 @@ def test_sprint_qualifying_is_ignored():
     with (
         patch(
             "broiestbot.commands.f1.qualifying._fetch_hyprace",
+            new_callable=AsyncMock,
             side_effect=[SPRINT_WEEKEND_SESSIONS, QUALIFYING_RESULTS],
         ) as mock_fetch,
-        patch("broiestbot.commands.f1.qualifying.resolve_season_id", return_value="season-2026"),
-        patch("broiestbot.commands.f1.qualifying.driver_roster", return_value=ROSTER),
+        patch(
+            "broiestbot.commands.f1.qualifying.resolve_season_id", new_callable=AsyncMock, return_value="season-2026"
+        ),
+        patch("broiestbot.commands.f1.qualifying.driver_roster", new_callable=AsyncMock, return_value=ROSTER),
     ):
-        fetch_starting_grid("gp-britain", 2026)
+        asyncio.run(fetch_starting_grid("gp-britain", 2026))
 
     assert "quali-standard" in mock_fetch.call_args_list[1].args[0]
 
@@ -92,9 +99,10 @@ def test_qualifying_yet_to_run_has_an_empty_grid():
     """A grand prix whose qualifying hasn't happened yet reports no grid at all."""
     with patch(
         "broiestbot.commands.f1.qualifying._fetch_hyprace",
+        new_callable=AsyncMock,
         side_effect=[SPRINT_WEEKEND_SESSIONS, {"results": []}],
     ):
-        assert fetch_starting_grid("gp-dutch", 2026) == []
+        assert asyncio.run(fetch_starting_grid("gp-dutch", 2026)) == []
 
 
 def test_unresolved_driver_still_listed():
@@ -102,12 +110,15 @@ def test_unresolved_driver_still_listed():
     with (
         patch(
             "broiestbot.commands.f1.qualifying._fetch_hyprace",
+            new_callable=AsyncMock,
             side_effect=[SPRINT_WEEKEND_SESSIONS, QUALIFYING_RESULTS],
         ),
-        patch("broiestbot.commands.f1.qualifying.resolve_season_id", return_value="season-2026"),
-        patch("broiestbot.commands.f1.qualifying.driver_roster", return_value={}),
+        patch(
+            "broiestbot.commands.f1.qualifying.resolve_season_id", new_callable=AsyncMock, return_value="season-2026"
+        ),
+        patch("broiestbot.commands.f1.qualifying.driver_roster", new_callable=AsyncMock, return_value={}),
     ):
-        grid = fetch_starting_grid("gp-hungary", 2026)
+        grid = asyncio.run(fetch_starting_grid("gp-hungary", 2026))
 
     assert grid[0]["position"] == 1
     assert grid[0]["name"] is None
@@ -115,26 +126,28 @@ def test_unresolved_driver_still_listed():
 
 def test_missing_qualifying_session_returns_none():
     """A grand prix with no standard qualifying session yields no grid."""
-    with patch("broiestbot.commands.f1.qualifying._fetch_hyprace", return_value={"items": []}):
-        assert fetch_starting_grid("gp-hungary", 2026) is None
+    with patch("broiestbot.commands.f1.qualifying._fetch_hyprace", new_callable=AsyncMock, return_value={"items": []}):
+        assert asyncio.run(fetch_starting_grid("gp-hungary", 2026)) is None
 
 
 def test_failed_grid_request_returns_none():
     """A failed qualifying request is swallowed & reported as no data."""
-    with patch("broiestbot.commands.f1.qualifying._fetch_hyprace", return_value=None):
-        assert fetch_starting_grid("gp-hungary", 2026) is None
+    with patch("broiestbot.commands.f1.qualifying._fetch_hyprace", new_callable=AsyncMock, return_value=None):
+        assert asyncio.run(fetch_starting_grid("gp-hungary", 2026)) is None
 
 
 def test_race_without_an_id_has_no_grid():
     """A race we don't have an ID for can't have its grid looked up."""
-    assert fetch_starting_grid(None, 2026) is None
-    assert fetch_starting_grid("gp-hungary", None) is None
+    assert asyncio.run(fetch_starting_grid(None, 2026)) is None
+    assert asyncio.run(fetch_starting_grid("gp-hungary", None)) is None
 
 
 def test_unexpected_error_returns_none():
     """Unexpected errors are swallowed & reported as no data."""
-    with patch("broiestbot.commands.f1.qualifying._fetch_hyprace", side_effect=ValueError("boom")):
-        assert fetch_starting_grid("gp-hungary", 2026) is None
+    with patch(
+        "broiestbot.commands.f1.qualifying._fetch_hyprace", new_callable=AsyncMock, side_effect=ValueError("boom")
+    ):
+        assert asyncio.run(fetch_starting_grid("gp-hungary", 2026)) is None
 
 
 def test_penalized_driver_isnt_marked_as_qualified():

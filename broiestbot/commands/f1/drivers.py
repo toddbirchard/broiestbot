@@ -11,7 +11,7 @@ from .races import fetch_all_pages
 _DRIVER_ROSTERS: Dict[str, Dict[str, dict]] = {}
 
 
-def driver_roster(season_id: str) -> Dict[str, dict]:
+async def driver_roster(season_id: str) -> Dict[str, dict]:
     """
     Build (and cache) a map of driver ID to name, code & team for a season.
 
@@ -21,7 +21,7 @@ def driver_roster(season_id: str) -> Dict[str, dict]:
     """
     if season_id in _DRIVER_ROSTERS:
         return _DRIVER_ROSTERS[season_id]
-    drivers = fetch_all_pages(f"{F1_SEASONS_ENDPOINT}/{season_id}/drivers", {})
+    drivers = await fetch_all_pages(f"{F1_SEASONS_ENDPOINT}/{season_id}/drivers", {})
     if not drivers:
         return {}
     roster = {}

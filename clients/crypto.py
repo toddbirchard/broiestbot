@@ -6,11 +6,10 @@ from typing import Optional
 import chart_studio
 import chart_studio.plotly as py
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-import requests
+from aiohttp import ClientError
 from emoji import emojize
-from requests.exceptions import HTTPError
+from http_client import get_http_session, request_timeout
 
 from config import PLOTLY_API_KEY, PLOTLY_USERNAME
 
@@ -26,15 +25,7 @@ class CryptoChartHandler:
         self.price_endpoint = price_endpoint
         self.chart_endpoint = chart_endpoint
 
-    def get_coin_price(self, symbol: str, endpoint: str) -> str:
-        """
-        Get crypto data and generate Plotly chart.
-
-        :param str symbol: Crypto symbol to fetch price performance for.
-        :param str endpoint: Endpoint for the requested crypto.
-
-        :returns: str
-        """
+    async def get_coin_price(self, symbol: str, endpoint: str) -> str:
         """
         Get crypto price for provided ticker label.
 
@@ -43,7 +34,11 @@ class CryptoChartHandler:
 
         :returns: str
         """
-        prices = self._fetch_price_data(symbol, endpoint)
+        prices = await self._fetch_price_data(symbol, endpoint)
+        if isinstance(prices, str):
+            return prices
+        if not prices:
+            return emojize("⚠️ dats nought a COIN u RETART :@ ⚠️", language="en")
         percentage = prices["change"]["percentage"] * 100
         if prices.get("last") > 1:
             return emojize(
@@ -65,7 +60,7 @@ class CryptoChartHandler:
             )
         return emojize("⚠️ dats nought a COIN u RETART :@ ⚠️", language="en")
 
-    def get_crypto_chart(self, symbol: str) -> str:
+    async def get_crypto_chart(self, symbol: str) -> str:
         """
         Get crypto data and generate Plotly chart.
 
@@ -73,10 +68,10 @@ class CryptoChartHandler:
 
         :returns: Optional[str]
         """
-        return self._create_chart(symbol)
+        return await self._create_chart(symbol)
 
     @staticmethod
-    def _fetch_price_data(symbol: str, endpoint: str) -> Optional[dict]:
+    async def _fetch_price_data(symbol: str, endpoint: str) -> Optional[dict]:
         """
         Get crypto price for a coin symbol.
 
@@ -86,19 +81,18 @@ class CryptoChartHandler:
         :returns: Optional[dict]
         """
         try:
-            resp = requests.get(url=endpoint, timeout=20)
-            if resp.status_code == 429:
-                return emojize(f":warning: jfc you exceeded the crypto API limit :@ :warning:", language="en")
-            if resp.status_code == 200:
-                return resp.json()["result"]["price"]
-        except HTTPError as e:
-            raise HTTPError(
-                f"HTTPError error {e.response.status_code} while fetching crypto price for `{symbol}`: {e.response.content}"
-            )
+            session = await get_http_session()
+            async with session.get(endpoint, timeout=request_timeout(20)) as resp:
+                if resp.status == 429:
+                    return emojize(":warning: jfc you exceeded the crypto API limit :@ :warning:", language="en")
+                if resp.status == 200:
+                    return (await resp.json(content_type=None))["result"]["price"]
+        except ClientError as e:
+            raise ClientError(f"ClientError while fetching crypto price for `{symbol}`: {e}")
         except Exception as e:
             raise Exception(f"Unexpected error while crypto price for `{symbol}`: {e}")
 
-    def _get_chart_data(self, symbol: str) -> Optional[dict]:
+    async def _get_chart_data(self, symbol: str) -> Optional[dict]:
         """
         Fetch 60-day crypto prices.
 
@@ -113,11 +107,14 @@ class CryptoChartHandler:
             "apikey": self.token,
         }
         try:
-            resp = requests.get(self.chart_endpoint, params=params)
-            if resp.status_code == 200 and resp.json():
-                return resp.json()
-        except HTTPError as e:
-            raise HTTPError(f"Failed to fetch crypto data for `{symbol}`: {e.response.content}")
+            session = await get_http_session()
+            async with session.get(self.chart_endpoint, params=params) as resp:
+                if resp.status == 200:
+                    chart_data = await resp.json(content_type=None)
+                    if chart_data:
+                        return chart_data
+        except ClientError as e:
+            raise ClientError(f"Failed to fetch crypto data for `{symbol}`: {e}")
         except Exception as e:
             raise Exception(f"Unexpected error while crypto data for `{symbol}`: {e}")
 
@@ -133,7 +130,7 @@ class CryptoChartHandler:
         df = pd.DataFrame.from_dict(coin_data["Time Series (Digital Currency Daily)"], orient="index")[:60]
         return df
 
-    def _create_chart(self, symbol: str) -> Optional[str]:
+    async def _create_chart(self, symbol: str) -> Optional[str]:
         """
         Create Plotly chart for given crypto symbol.
 
@@ -142,7 +139,7 @@ class CryptoChartHandler:
         :returns: Optional[str]
         """
         try:
-            chart_data = self._get_chart_data(symbol)
+            chart_data = await self._get_chart_data(symbol)
             if chart_data:
                 crypto_df = self._parse_chart_data(chart_data)
                 crypto_df = crypto_df.apply(pd.to_numeric)
@@ -202,7 +199,7 @@ class CryptoChartHandler:
                     auto_open=False,
                 )
                 return chart.replace("https://plotly.com/", "https://chart-studio.plotly.com/")[:-1] + ".png"
-        except HTTPError as e:
+        except ClientError as e:
             return emojize(f":warning: fk bro's plotly subscription died: {e} :warning:", language="en")
         except Exception as e:
             return emojize(f":warning: idk wot happened: {e} :warning:", language="en")

@@ -2,16 +2,15 @@
 
 from typing import Optional
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session
 from imdb import IMDbError
 from imdb.Movie import Movie
 from logger import LOGGER
-from requests.exceptions import HTTPError
 
 from clients import ia
 from config import (
-    HTTP_REQUEST_TIMEOUT,
     OMDB_API_KEY,
     OMDB_ENDPOINT,
     RAPID_API_KEY,
@@ -20,7 +19,7 @@ from config import (
 )
 
 
-def find_movie(movie_title: str) -> str:
+async def find_movie(movie_title: str) -> str:
     """
     Get movie metadata from OMDb.
 
@@ -29,13 +28,10 @@ def find_movie(movie_title: str) -> str:
     :returns: str
     """
     try:
-        resp = requests.get(
-            OMDB_ENDPOINT,
-            params={"t": movie_title, "apikey": OMDB_API_KEY},
-            timeout=HTTP_REQUEST_TIMEOUT,
-        )
-        if resp.status_code == 200:
-            movie = resp.json()
+        session = await get_http_session()
+        async with session.get(OMDB_ENDPOINT, params={"t": movie_title, "apikey": OMDB_API_KEY}) as resp:
+            movie = await resp.json(content_type=None) if resp.status == 200 else None
+        if movie is not None:
             title = f"<b>{movie.get('Title').upper()}</b>"
             year = movie.get("Year")
             rated = movie.get("Rated")
@@ -50,9 +46,10 @@ def find_movie(movie_title: str) -> str:
             imdb_url = movie.get("imdbID")
             if title and year:
                 title = f"{title}, {year} <i>({rated})</i>"
-            if ratings:
-                ratings = [rating for rating in ratings if rating.get("Source") == "Rotten Tomatoes"]
-                rating = ratings[0].get("Value")
+            # OMDb serves no `Ratings` at all for some titles, and omits the Rotten
+            # Tomatoes entry for plenty more; neither should sink the whole lookup.
+            rating = next((r.get("Value") for r in ratings or [] if r.get("Source") == "Rotten Tomatoes"), None)
+            if rating:
                 rating = f"🍅 <b>Rotten Tomatos</b>: {rating}"
             if cast:
                 cast = f":people_hugging: <b>Starring</b>: {cast}"
@@ -89,7 +86,7 @@ def find_movie(movie_title: str) -> str:
             )
             return emojize(f"\n\n\n{response}", language="en")
         return emojize(f":warning: wtf kind of movie is {movie_title} :warning:", language="en")
-    except HTTPError as e:
+    except ClientError as e:
         LOGGER.exception(f"OMDb failed to find `{movie_title}`: {e}")
         return emojize(f":warning: wtf kind of movie is {movie_title} :warning:", language="en")
     except Exception as e:
@@ -189,7 +186,7 @@ def get_box_office_data(movie: Movie) -> Optional[str]:
         LOGGER.error(f"Unexpected error when fetching box office info for `{movie}`: {e}")
 
 
-def streaming_service_show(tv_show_name: str) -> str:
+async def streaming_service_show(tv_show_name: str) -> str:
     """
     Placeholder for future streaming service availability feature.
 
@@ -200,13 +197,14 @@ def streaming_service_show(tv_show_name: str) -> str:
     try:
         params = {"title": tv_show_name, "country": "us", "output_language": "en", "show_type": "series"}
         headers = {"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": STREAMING_SERVICE_HEADER}
-        resp = requests.get(STREAMING_SERVICE_ENDPOINT, headers=headers, params=params, timeout=HTTP_REQUEST_TIMEOUT)
-        if resp.status_code == 200:
-            show = resp.json()[0]
-            response = ""
-            response += streaming_service_show_description(show)
-            return emojize(response, language="en")
-    except HTTPError as e:
+        session = await get_http_session()
+        async with session.get(STREAMING_SERVICE_ENDPOINT, headers=headers, params=params) as resp:
+            if resp.status == 200:
+                show = (await resp.json(content_type=None))[0]
+                response = ""
+                response += streaming_service_show_description(show)
+                return emojize(response, language="en")
+    except ClientError as e:
         LOGGER.exception(f"Streaming-availability API failed to find `{tv_show_name}`: {e}")
         return emojize(f":warning: wtf kind of show is {tv_show_name} :warning:", language="en")
     except Exception as e:

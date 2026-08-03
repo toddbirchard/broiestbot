@@ -27,7 +27,7 @@ from .util import (
 API_ERROR_MESSAGE = emojize(":warning: idk the F1 API shit the bed, try again later.", language="en")
 
 
-def f1_grand_prix_at(now: datetime) -> str:
+async def f1_grand_prix_at(now: datetime) -> str:
     """
     Summarize the state of F1 at a given moment: a live race, the next race, or the offseason.
 
@@ -36,31 +36,31 @@ def f1_grand_prix_at(now: datetime) -> str:
     :returns: str
     """
     try:
-        races = fetch_season_races(now.year)
+        races = await fetch_season_races(now.year)
         if races is None:
             return API_ERROR_MESSAGE
         live_race = find_live_race(races, now)
         if live_race:
-            return live_race_message(_with_circuit(live_race))
+            return await live_race_message(await _with_circuit(live_race))
         next_race = find_next_race(races, now)
         if next_race is None:
-            return offseason_message(now.year, now, bool(races))
-        return upcoming_race_message(_with_circuit(next_race), now)
+            return await offseason_message(now.year, now, bool(races))
+        return await upcoming_race_message(await _with_circuit(next_race), now)
     except Exception as e:
         LOGGER.exception(f"Unexpected error while building F1 grand prix message: {e}")
         return API_ERROR_MESSAGE
 
 
-def f1_grand_prix() -> str:
+async def f1_grand_prix() -> str:
     """
     Summarize the current state of F1, whether that's a live race, the next race, or the offseason.
 
     :returns: str
     """
-    return f1_grand_prix_at(datetime.now(timezone.utc))
+    return await f1_grand_prix_at(datetime.now(timezone.utc))
 
 
-def live_race_message(race: dict) -> str:
+async def live_race_message(race: dict) -> str:
     """
     Summarize a grand prix which is currently being run, with the championship & odds to win.
 
@@ -70,10 +70,10 @@ def live_race_message(race: dict) -> str:
     """
     message = _race_header(race, ":racing_car:", "LIVE NOW")
     message += _race_details(race)
-    return message + _driver_sections(race)
+    return message + await _driver_sections(race)
 
 
-def upcoming_race_message(race: dict, now: datetime) -> str:
+async def upcoming_race_message(race: dict, now: datetime) -> str:
     """
     Summarize the next grand prix, with the championship standings & odds to win.
 
@@ -90,10 +90,10 @@ def upcoming_race_message(race: dict, now: datetime) -> str:
             f":calendar: {format_race_date(start_time)} <i>({format_countdown(start_time - now)})</i>\n",
             language="en",
         )
-    return message + _driver_sections(race)
+    return message + await _driver_sections(race)
 
 
-def offseason_message(season: int, now: datetime, season_had_races: bool = True) -> str:
+async def offseason_message(season: int, now: datetime, season_had_races: bool = True) -> str:
     """
     Report that the F1 season has ended, along with the start of the next season (when known).
 
@@ -107,7 +107,7 @@ def offseason_message(season: int, now: datetime, season_had_races: bool = True)
         message = emojize(f":chequered_flag: <b>the {season} F1 season is over</b>, BROH.\n", language="en")
     else:
         message = emojize(f":chequered_flag: <b>no {season} F1 races on the schedule</b>, BROH.\n", language="en")
-    next_season_races = fetch_season_races(season + 1) or []
+    next_season_races = await fetch_season_races(season + 1) or []
     next_season_start = _first_race_of_season(next_season_races)
     if next_season_start is None:
         return message + emojize(
@@ -123,7 +123,7 @@ def offseason_message(season: int, now: datetime, season_had_races: bool = True)
     return message
 
 
-def _with_circuit(race: dict) -> dict:
+async def _with_circuit(race: dict) -> dict:
     """
     Attach a race's circuit details (name, city & flag) ahead of rendering it.
 
@@ -131,7 +131,7 @@ def _with_circuit(race: dict) -> dict:
 
     :returns: dict
     """
-    race["circuit"] = fetch_circuit(race.get("circuit_id")) or {}
+    race["circuit"] = await fetch_circuit(race.get("circuit_id")) or {}
     return race
 
 
@@ -193,7 +193,7 @@ def _race_details(race: dict) -> str:
     return details
 
 
-def _driver_sections(race: dict) -> str:
+async def _driver_sections(race: dict) -> str:
     """
     Construct the driver-facing section of a summary.
 
@@ -204,16 +204,16 @@ def _driver_sections(race: dict) -> str:
 
     :returns: str
     """
-    grid = _grid_section(race)
+    grid = await _grid_section(race)
     if grid:
         return grid
-    standings = _standings_section(race.get("season"))
+    standings = await _standings_section(race.get("season"))
     if standings:
         return standings
     return emojize(":warning: <i>championship standings unavailable right now.</i>", language="en")
 
 
-def _grid_section(race: dict) -> str:
+async def _grid_section(race: dict) -> str:
     """
     Construct the starting grid of a grand prix, pole first.
 
@@ -221,7 +221,7 @@ def _grid_section(race: dict) -> str:
 
     :returns: str
     """
-    grid = fetch_starting_grid(race.get("id"), race.get("season"))
+    grid = await fetch_starting_grid(race.get("id"), race.get("season"))
     if not grid:
         return ""
     section = emojize("\n:stopwatch: <b>STARTING GRID</b>\n", language="en")
@@ -237,7 +237,7 @@ def _grid_section(race: dict) -> str:
     return section
 
 
-def _standings_section(season: Optional[int]) -> str:
+async def _standings_section(season: Optional[int]) -> str:
     """
     Construct the drivers' championship standings, leader first.
 
@@ -247,7 +247,7 @@ def _standings_section(season: Optional[int]) -> str:
     """
     if season is None:
         return ""
-    standings = fetch_driver_standings(season)
+    standings = await fetch_driver_standings(season)
     if not standings:
         return ""
     section = emojize("\n:trophy: <b>DRIVERS' CHAMPIONSHIP</b>\n", language="en")

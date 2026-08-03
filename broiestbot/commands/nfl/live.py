@@ -2,15 +2,15 @@
 
 from datetime import datetime
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
+from http_client import get_http_session, request_timeout
 from logger import LOGGER
-from requests import HTTPError
 
 from config import NFL_LIVE_GAMES_URL, NFL_LIVE_HTTP_HEADERS
 
 
-def get_live_nfl_game_summaries(username: str) -> str:
+async def get_live_nfl_game_summaries(username: str) -> str:
     """
     Get passing and rushing leaders for live NFL game.
 
@@ -20,12 +20,12 @@ def get_live_nfl_game_summaries(username: str) -> str:
     """
     try:
         game_summaries = "\n\n\n"
-        games = fetch_live_nfl_games()
+        games = await fetch_live_nfl_games()
         if bool(games):
             for game in games:
                 game_id = game["game"]["id"]
                 game_summaries += parse_live_nfl_game_summary(game)
-                game_events = fetch_live_nfl_game_events(game_id)
+                game_events = await fetch_live_nfl_game_events(game_id)
                 game_summaries += parse_live_nfl_scoring_events(game_events)
             return game_summaries
         return emojize(f"tired_face: aw jeez @{username} idt theres any tovalaball on rn tired_face:", language="en")
@@ -34,7 +34,7 @@ def get_live_nfl_game_summaries(username: str) -> str:
         return emojize(f":no_entry: o shit i died: `{e}` :no_entry:", language="en")
 
 
-def fetch_live_nfl_games() -> dict:
+async def fetch_live_nfl_games() -> dict:
     """
     Fetch live NFL games.
 
@@ -43,10 +43,14 @@ def fetch_live_nfl_games() -> dict:
     try:
         current_year = datetime.now().year
         params = {"league": 1, "season": current_year, "live": "all"}
-        resp = requests.get(NFL_LIVE_GAMES_URL, headers=NFL_LIVE_HTTP_HEADERS, params=params, timeout=30)
-        return resp.json().get("response")
-    except HTTPError as e:
-        LOGGER.error(f"HTTPError error {resp.status_code} when fetching live NFL games: {e}")
+        session = await get_http_session()
+        async with session.get(
+            NFL_LIVE_GAMES_URL, headers=NFL_LIVE_HTTP_HEADERS, params=params, timeout=request_timeout(30)
+        ) as resp:
+            games = await resp.json(content_type=None)
+            return games.get("response")
+    except ClientError as e:
+        LOGGER.error(f"ClientError when fetching live NFL games: {e}")
         raise e
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching live NFL games: {e}")
@@ -78,7 +82,7 @@ def parse_live_nfl_game_summary(game: dict) -> str:
         raise f"{__name__}: {e}"
 
 
-def fetch_live_nfl_game_events(game_id: int):
+async def fetch_live_nfl_game_events(game_id: int):
     """
     Get scoring events for a given live NFL game.
 
@@ -88,8 +92,12 @@ def fetch_live_nfl_game_events(game_id: int):
     """
     try:
         params = {"id": game_id}
-        resp = requests.get(f"{NFL_LIVE_GAMES_URL}/events", headers=NFL_LIVE_HTTP_HEADERS, params=params, timeout=30)
-        return resp.json().get("response")
+        session = await get_http_session()
+        async with session.get(
+            f"{NFL_LIVE_GAMES_URL}/events", headers=NFL_LIVE_HTTP_HEADERS, params=params, timeout=request_timeout(30)
+        ) as resp:
+            events = await resp.json(content_type=None)
+            return events.get("response")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching live NFL games: {e}")
 

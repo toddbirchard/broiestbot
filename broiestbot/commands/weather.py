@@ -3,24 +3,23 @@
 from datetime import datetime
 from typing import Optional
 
-import requests
+from aiohttp import ClientError
 from emoji import emojize
-from requests.exceptions import HTTPError
+from http_client import get_http_session
 from logger import LOGGER
-
+from sqlalchemy import select
 
 from config import (
     CHATANGO_OBI_ROOM,
-    HTTP_REQUEST_TIMEOUT,
     METRIC_SYSTEM_USERS,
     WEATHERSTACK_API_ENDPOINT,
     WEATHERSTACK_API_KEY,
 )
-from database import Session
+from database import async_session
 from database.models import Weather
 
 
-def get_current_weather(location: str, room: str, user: str) -> str:
+async def get_current_weather(location: str, room: str, user: str) -> str:
     """
     Return temperature and weather per city/state/zip.
 
@@ -32,16 +31,16 @@ def get_current_weather(location: str, room: str, user: str) -> str:
     """
     try:
         measurement_units = get_user_preferred_units(room, user)
-        weather_response = fetch_current_weather_by_location(location, measurement_units)
+        weather_response = await fetch_current_weather_by_location(location, measurement_units)
         if weather_response is not None and weather_response.get("current"):
-            return parse_weather_response(weather_response, measurement_units, room, user)
+            return await parse_weather_response(weather_response, measurement_units, room, user)
         return f"😢⛈️ sry @{user} i couldn't find da weather for `{location}` ⛈️😢"
     except Exception as e:
         LOGGER.exception(f"Failed to fetch & parse weather for `{location}`: {e}")
         return "⚠️ omfg u broke the bot WHAT DID YOU DO IM DEAD AHHHHHH ⚠️"
 
 
-def fetch_current_weather_by_location(location: str, measurement_units: str) -> Optional[dict]:
+async def fetch_current_weather_by_location(location: str, measurement_units: str) -> Optional[dict]:
     """
     Return temperature and weather per city/state/zip.
 
@@ -58,17 +57,18 @@ def fetch_current_weather_by_location(location: str, measurement_units: str) -> 
             "query": location.replace(";", ""),
             "units": measurement_units,
         }
-        resp = requests.get(WEATHERSTACK_API_ENDPOINT, params=params, timeout=HTTP_REQUEST_TIMEOUT)
-        return resp.json()
-    except HTTPError as e:
-        LOGGER.error(f"Failed to get weather for `{location}`: {e.response}")
+        session = await get_http_session()
+        async with session.get(WEATHERSTACK_API_ENDPOINT, params=params) as resp:
+            return await resp.json(content_type=None)
+    except ClientError as e:
+        LOGGER.error(f"Failed to get weather for `{location}`: {e}")
     except LookupError as e:
-        LOGGER.error(f"KeyError while fetching weather for `{location}`: {e}", language="en")
+        LOGGER.error(f"KeyError while fetching weather for `{location}`: {e}")
     except Exception as e:
         LOGGER.exception(f"Failed to get weather for `{location}`: {e}")
 
 
-def parse_weather_response(weather: dict, measurement_units: str, room: str, user: str) -> str:
+async def parse_weather_response(weather: dict, measurement_units: str, room: str, user: str) -> str:
     """
     Parse weather response returned by API.
 
@@ -93,7 +93,7 @@ def parse_weather_response(weather: dict, measurement_units: str, room: str, use
         local_time = datetime.utcfromtimestamp(weather["location"]["localtime_epoch"]).strftime("%I:%M %p").lower()
         if room == CHATANGO_OBI_ROOM or user in METRIC_SYSTEM_USERS:
             local_time = datetime.utcfromtimestamp(weather["location"]["localtime_epoch"]).strftime("%R")
-        weather_emoji = get_weather_emoji(weather_code, is_day)
+        weather_emoji = await get_weather_emoji(weather_code, is_day)
         precipitation_emoji = get_precipitation_emoji(weather["current"]["precip"])
         humidity_emoji = get_humidity_emoji(humidity)
         cloud_cover_emoji = get_cloud_cover_emoji(cloud_cover)
@@ -130,7 +130,7 @@ def get_user_preferred_units(room: str, user: str) -> str:
     return "f"
 
 
-def get_weather_emoji(weather_code: int, is_day: str) -> str:
+async def get_weather_emoji(weather_code: int, is_day: str) -> str:
     """
     Fetch emoji to best represent location weather based on weather code and time of day.
 
@@ -139,18 +139,15 @@ def get_weather_emoji(weather_code: int, is_day: str) -> str:
 
     :returns: str
     """
-    with Session() as db:
-        weather_emoji = db.query(Weather).filter(Weather.code == weather_code).one_or_none()
-    if weather_emoji is not None:
-        return weather_emoji.icon
-    elif is_day == "no" and weather_emoji.group in [
-        "sun",
-        None,
-    ]:
+    async with async_session() as db:
+        result = await db.execute(select(Weather).where(Weather.code == weather_code))
+        weather_emoji = result.scalars().one_or_none()
+    if weather_emoji is None:
+        return ":sun:"
+    # A sun after dark makes no sense, so sun-group conditions get a night sky instead.
+    if is_day == "no" and weather_emoji.group in ("sun", None):
         return emojize(":night_with_stars:", language="en")
-    elif weather_emoji.icon and is_day == "no":
-        return weather_emoji.icon
-    return ":sun:"
+    return weather_emoji.icon
 
 
 def get_precipitation_emoji(precipitation: int) -> str:

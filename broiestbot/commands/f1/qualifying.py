@@ -21,7 +21,7 @@ QUALIFIED_STATUS = "qualified"
 QUALIFYING_SEGMENTS = ("q3", "q2", "q1")
 
 
-def fetch_starting_grid(grand_prix_id: Optional[str], season: Optional[int]) -> Optional[List[dict]]:
+async def fetch_starting_grid(grand_prix_id: Optional[str], season: Optional[int]) -> Optional[List[dict]]:
     """
     Fetch the starting grid of a grand prix, as set by its qualifying session.
 
@@ -36,18 +36,18 @@ def fetch_starting_grid(grand_prix_id: Optional[str], season: Optional[int]) -> 
     if not grand_prix_id or season is None:
         return None
     try:
-        session_id = _qualifying_session_id(grand_prix_id)
+        session_id = await _qualifying_session_id(grand_prix_id)
         if session_id is None:
             return None
-        data = _fetch_hyprace(f"{F1_GRANDS_PRIX_ENDPOINT}/{grand_prix_id}/qualifying/{session_id}/results", {})
+        data = await _fetch_hyprace(f"{F1_GRANDS_PRIX_ENDPOINT}/{grand_prix_id}/qualifying/{session_id}/results", {})
         if data is None:
             return None
         results = data.get("results") or []
         if not results:
             # Qualifying is still to come; the caller falls back to the championship standings.
             return []
-        season_id = resolve_season_id(season)
-        roster = driver_roster(season_id) if season_id else {}
+        season_id = await resolve_season_id(season)
+        roster = await driver_roster(season_id) if season_id else {}
         grid = []
         for result in results:
             position = result.get("position")
@@ -70,7 +70,7 @@ def fetch_starting_grid(grand_prix_id: Optional[str], season: Optional[int]) -> 
         return None
 
 
-def _qualifying_session_id(grand_prix_id: str) -> Optional[str]:
+async def _qualifying_session_id(grand_prix_id: str) -> Optional[str]:
     """
     ID of the qualifying session which sets a grand prix' grid.
 
@@ -78,7 +78,7 @@ def _qualifying_session_id(grand_prix_id: str) -> Optional[str]:
 
     :returns: Optional[str]
     """
-    data = _fetch_hyprace(f"{F1_GRANDS_PRIX_ENDPOINT}/{grand_prix_id}/qualifying", {})
+    data = await _fetch_hyprace(f"{F1_GRANDS_PRIX_ENDPOINT}/{grand_prix_id}/qualifying", {})
     if not data:
         return None
     sessions = data.get("items") or []

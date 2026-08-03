@@ -5,13 +5,12 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import parse_qs, urlparse, urlunparse
 
-import requests
+from aiohttp import ClientError
+from http_client import get_http_session
 from logger import LOGGER
-from requests.exceptions import HTTPError
 from youtube_search import YoutubeSearch
 
 from config import (
-    HTTP_REQUEST_TIMEOUT,
     TWITCH_BROADCASTERS,
     TWITCH_CLIENT_ID,
     TWITCH_CLIENT_SECRET,
@@ -24,18 +23,18 @@ from config import (
 )
 
 
-def get_all_live_twitch_streams() -> str:
+async def get_all_live_twitch_streams() -> str:
     """
     Check all Twitch broadcasters for live streams.
 
     :returns: str
     """
-    token = get_twitch_auth_token()
+    token = await get_twitch_auth_token()
     try:
         twitch_streams = []
         i = 0
         for user, broadcaster_id in TWITCH_BROADCASTERS.items():
-            stream = get_live_twitch_stream(broadcaster_id, token)
+            stream = await get_live_twitch_stream(broadcaster_id, token)
             if stream:
                 i += 1
                 twitch_streams.append(stream)
@@ -45,15 +44,15 @@ def get_all_live_twitch_streams() -> str:
                     return "\n-----------------------\n".join(twitch_streams)
                 return "".join(twitch_streams)
         return "🚫🎮🙁 no memers streaming twitch rn 🙁🎮🚫"
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError error while fetching Twitch streams: {e}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching Twitch streams: {e}")
         return "🙁 twitch is down or something idk 🙁"
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Twitch streams: {e}")
         return "🙁⚠️ fmga bot died trying to get meme streamers ⚠️🙁"
 
 
-def get_live_twitch_stream(broadcaster_id: str, token: str) -> Optional[str]:
+async def get_live_twitch_stream(broadcaster_id: str, token: str) -> Optional[str]:
     """
     Check if Twitch user is live-streaming and return stream info.
 
@@ -70,13 +69,14 @@ def get_live_twitch_stream(broadcaster_id: str, token: str) -> Optional[str]:
             "client-id": TWITCH_CLIENT_ID,
             "Accept": "application/vnd.twitchtv.v5+json",
         }
-        resp = requests.get(endpoint, params=params, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-        resp = resp.json().get("data")
-        if bool(resp):
-            return format_twitch_response(resp[0])
+        session = await get_http_session()
+        async with session.get(endpoint, params=params, headers=headers) as resp:
+            streams = (await resp.json(content_type=None)).get("data")
+        if bool(streams):
+            return format_twitch_response(streams[0])
         return None
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError when fetching Twitch channel: {e.response.content}")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError when fetching Twitch channel: {e}")
     except IndexError as e:
         LOGGER.exception(f"IndexError when fetching Twitch channel: {e}")
     except Exception as e:
@@ -102,7 +102,7 @@ def format_twitch_response(stream: dict) -> str:
     return f"\n\n\n<b>{broadcaster}</b> is streaming <b>{game}</b>\n<i>{title}</i>\n{viewers} viewers, {int(duration)} minutes\n{url}\n\n{thumbnail}"
 
 
-def get_twitch_auth_token() -> Optional[str]:
+async def get_twitch_auth_token() -> Optional[str]:
     """
     Generate Twitch auth token prior to fetching live streams.
 
@@ -115,10 +115,12 @@ def get_twitch_auth_token() -> Optional[str]:
             "client_secret": TWITCH_CLIENT_SECRET,
             "grant_type": "client_credentials",
         }
-        resp = requests.post(endpoint, params=params, timeout=HTTP_REQUEST_TIMEOUT)
-        return resp.json().get("access_token")
-    except HTTPError as e:
-        LOGGER.exception(f"HTTPError {resp.status_code} when fetching Twitch auth token: {e.response.content}")
+        session = await get_http_session()
+        async with session.post(endpoint, params=params) as resp:
+            token_response = await resp.json(content_type=None)
+            return token_response.get("access_token")
+    except ClientError as e:
+        LOGGER.exception(f"ClientError when fetching Twitch auth token: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Twitch auth token: {e}")
 
