@@ -3,17 +3,18 @@
 import asyncio
 from typing import List
 
+from http_client import close_http_session
 from logger import LOGGER
 
 from broiestbot.bot import Bot
-from database import init_db
+from clients import claude
 from config import (
     CHATANGO_ROOMS,
     CHATANGO_TEST_ROOM,
     CHATANGO_USERS,
     ENVIRONMENT,
 )
-from http_client import close_http_session
+from database import init_db
 
 _bot_task: asyncio.Task = None
 
@@ -59,6 +60,7 @@ async def _handle_lifespan(receive, send) -> None:
                 except asyncio.CancelledError:
                     pass
             await close_http_session()
+            await claude.close()
             await send({"type": "lifespan.shutdown.complete"})
             return
 
