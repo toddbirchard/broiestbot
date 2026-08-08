@@ -6,9 +6,10 @@ from anthropic import APIError, RateLimitError
 from logger import LOGGER
 
 from clients import claude
+from clients.llm import LLMRefusalError
 
 
-def generate_llm_response(user_name: str, history) -> Optional[str]:
+async def generate_llm_response(user_name: str, history) -> Optional[str]:
     """
     Generate a response from the LLM based on the input prompt and chat history.
 
@@ -19,7 +20,10 @@ def generate_llm_response(user_name: str, history) -> Optional[str]:
     """
     try:
         messages = claude.format_chat_history(history, format_type="messages")
-        return claude.generate_response(messages)
+        return await claude.generate_response(messages)
+    except LLMRefusalError as e:
+        LOGGER.warning(f"LLM declined to respond: {e}")
+        return f"@{user_name} nah bro, i ain't touching that one."
     except RateLimitError as e:
         LOGGER.warning(f"LLM rate limit exceeded: {e}")
         return f"sry @{user_name}, brough is too cheap to pay for bert, lmao."

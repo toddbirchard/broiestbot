@@ -149,7 +149,7 @@ class Bot(chatango.Client):
 
         Handlers which fetch data over HTTP are coroutines (`aiohttp`) and are awaited
         directly; handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb,
-        Anthropic, etc.) are dispatched with `asyncio.to_thread` to keep the event loop free.
+        Genius, etc.) are dispatched with `asyncio.to_thread` to keep the event loop free.
 
         :param str cmd_type: `Type` of command triggered by a user.
         :param str content: Content to be used in response.
@@ -537,6 +537,6 @@ class Bot(chatango.Client):
         :returns: None
         """
         LOGGER.info(f"Generating LLM response for message directed at bot in room {room.name}")
-        response = await asyncio.to_thread(generate_llm_response, user_name, list(room.history))
+        response = await generate_llm_response(user_name, list(room.history))
         if response:
             await room.send_message(response, use_html=True)
