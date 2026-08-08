@@ -42,7 +42,7 @@ The bot is not a web server — uvicorn is used purely as a process manager. `as
 
 ### Sync/Async Boundary
 
-Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `create_message` awaits them directly. Handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb, Anthropic, PSN, Genius, `praw`, `wikipediaapi`, `youtube_search`, `pandas.read_html`) stay synchronous and are dispatched with `asyncio.to_thread(...)` so they never block the event loop.
+Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `create_message` awaits them directly. The LLM handler is likewise a coroutine, built on the Anthropic SDK's `AsyncAnthropic` client. Handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb, PSN, Genius, `praw`, `wikipediaapi`, `youtube_search`, `pandas.read_html`) stay synchronous and are dispatched with `asyncio.to_thread(...)` so they never block the event loop.
 
 - **`http_client.py`** owns the process-wide `aiohttp.ClientSession`. Call `get_http_session()` inside a handler rather than creating a session per request; `asgi.py` closes it on lifespan shutdown. Pass `request_timeout(n)` per request only when overriding the session-wide `HTTP_REQUEST_TIMEOUT`.
 - Decode bodies with `await resp.json(content_type=None)` — several of these APIs serve JSON under the wrong content type.
@@ -76,7 +76,12 @@ Tests live beside the code they cover (`broiestbot/commands/<domain>/tests/`), w
 
 ### LLM Integration
 
-`@bro <message>` triggers `_respond_llm_prompt` → `generate_llm_response` → `clients/llm.py:LLMClient`, which calls Claude via the Anthropic SDK with a persona system prompt. Room history (`room.history`) is formatted into a structured `messages` list, and the markdown reply is converted to HTML before being sent.
+`@bro <message>` triggers `_respond_llm_prompt` → `generate_llm_response` → `clients/llm.py:LLMClient`, which awaits Claude via the Anthropic SDK's `AsyncAnthropic` client with a persona system prompt. Room history (`room.history`) is formatted into a structured `messages` list, and the markdown reply is converted to HTML before being sent. `asgi.py` closes the client on lifespan shutdown.
+
+The call goes through `client.beta.messages.create` because it opts into server-side refusal fallbacks (`fallbacks="default"` plus the `SERVER_SIDE_FALLBACK_BETA` header): if Claude's safety classifiers decline the prompt, Anthropic re-runs it on a fallback model within the same request. Two consequences worth knowing:
+
+- Reply text must be selected by block type (`block.type == "text"`) — `content[0]` may be a thinking or `fallback` block.
+- If the whole chain still declines, `generate_response` raises `LLMRefusalError` and `generate_llm_response` returns an in-persona brush-off rather than staying silent.
 
 ### Active Rooms / Leagues
 
