@@ -10,6 +10,7 @@ from emoji import emojize
 from logger import LOGGER
 
 from broiestbot.commands import (  # get_crypto_chart,
+    aafk_league_table_standings,
     all_leagues_golden_boot,
     bach_gang_counter,
     basic_message,
@@ -211,6 +212,8 @@ class Bot(chatango.Client):
             return await league_table_standings(PRIMEIRA_LIGA_ID)
         elif cmd_type == "estable":
             return await league_table_standings(ELITESERIEN_LEAGUE_ID)
+        elif cmd_type == "aafktable":
+            return await aafk_league_table_standings()
         elif cmd_type == "mlstable":
             return await mls_standings()
         elif cmd_type == "fixtures" and room_name and user_name:

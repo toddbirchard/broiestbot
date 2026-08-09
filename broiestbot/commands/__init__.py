@@ -11,6 +11,7 @@ from .definitions import (
 from .embeds import create_instagram_preview, generate_twitter_preview
 from .f1 import f1_grand_prix
 from .footy import (
+    aafk_league_table_standings,
     all_leagues_golden_boot,
     epl_golden_boot,
     fetch_aafk_fixture_data,
