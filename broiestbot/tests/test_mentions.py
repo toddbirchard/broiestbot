@@ -34,6 +34,15 @@ NON_MENTIONS = [
     "@",
 ]
 
+# Chatango inlines the message being quoted as ``@<username>: `<quoted text>` ``.
+QUOTES = [
+    f"@{CHATANGO_BOT_USERNAME}: `unrelated but you're looking devastatingly handsome today`",
+    f"@{CHATANGO_BOT_USERNAME.upper()}: `image not found :(`",
+    f"@{CHATANGO_BOT_NICKNAME}: `sup`",
+    f"@some_user: `hey @{CHATANGO_BOT_NICKNAME}, who won`",  # somebody else's prompt, already answered
+    f"@some_user: `@{CHATANGO_BOT_USERNAME} what's the score`",
+]
+
 
 @pytest.mark.parametrize("mention", MENTIONS)
 def test_regex_matches_mentions(mention: str):
@@ -45,6 +54,31 @@ def test_regex_matches_mentions(mention: str):
 def test_regex_ignores_non_mentions(chat_message: str):
     """Names which merely start with the bot's name are not mentions."""
     assert CHATANGO_BOT_MENTION_REGEX.search(chat_message) is None
+
+
+@pytest.mark.parametrize("quote", QUOTES)
+def test_quote_alone_is_not_a_mention(quote: str):
+    """Quoting the bot (or somebody who tagged it) isn't a prompt in the sender's own words."""
+    assert Bot._mentions_bot(quote) is False
+    assert Bot._mentions_bot(f"{quote} lmao") is False
+
+
+@pytest.mark.parametrize("quote", QUOTES)
+def test_quote_plus_mention_is_a_mention(quote: str):
+    """A quote doesn't suppress a mention the sender typed outside of it."""
+    assert Bot._mentions_bot(f"{quote} @{CHATANGO_BOT_NICKNAME} thoughts?") is True
+
+
+@pytest.mark.parametrize(
+    "chat_message",
+    [
+        f"@{CHATANGO_BOT_USERNAME}: what's the score",  # a colon, but no quoted body
+        f"@{CHATANGO_BOT_NICKNAME}: who won",
+    ],
+)
+def test_addressing_bot_with_colon_still_mentions(chat_message: str):
+    """Addressing the bot with a trailing colon is a mention unless a quoted body follows."""
+    assert Bot._mentions_bot(chat_message) is True
 
 
 @pytest.mark.parametrize(
@@ -107,7 +141,7 @@ def dispatch(bot: Bot, room: MagicMock, message: MagicMock, chat_message: str) -
 def test_mention_triggers_llm_response(bot, room, message, mention: str):
     """Any casing of either bot name routes the message to the LLM."""
     llm_prompt, process_phrase = dispatch(bot, room, message, f"{mention} what's the score")
-    llm_prompt.assert_awaited_once_with(message.user.name, room)
+    llm_prompt.assert_awaited_once_with(message.user.name, room, message.body)
     process_phrase.assert_not_awaited()
 
 
@@ -115,5 +149,13 @@ def test_mention_triggers_llm_response(bot, room, message, mention: str):
 def test_non_mention_falls_through_to_phrase(bot, room, message, chat_message: str):
     """Messages without a mention keep falling through to phrase matching."""
     llm_prompt, process_phrase = dispatch(bot, room, message, chat_message)
+    llm_prompt.assert_not_awaited()
+    process_phrase.assert_awaited_once()
+
+
+@pytest.mark.parametrize("quote", QUOTES)
+def test_quoting_bot_does_not_trigger_llm(bot, room, message, quote: str):
+    """A user quoting the bot isn't prompting it, so the message falls through to phrase matching."""
+    llm_prompt, process_phrase = dispatch(bot, room, message, quote)
     llm_prompt.assert_not_awaited()
     process_phrase.assert_awaited_once()

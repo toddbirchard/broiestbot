@@ -82,6 +82,7 @@ from config import (
     CHATANGO_BOT_MENTION_REGEX,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
+    CHATANGO_QUOTE_REGEX,
     ELITESERIEN_LEAGUE_ID,
     ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ENGLISH_LEAGUE_ONE_ID,
@@ -434,12 +435,28 @@ class Bot(chatango.Client):
             await ban_word(room, message, user_name, silent=True)
         elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
             await ban_word(room, message, user_name, silent=True)
-        elif CHATANGO_BOT_MENTION_REGEX.search(chat_message):
-            await self._respond_llm_prompt(user_name, room)
+        elif self._mentions_bot(chat_message):
+            await self._respond_llm_prompt(user_name, room, chat_message)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             await ban_word(room, message, user_name, silent=True)
         else:
             await self._process_phrase(chat_message, room, user_name, message, bot_username)
+
+    @staticmethod
+    def _mentions_bot(chat_message: str) -> bool:
+        """
+        Determine whether a message `@`-mentions the bot in the sender's own words.
+
+        Quoted messages are inlined by Chatango as ``@<username>: `<quoted text>` ``, so a user quoting
+        the bot would otherwise look identical to a user tagging it. Quotes are dropped before the
+        mention search, leaving only what the sender actually typed.
+
+        :param str chat_message: Raw message sent by user.
+
+        :returns: bool
+        """
+        unquoted_message = CHATANGO_QUOTE_REGEX.sub(" ", chat_message)
+        return CHATANGO_BOT_MENTION_REGEX.search(unquoted_message) is not None
 
     @staticmethod
     def _log_message(room: Room, user_name: str, message: RoomMessage):
@@ -588,16 +605,18 @@ class Bot(chatango.Client):
         await room.send_message("™")
 
     @staticmethod
-    async def _respond_llm_prompt(user_name: str, room: Room) -> None:
+    async def _respond_llm_prompt(user_name: str, room: Room, chat_message: str) -> None:
         """
         Respond to messages directed at the bot with LLM-generated responses.
 
         :param str user_name: Username of the Chatango user who triggered the LLM response.
         :param Room room: Current Chatango room object.
+        :param str chat_message: Raw message which tagged the bot. Passed separately from the
+            room history so a link may only be read when *this* message is the one carrying it.
 
         :returns: None
         """
         LOGGER.info(f"Generating LLM response for message directed at bot in room {room.name}")
-        response = await generate_llm_response(user_name, list(room.history))
+        response = await generate_llm_response(user_name, list(room.history), chat_message)
         if response:
             await room.send_message(response, use_html=True)
