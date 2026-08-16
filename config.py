@@ -30,6 +30,11 @@ CHATANGO_BOT_MENTION_REGEX = re.compile(
     r"@(?:" + "|".join(re.escape(name) for name in CHATANGO_BOT_MENTION_NAMES) + r")(?![a-zA-Z0-9])",
     re.IGNORECASE,
 )
+
+# Chatango inlines a quoted message into the quoter's own message as ``@<username>: `<quoted text>` ``.
+# The quoted half is somebody else's words, so it's stripped before mention detection: without this,
+# quoting the bot reads as an `@broiestbot` mention & the bot answers a prompt nobody wrote.
+CHATANGO_QUOTE_REGEX = re.compile(r"@[^\s:`]+:\s*`.*?`", re.DOTALL)
 CHATANGO_USERS = {
     "BROIESTBOT": {
         "USERNAME": getenv("CHATANGO_BOT_USERNAME"),
@@ -252,6 +257,11 @@ YOUTUBE_VIDEO_SHORT_URL = "https://youtu.be/{video_id}"
 # Anthropic
 # -------------------------------------------------
 ANTHROPIC_API_KEY = getenv("ANTHROPIC_API_KEY")
+
+# Matches an `http(s)` URL in a chat message. Trailing sentence punctuation is excluded so a link
+# at the end of a sentence still parses. Used to decide whether an `@bro` prompt hands the bot a
+# link to read — the LLM is given the web fetch tool only for links found by this.
+URL_REGEX = re.compile(r"https?://[^\s<>\"']*[^\s<>\"'.,!?;:)\]]", re.IGNORECASE)
 
 # Twitch
 # -------------------------------------------------

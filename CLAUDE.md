@@ -83,6 +83,17 @@ The call goes through `client.beta.messages.create` because it opts into server-
 - Reply text must be selected by block type (`block.type == "text"`) — `content[0]` may be a thinking or `fallback` block.
 - If the whole chain still declines, `generate_response` raises `LLMRefusalError` and `generate_llm_response` returns an in-persona brush-off rather than staying silent.
 
+#### Reading links (`web_fetch`)
+
+The LLM can read a link, using Anthropic's server-side `web_fetch` tool, but **only when the message tagging the bot carries that link itself**. `LLMClient.fetchable_hosts` strips quoted text (a quoted link is not the sender's own ask) and returns the hosts of any URLs left; `generate_response` then attaches the tool scoped to those hosts via `allowed_domains`. With no link in the prompt the tool is omitted from the request entirely, so links merely sitting in `room.history` can never be fetched — this is why `_respond_llm_prompt` takes the triggering `chat_message` separately from the history.
+
+Consequences for anyone editing this path:
+
+- Reply text is whatever follows the **last non-text block** (`LLMClient._reply_text`), not the first text block: a turn that used a tool opens with a throwaway preamble before the tool call, and the answer comes after the results.
+- Dynamic filtering runs code execution server-side, so responses contain `code_execution_tool_result` blocks. Do **not** also declare a `code_execution` tool — a second execution environment confuses the model.
+- A tool loop which hits its iteration cap stops with `stop_reason == "pause_turn"`; the turn is re-sent unchanged (no extra user message) up to `MAX_PAUSE_TURN_RESUMES` times.
+- A blocked host comes back as a `web_fetch_tool_result` whose content is `web_fetch_tool_result_error` with `error_code: "url_not_allowed"` — an ordinary HTTP 200, not a raised exception.
+
 ### Room Privileges
 
 Chatango grants moderator powers **per room**, so the bot must not assume it can moderate everywhere. `broiestbot/moderation/privileges.py` exposes `bot_privilege_level(room)` and `bot_is_moderator(room)`, both reading `Room.get_level()` and failing closed (`PrivilegeLevel.USER`) when the level can't be determined.
