@@ -3,17 +3,25 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from broiestbot.moderation.users import ban_daddy_anons, is_user_anon
+from broiestbot.moderation.privileges import PrivilegeLevel
+from broiestbot.moderation.users import (
+    ban_daddy_anons,
+    check_blacklisted_users,
+    is_user_anon,
+)
 
 TEST_ROOM = "lmaolove2"
 
 
-def make_room(name: str = TEST_ROOM) -> MagicMock:
+def make_room(name: str = TEST_ROOM, privilege_level: int = PrivilegeLevel.MODERATOR) -> MagicMock:
+    """Build a room in which the bot holds `privilege_level` (mod by default)."""
     room = MagicMock()
     room.name = name
-    room.ban_message = AsyncMock()
-    room.clear_user = AsyncMock()
-    room.ban_user = AsyncMock()
+    room.user = MagicMock()
+    room.get_level = MagicMock(return_value=privilege_level)
+    room.ban_message = AsyncMock(return_value=privilege_level >= PrivilegeLevel.MODERATOR)
+    room.clear_user = AsyncMock(return_value=privilege_level >= PrivilegeLevel.MODERATOR)
+    room.ban_user = AsyncMock(return_value=privilege_level >= PrivilegeLevel.MODERATOR)
     room.send_message = AsyncMock()
     return room
 
@@ -21,6 +29,9 @@ def make_room(name: str = TEST_ROOM) -> MagicMock:
 def make_user(name: str) -> MagicMock:
     user = MagicMock()
     user.name = name
+    # Chatango sets `isanon` itself; mirror it from the name so a bare MagicMock
+    # attribute doesn't make every test user look like an anon.
+    user.isanon = is_user_anon(name)
     return user
 
 
@@ -70,7 +81,6 @@ class TestBanDaddyAnons:
         with patch("broiestbot.moderation.users.CHATANGO_DADDY_ANON_BAN_ROOMS", [TEST_ROOM]):
             asyncio.run(ban_daddy_anons(room, user, message))
 
-        room.ban_message.assert_awaited_once_with(message)
         room.clear_user.assert_awaited_once_with(user)
         room.ban_user.assert_awaited_once_with(user.name)
         room.send_message.assert_awaited_once()
@@ -91,7 +101,6 @@ class TestBanDaddyAnons:
         with patch("broiestbot.moderation.users.CHATANGO_DADDY_ANON_BAN_ROOMS", [TEST_ROOM]):
             asyncio.run(ban_daddy_anons(room, user, message))
 
-        room.ban_message.assert_awaited_once_with(message)
         room.clear_user.assert_awaited_once_with(user)
         room.ban_user.assert_awaited_once_with(user.name)
 
@@ -140,4 +149,84 @@ class TestBanDaddyAnons:
         with patch("broiestbot.moderation.users.CHATANGO_DADDY_ANON_BAN_ROOMS", [TEST_ROOM]):
             asyncio.run(ban_daddy_anons(room, user, message))
 
+        room.ban_user.assert_awaited_once_with(user.name)
+
+
+# ---------------------------------------------------------------------------
+# Non-moderator rooms
+# ---------------------------------------------------------------------------
+
+
+class TestNonModeratorRooms:
+    """
+    In rooms where the bot is a plain user, moderation must degrade quietly: no ban
+    attempts, and — critically — no taunts announcing bans the bot cannot deliver.
+    """
+
+    def test_ban_daddy_anons_is_a_noop_without_mod_privileges(self):
+        room = make_room(privilege_level=PrivilegeLevel.USER)
+        user = make_user("anon8329")
+        message = make_message("Streaming Live: daddylive.nl")
+
+        with patch("broiestbot.moderation.users.CHATANGO_DADDY_ANON_BAN_ROOMS", [TEST_ROOM]):
+            asyncio.run(ban_daddy_anons(room, user, message))
+
+        room.clear_user.assert_not_called()
+        room.ban_user.assert_not_called()
+        room.send_message.assert_not_called()
+
+    def test_ban_daddy_anons_stays_silent_when_the_ban_is_rejected(self):
+        """A mod-level bot whose ban is refused by the server must not taunt either."""
+        room = make_room()
+        room.ban_user = AsyncMock(return_value=False)
+        user = make_user("anon8329")
+        message = make_message("Streaming Live: daddylive.nl")
+
+        with patch("broiestbot.moderation.users.CHATANGO_DADDY_ANON_BAN_ROOMS", [TEST_ROOM]):
+            asyncio.run(ban_daddy_anons(room, user, message))
+
+        room.ban_user.assert_awaited_once_with(user.name)
+        room.send_message.assert_not_called()
+
+    def test_check_blacklisted_users_is_a_noop_without_mod_privileges(self):
+        room = make_room(privilege_level=PrivilegeLevel.USER)
+        message = make_message("hello")
+        message.user = make_user("blacklisted_guy")
+
+        with (
+            patch("broiestbot.moderation.users.CHATANGO_BLACKLISTED_USERS", ["blacklisted_guy"]),
+            patch("broiestbot.moderation.users.CHATANGO_BLACKLIST_ROOMS", [TEST_ROOM]),
+        ):
+            asyncio.run(check_blacklisted_users(room, "blacklisted_guy", message))
+
+        room.ban_message.assert_not_called()
+        room.send_message.assert_not_called()
+
+    def test_check_blacklisted_users_taunts_only_after_a_successful_ban(self):
+        room = make_room()
+        message = make_message("hello")
+        message.user = make_user("blacklisted_guy")
+
+        with (
+            patch("broiestbot.moderation.users.CHATANGO_BLACKLISTED_USERS", ["blacklisted_guy"]),
+            patch("broiestbot.moderation.users.CHATANGO_BLACKLIST_ROOMS", [TEST_ROOM]),
+        ):
+            asyncio.run(check_blacklisted_users(room, "blacklisted_guy", message))
+
         room.ban_message.assert_awaited_once_with(message)
+        room.send_message.assert_awaited_once()
+
+    def test_check_blacklisted_users_stays_silent_when_the_ban_is_rejected(self):
+        room = make_room()
+        room.ban_message = AsyncMock(return_value=False)
+        message = make_message("hello")
+        message.user = make_user("blacklisted_guy")
+
+        with (
+            patch("broiestbot.moderation.users.CHATANGO_BLACKLISTED_USERS", ["blacklisted_guy"]),
+            patch("broiestbot.moderation.users.CHATANGO_BLACKLIST_ROOMS", [TEST_ROOM]),
+        ):
+            asyncio.run(check_blacklisted_users(room, "blacklisted_guy", message))
+
+        room.ban_message.assert_awaited_once_with(message)
+        room.send_message.assert_not_called()

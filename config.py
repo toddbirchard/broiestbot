@@ -21,6 +21,15 @@ HTTP_REQUEST_TIMEOUT = 40
 # -------------------------------------------------
 CHATANGO_BOT_USERNAME = "broiestbot"
 CHATANGO_BOT_NICKNAME = "bro"
+
+# Matches an `@` mention of the bot by either its username or nickname, case-insensitively.
+# Names are ordered longest-first so the full username wins over the nickname it starts with,
+# and the trailing lookahead keeps `@brotherhood` from reading as a mention of `@bro`.
+CHATANGO_BOT_MENTION_NAMES = sorted((CHATANGO_BOT_USERNAME, CHATANGO_BOT_NICKNAME), key=len, reverse=True)
+CHATANGO_BOT_MENTION_REGEX = re.compile(
+    r"@(?:" + "|".join(re.escape(name) for name in CHATANGO_BOT_MENTION_NAMES) + r")(?![a-zA-Z0-9])",
+    re.IGNORECASE,
+)
 CHATANGO_USERS = {
     "BROIESTBOT": {
         "USERNAME": getenv("CHATANGO_BOT_USERNAME"),
@@ -56,9 +65,9 @@ CHATANGO_ROOMS = [
     # CHATANGO_SIXERS_ROOM,
     # CHATANGO_PHILLIES_ROOM,
     # CHATANGO_FLYERS_ROOM,
-    # CHATANGO_ALT_ROOM,
+    CHATANGO_ALT_ROOM,
     # CHATANGO_NFL_ROOM,
-    # CHATANGO_OBI_ROOM,
+    CHATANGO_OBI_ROOM,
     # CHATANGO_TEST_ROOM,
     # CHATANGO_REDZONE_ROOM,
     # CHATANGO_PATREON_ROOM,
