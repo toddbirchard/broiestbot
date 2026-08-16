@@ -18,11 +18,14 @@ from config import (
 )
 
 from .ban import ban_user
+from .privileges import bot_is_moderator
 
 
 async def check_blacklisted_users(room: Room, user_name: str, message: RoomMessage) -> None:
     """
     Ban and delete chat history of blacklisted user.
+
+    No-op in rooms where the bot isn't a moderator, since every outcome here is a ban.
 
     :param Room room: Chatango room in which user appeared.
     :param str user_name: Chatango username to validate against blacklist.
@@ -30,13 +33,15 @@ async def check_blacklisted_users(room: Room, user_name: str, message: RoomMessa
 
     :returns: None
     """
+    if not bot_is_moderator(room):
+        return
     if (
         user_name in CHATANGO_BLACKLISTED_USERS or "shaw" in user_name or message.ip in CHATANGO_IGNORED_IPS
     ) and room.name.lower() in CHATANGO_BLACKLIST_ROOMS:
-        reply = emojize(f":wave: @{user_name} lmao pz fgt have fun being banned forever :wave:", language="en")
-        LOGGER.warning(f"BANNED user: username={message.user.name} ip={message.ip}")
-        await room.send_message(reply)
-        await room.ban_message(message)
+        # Taunt only once the ban has landed, so the bot never threatens what it can't deliver.
+        if await ban_user(room, message):
+            reply = emojize(f":wave: @{user_name} lmao pz fgt have fun being banned forever :wave:", language="en")
+            await room.send_message(reply)
     elif (
         message.ip is not None
         and message.ip in CHATANGO_BANNED_IPS
@@ -59,21 +64,28 @@ async def ban_daddy_anons(room: Room, user: User, message: RoomMessage) -> None:
     """
     Ban and delete chat history of anons who post from Daddy.
 
+    No-op in rooms where the bot isn't a moderator, since every outcome here is a ban.
+
     :param Room room: Chatango room in which user appeared.
     :param User user: Chatango user object to validate against blacklist.
     :param RoomMessage message: User submitted message.
 
     :returns: None
     """
+    if not bot_is_moderator(room):
+        return
     user_name = user.name.lower()
     if room.name.lower() in CHATANGO_DADDY_ANON_BAN_ROOMS:
         if user.isanon and re.search(r"daddylive[a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}", message.body):
             LOGGER.success(f"BANNING!!!! user={user}, message={message}, room={room}")
             await room.clear_user(user)
-            await room.ban_user(user.name)
-            reply = f"👋🏏 @{user_name} lmao have fun being banned forever 🏏👋"
-            LOGGER.warning(f"BANNED Daddy anon user: username={user_name} ip={message.ip}")
-            await room.send_message(reply)
+            # Taunt only once the ban has landed, so the bot never threatens what it can't deliver.
+            if await room.ban_user(user.name):
+                reply = f"👋🏏 @{user_name} lmao have fun being banned forever 🏏👋"
+                LOGGER.warning(f"BANNED Daddy anon user: username={user_name} ip={message.ip}")
+                await room.send_message(reply)
+            else:
+                LOGGER.warning(f"Could not ban Daddy anon user: username={user_name} ip={message.ip}")
 
 
 def ignored_user(user_name: str, user_ip: str) -> Optional[str]:

@@ -57,7 +57,7 @@ Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `c
 - **`broiestbot/bot.py`** — Core `Bot(chatango.Client)` class; all message routing lives here.
 - **`broiestbot/commands/`** — One module or package per domain (`footy/`, `f1/`, `nba/`, `nfl/`, `mlb/`, `sumo/`, `odds/`, `polls/`, `images/`, plus flat modules like `llm.py`, `weather.py`, `movies.py`). All public command functions are re-exported through `broiestbot/commands/__init__.py`.
 - **`broiestbot/data/`** — Persists chat logs and user geo/IP data to the DB after every message.
-- **`broiestbot/moderation/`** — Ban/mute logic for blacklisted users, anon accounts, IPs, and specific phrases.
+- **`broiestbot/moderation/`** — Ban/mute logic for blacklisted users, anon accounts, IPs, and specific phrases. Every entry point is gated on `privileges.py:bot_is_moderator(room)` — see "Room Privileges" below.
 - **`clients/__init__.py`** — Instantiates all third-party SDK clients at import time (Redis, Twilio, GCS, Wikipedia, IMDB, Reddit, Genius, PSN, Anthropic, Redgifs). Import from here rather than re-instantiating.
 - **`database/models.py`** — ORM models: `Command`, `Phrase`, `Chat`, `ChatangoUser`, `Weather`, `PollResult`, `Sport`, `League`.
 - **`config.py`** — All configuration and constants loaded from `.env`. Includes hundreds of league/team IDs and API endpoints. Import constants from here; never hardcode them.
@@ -82,6 +82,19 @@ The call goes through `client.beta.messages.create` because it opts into server-
 
 - Reply text must be selected by block type (`block.type == "text"`) — `content[0]` may be a thinking or `fallback` block.
 - If the whole chain still declines, `generate_response` raises `LLMRefusalError` and `generate_llm_response` returns an in-persona brush-off rather than staying silent.
+
+### Room Privileges
+
+Chatango grants moderator powers **per room**, so the bot must not assume it can moderate everywhere. `broiestbot/moderation/privileges.py` exposes `bot_privilege_level(room)` and `bot_is_moderator(room)`, both reading `Room.get_level()` and failing closed (`PrivilegeLevel.USER`) when the level can't be determined.
+
+In a room where the bot is a plain user:
+
+- `check_blacklisted_users`, `ban_daddy_anons` and `ban_word` return immediately. This matters mostly because each of them **taunts the offending user in chat** — without the guard the bot announces bans it has no power to carry out.
+- Even as a mod, taunts are sent only after the privileged call reports success: `room.ban_message()`, `room.ban_user()` and `room.delete_message()` all return `bool` rather than raising, and `chatango-lib` returns `False` instead of erroring when the bot lacks the power.
+- `RoomMessage.ip` is an empty string — Chatango discloses IPs to mods only. `persist_user_data` already treats a missing IP as "nothing to persist", so `chatango_users` rows simply aren't written for that room. Chat logs are unaffected.
+- A missing IP is expected rather than anomalous, so `_log_message` logs it at INFO instead of WARNING.
+
+`Bot.on_inited`, `on_mod_added` and `on_mod_remove` log the bot's level per room on join and whenever it changes, so degraded rooms are visible in the logs rather than silent.
 
 ### Active Rooms / Leagues
 

@@ -5,7 +5,7 @@ import re
 from typing import Optional, Tuple
 
 import chatango
-from chatango import Room, RoomMessage
+from chatango import Room, RoomMessage, User
 from emoji import emojize
 from logger import LOGGER
 
@@ -79,6 +79,7 @@ from broiestbot.commands import (  # get_crypto_chart,
 )
 from config import (
     BUND_LEAGUE_ID,
+    CHATANGO_BOT_MENTION_REGEX,
     CHATANGO_IGNORED_IPS,
     CHATANGO_IGNORED_USERS,
     ELITESERIEN_LEAGUE_ID,
@@ -96,7 +97,14 @@ from database import async_session
 from database.models import Command, Phrase
 
 from .data import persist_chat_logs, persist_user_data
-from .moderation import ban_daddy_anons, ban_word, check_blacklisted_users
+from .moderation import (
+    PrivilegeLevel,
+    ban_daddy_anons,
+    ban_word,
+    bot_is_moderator,
+    bot_privilege_level,
+    check_blacklisted_users,
+)
 from .moderation.users import ignored_user
 
 
@@ -133,6 +141,53 @@ class Bot(chatango.Client):
                 font_color="000000",
                 font_face=0,  # 0 = Arial
                 font_size=11,
+            )
+
+    async def on_inited(self, room: Room) -> None:
+        """
+        Announce which privileges the bot holds in a room once its handshake completes.
+
+        Moderation & IP persistence silently degrade in rooms where the bot is a plain
+        user, so record the level up front to make that behavior diagnosable.
+
+        :param Room room: Chatango room which just finished connecting.
+
+        :returns: None
+        """
+        level = bot_privilege_level(room)
+        if level >= PrivilegeLevel.MODERATOR:
+            LOGGER.success(f"Joined room `{room.name}` as {level.name.lower()}; moderation enabled.")
+        else:
+            LOGGER.warning(
+                f"Joined room `{room.name}` without mod privileges; "
+                "bans, message deletion & user IP persistence are disabled there."
+            )
+
+    async def on_mod_added(self, room: Room, user: User) -> None:
+        """
+        Log the bot regaining moderation powers mid-session.
+
+        :param Room room: Chatango room whose mod list changed.
+        :param User user: User who was granted moderator powers.
+
+        :returns: None
+        """
+        if user == room.user:
+            LOGGER.success(f"Bot was granted mod privileges in `{room.name}`; moderation enabled.")
+
+    async def on_mod_remove(self, room: Room, user: User) -> None:
+        """
+        Log the bot losing moderation powers mid-session.
+
+        :param Room room: Chatango room whose mod list changed.
+        :param User user: User whose moderator powers were revoked.
+
+        :returns: None
+        """
+        if user == room.user:
+            LOGGER.warning(
+                f"Bot lost mod privileges in `{room.name}`; "
+                "bans, message deletion & user IP persistence are now disabled there."
             )
 
     async def create_message(
@@ -379,7 +434,7 @@ class Bot(chatango.Client):
             await ban_word(room, message, user_name, silent=True)
         elif "https://i.imgur.com/bQJxsBV.png" in chat_message:
             await ban_word(room, message, user_name, silent=True)
-        elif re.search(r"@bro(?![a-zA-Z0-9])", chat_message):
+        elif CHATANGO_BOT_MENTION_REGEX.search(chat_message):
             await self._respond_llm_prompt(user_name, room)
         elif "idk wtf u did but bot is ded now, thanks" in chat_message:
             await ban_word(room, message, user_name, silent=True)
@@ -390,8 +445,11 @@ class Bot(chatango.Client):
     def _log_message(room: Room, user_name: str, message: RoomMessage):
         if bool(message.ip) is True and message.body is not None:
             LOGGER.info(f"[{room.name}] [{user_name}] [{message.ip}]: {message.body}")
-        else:
+        elif bot_is_moderator(room):
+            # Chatango discloses IPs to mods only, so a mod missing one is genuinely anomalous.
             LOGGER.warning(f"[{room.name}] [{user_name}] [no IP address]: {message.body}")
+        else:
+            LOGGER.info(f"[{room.name}] [{user_name}] [no IP address]: {message.body}")
 
     async def _process_command(self, chat_message: str, room: Room, user_name: str, message: RoomMessage):
         """
