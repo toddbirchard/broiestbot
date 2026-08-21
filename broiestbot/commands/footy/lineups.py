@@ -18,7 +18,7 @@ from config import (
 
 from .util import (
     check_fixture_start_date,
-    filter_friendly_fixtures,
+    filter_league_fixtures,
     get_current_day,
     get_preferred_time_format,
     get_preferred_timezone,
@@ -144,7 +144,7 @@ async def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name
         session = await get_http_session()
         async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             fixtures = await resp.json(content_type=None)
-            return filter_friendly_fixtures(fixtures.get("response"), league_id)
+            return filter_league_fixtures(fixtures.get("response"), league_id)
     except ClientError as e:
         LOGGER.error(f"ClientError while fetching footy fixtures: {e}")
     except KeyError as e:

@@ -14,7 +14,7 @@ from config import (
     FOOTY_LIVE_SCORED_LEAGUES,
 )
 
-from .util import filter_friendly_fixtures
+from .util import filter_league_fixtures
 
 
 async def footy_live_fixtures(username: str, subs=False) -> str:
@@ -96,7 +96,7 @@ async def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
         async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             if resp.status == 200:
                 fixtures = await resp.json(content_type=None)
-                return filter_friendly_fixtures(fixtures.get("response"), league_id)
+                return filter_league_fixtures(fixtures.get("response"), league_id)
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching footy fixtures: {e}")
     except KeyError as e:

@@ -460,12 +460,12 @@ FOOTY_LEAGUES = {
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":trophy: :rainbow: EUROS": EUROS_LEAGUE_ID,
-    # ":Portugal: PRIMEIRA LIGA": PRIMEIRA_LIGA_ID,
+    ":Portugal: PRIMEIRA LIGA": PRIMEIRA_LIGA_ID,
     # ":Spain: EL CLÁSICO": SPAIN_EL_CLASICO,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":trophy: :France: COUPE DE FRANCE": COUPE_DE_FRANCE,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
-    ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
+    # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
@@ -489,7 +489,7 @@ FOOTY_LEAGUES = {
     # ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
     # ":slightly_smiling_face: :globe_showing_Europe-Africa: INTERNATIONAL FRIENDLIES": INT_FRIENDLIES_LEAGUE_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
@@ -535,9 +535,10 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":trophy: :female_sign: WOMENS WORLD CUP": WOMENS_WORLD_CUP_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
     # ":trophy: :baby_light_skin_tone: U20 WORLD CUP": U20_WORLD_CUP_ID,
-    ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
+    # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
+    ":Portugal: PRIMEIRA LIGA": PRIMEIRA_LIGA_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
     # ":European_Union: :rainbow: EUROS 2024 QUALIFIERS": EUROS_QUALIFIERS_ID,
     # ":globe_showing_Americas: COPA AMERICA": COPA_AMERICA_LEAGUE_ID,
@@ -581,7 +582,7 @@ FOOTY_XI_LEAGUES = {
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
-    ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
+    # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
@@ -607,7 +608,7 @@ FOOTY_XI_LEAGUES = {
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
     ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":blue_circle: :female_sign: WOMENS UCL": UEFA_WOMENS_UCL_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
 }
 
@@ -624,7 +625,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
-    ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
+    # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
@@ -645,8 +646,9 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":slightly_smiling_face: :female_sign: WOMENS INTERNATIONAL FRIENDLIES": WOMENS_INT_FRIENDLIES_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
+    ":Portugal: PRIMEIRA LIGA": PRIMEIRA_LIGA_ID,
     ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 FOOTY_LIVE_STATS_LEAGUES = {
@@ -670,6 +672,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
+    ":Portugal: PRIMEIRA LIGA": PRIMEIRA_LIGA_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
     ":Norway: ELITESERIEN": ELITESERIEN_LEAGUE_ID,
     # ":globe_showing_Americas: WC QUALIFIERS (CONCACAF)": WC_QUALIFIERS_CONCACAF_ID,
@@ -684,7 +687,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":European_Union: :female_sign: UEFA NATIONS WOMENS 2025": UEFA_WOMENS_NATIONS_LEAGUE_ID,
     # ":palm_tree: :globe_showing_Americas: CONCACAF NATIONS LEAGUE": CONCACAF_NATIONS_LEAGUE_ID,
     # ":trophy: :Portugal: TAÇA DE PORTUGAL": TACA_DE_PORTUGAL_ID,
-    ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
+    # ":slightly_smiling_face: CLUB FRIENDLIES": CLUB_FRIENDLIES_LEAGUE_ID,
 }
 
 # Footy leagues to be considered for "golden shoe" award
@@ -753,6 +756,15 @@ FOOTY_FRIENDLY_CLUBS = [
     REAL_MADRID_TEAM_ID,
     ATLETICO_MADRID_TEAM_ID,
 ]
+
+# Leagues whose fixtures are only worth surfacing when a club we care about is involved.
+# Fixtures of a league listed here are discarded unless one of its teams is playing;
+# every other league passes through unfiltered.
+FOOTY_LEAGUE_TEAM_FILTERS = {
+    CLUB_FRIENDLIES_LEAGUE_ID: FOOTY_FRIENDLY_CLUBS,
+    PRIMEIRA_LIGA_ID: [BENFICA_TEAM_ID],
+    ELITESERIEN_LEAGUE_ID: [AALESUND_TEAM_ID],
+}
 
 # Specify team IDs to be prioritized whe fetching starting XIs
 FOOTY_TEAMS_PRIORITY = {

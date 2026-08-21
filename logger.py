@@ -10,10 +10,18 @@ from loguru import logger
 from clients import sms
 from config import BASE_DIR, ENVIRONMENT, TWILIO_BRO_PHONE_NUMBER, TWILIO_SENDER_PHONE
 
+CHAT_LOG_PATTERN = re.compile(
+    r"^\[(?P<room>[^]]*)] \[(?P<user>[^]]*)](?: \[(?P<ip>[^]]*)])?: (?P<body>.*)",
+    re.DOTALL,
+)
+
+# `bot.py` logs this placeholder in rooms where the bot isn't a mod (Chatango only discloses IPs to mods).
+MISSING_IP_PLACEHOLDER = "no IP address"
+
 
 def json_formatter(record: dict) -> str:
     """
-    Format info message logs.
+    Serialize a log record as a single JSON object.
 
     :param dict record: Log object containing log metadata & message.
 
@@ -22,90 +30,77 @@ def json_formatter(record: dict) -> str:
     if isinstance(record, (str, bool)):
         return json.dumps(construct_json_from_corrupted_log(record))
 
-    record["time"] = record["time"].strftime("%m/%d/%Y, %H:%M:%S")
-    record["elapsed"] = record["elapsed"].total_seconds()
+    log = {
+        "time": record["time"].strftime("%m/%d/%Y, %H:%M:%S"),
+        "level": record["level"].name,
+        "message": record.get("message") or "(No message provided)",
+    }
+    if log["level"] in ("ERROR", "CRITICAL"):
+        serialized = serialize_error(log)
+        sms_error_handler(log)
+    else:
+        serialized = serialize_chat_message(log)
+    record["extra"]["serialized"] = serialized
+    return "{extra[serialized]},\n"
 
-    def serialize_as_admin(log: dict) -> str:
-        """
-        Construct JSON info log record where user is room admin.
 
-        :param dict log: Dictionary containing logged message with metadata.
+def serialize_chat_message(log: dict) -> str:
+    """
+    Construct JSON log record for a message logged from within a Chatango room.
 
-        :returns: str
-        """
-        try:
-            chat_data = re.search(r"(?P<room>\[\S+]) (?P<user>\[\S+]) (?P<ip>\[\S+])", log.get("message"))
-            if chat_data and log.get("message"):
-                message = log["message"].split(": ", 1)[1].replace("\n", "\t")
-                subset = {
-                    "time": log["time"],
-                    "message": message,
-                    "level": log["level"].name,
-                    "room": chat_data["room"].replace("[", "").replace("]", ""),
-                    "user": chat_data["user"].replace("[", "").replace("]", ""),
-                    "ip": chat_data["ip"].replace("[", "").replace("]", ""),
-                }
-                return json.dumps(subset)
-        except Exception as e:
-            subset["error"] = f"Logging error occurred: {str(e)}"
-            return serialize_error(subset)
+    Falls back to a plain record when the log isn't a chat message (bot lifecycle
+    events, moderation checks, etc.); such logs are still valid JSON.
 
-    def serialize_event(log: dict) -> str:
-        """
-        Construct warning log.
+    :param dict log: Dictionary containing logged message with metadata.
 
-        :param dict log: Dictionary containing logged message with metadata.
+    :returns: str
+    """
+    try:
+        chat_data = CHAT_LOG_PATTERN.match(log["message"])
+        if chat_data is None:
+            return serialize_default(log)
+        subset = {
+            "time": log["time"],
+            "message": chat_data["body"].replace("\n", "\t"),
+            "level": log["level"],
+            "room": chat_data["room"],
+            "user": chat_data["user"],
+        }
+        if chat_data["ip"] and chat_data["ip"] != MISSING_IP_PLACEHOLDER:
+            subset["ip"] = chat_data["ip"]
+        return json.dumps(subset)
+    except Exception as e:
+        return serialize_default(log, error=f"Logging error occurred: {str(e)}")
 
-        :returns: str
-        """
-        try:
-            chat_data = re.search(r"(?P<room>\[\S+]) (?P<user>\[\S+])", log["message"])
-            if bool(chat_data) and log.get("message") is not None:
-                subset = {
-                    "time": log["time"],
-                    "message": log["message"].split(": ", 1)[1],
-                    "level": log["level"].name,
-                    "room": chat_data["room"].replace("[", "").replace("]", ""),
-                    "user": chat_data["user"].replace("[", "").replace("]", ""),
-                }
-                return json.dumps(subset)
-        except Exception as e:
-            log["error"] = f"Logging error occurred: {str(e)}"
 
-    def serialize_error(log: dict) -> str:
-        """
-        Construct error log record.
+def serialize_error(log: dict) -> str:
+    """
+    Construct error log record.
 
-        :param dict log: Dictionary containing logged message with metadata.
+    :param dict log: Dictionary containing logged message with metadata.
 
-        :returns: str
-        """
-        if log and log.get("message"):
-            subset = {
-                "time": log["time"],
-                "level": log["level"].name,
-                "message": log["message"],
-            }
-            return json.dumps(subset)
-        if not log.get("message"):
-            subset = {
-                "time": log["time"],
-                "level": log["level"].name,
-                "message": "(No message provided)",
-            }
-            return json.dumps(subset)
+    :returns: str
+    """
+    return serialize_default(log)
 
-    if record["level"].name == "INFO":
-        record["extra"]["serialized"] = serialize_as_admin(record)
-        return "{extra[serialized]},\n"
-    if record["level"].name in ("TRACE", "WARNING", "SUCCESS"):
-        record["extra"]["serialized"] = serialize_event(record)
-        return "{extra[serialized]},\n"
-    if record["level"].name in ("ERROR", "CRITICAL"):
-        record["extra"]["serialized"] = serialize_error(record)
-        sms_error_handler(record)
-        return "{extra[serialized]},\n"
-    return "{log},\n"
+
+def serialize_default(log: dict, error: str = None) -> str:
+    """
+    Construct a bare log record out of a message which has no additional metadata.
+
+    :param dict log: Dictionary containing logged message with metadata.
+    :param str error: Optional error encountered while serializing the log.
+
+    :returns: str
+    """
+    subset = {
+        "time": log["time"],
+        "level": log["level"],
+        "message": log["message"],
+    }
+    if error:
+        subset["error"] = error
+    return json.dumps(subset)
 
 
 def construct_json_from_corrupted_log(log: str) -> dict:
@@ -131,11 +126,14 @@ def sms_error_handler(log: dict) -> None:
 
     :returns: None
     """
-    sms.messages.create(
-        body=f'BROBOT ERROR: {log["time"]} | {log["message"]}',
-        from_=TWILIO_SENDER_PHONE,
-        to=TWILIO_BRO_PHONE_NUMBER,
-    )
+    try:
+        sms.messages.create(
+            body=f'BROBOT ERROR: {log["time"]} | {log["message"]}',
+            from_=TWILIO_SENDER_PHONE,
+            to=TWILIO_BRO_PHONE_NUMBER,
+        )
+    except Exception as e:
+        logger.bind(sms_notification=False).warning(f"Failed to send SMS notification for error log: {e}")
 
 
 def log_formatter(record: dict) -> str:

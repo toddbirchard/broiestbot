@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## What This Project Is
 
@@ -36,7 +36,7 @@ The bot is not a web server — uvicorn is used purely as a process manager. `as
    - `!<cmd>` → `_process_command` → DB lookup → `create_message` → `room.send_message()`
    - `!!<query>` → skip the DB, go straight to the image-search fallback
    - YouTube/X/Wikipedia URLs → auto-generate link previews
-   - `@bro` → LLM response via Anthropic Claude
+   - `@bro` → LLM response via Anthropic Codex
    - Everything else → `_process_phrase` → DB phrase match
 3. `create_message` is a large **async** `if/elif` dispatch on `cmd_type` (the `type` column of the `commands` table), calling the appropriate function from `broiestbot/commands/`.
 
@@ -76,9 +76,9 @@ Tests live beside the code they cover (`broiestbot/commands/<domain>/tests/`), w
 
 ### LLM Integration
 
-`@bro <message>` triggers `_respond_llm_prompt` → `generate_llm_response` → `clients/llm.py:LLMClient`, which awaits Claude via the Anthropic SDK's `AsyncAnthropic` client with a persona system prompt. Room history (`room.history`) is formatted into a structured `messages` list, and the markdown reply is converted to HTML before being sent. `asgi.py` closes the client on lifespan shutdown.
+`@bro <message>` triggers `_respond_llm_prompt` → `generate_llm_response` → `clients/llm.py:LLMClient`, which awaits Codex via the Anthropic SDK's `AsyncAnthropic` client with a persona system prompt. Room history (`room.history`) is formatted into a structured `messages` list, and the markdown reply is converted to HTML before being sent. `asgi.py` closes the client on lifespan shutdown.
 
-The call goes through `client.beta.messages.create` because it opts into server-side refusal fallbacks (`fallbacks="default"` plus the `SERVER_SIDE_FALLBACK_BETA` header): if Claude's safety classifiers decline the prompt, Anthropic re-runs it on a fallback model within the same request. Two consequences worth knowing:
+The call goes through `client.beta.messages.create` because it opts into server-side refusal fallbacks (`fallbacks="default"` plus the `SERVER_SIDE_FALLBACK_BETA` header): if Codex's safety classifiers decline the prompt, Anthropic re-runs it on a fallback model within the same request. Two consequences worth knowing:
 
 - Reply text must be selected by block type (`block.type == "text"`) — `content[0]` may be a thinking or `fallback` block.
 - If the whole chain still declines, `generate_response` raises `LLMRefusalError` and `generate_llm_response` returns an in-persona brush-off rather than staying silent.
@@ -110,10 +110,6 @@ In a room where the bot is a plain user:
 ### Active Rooms / Leagues
 
 `CHATANGO_ROOMS` and many league dicts in `config.py` (`FOOTY_LEAGUES`, `FOOTY_LIVE_SCORED_LEAGUES`, etc.) keep most entries commented out. Only uncommented entries are active. This is intentional seasonal configuration — comment/uncomment entries rather than deleting them.
-
-Some active leagues are only worth surfacing for a handful of clubs. `FOOTY_LEAGUE_TEAM_FILTERS` maps a league ID to the team IDs a fixture must feature to be shown (club friendlies → `FOOTY_FRIENDLY_CLUBS`; the Primeira Liga → Benfica; Eliteserien → Aalesund); every other league passes through unfiltered. `footy/util.py:filter_league_fixtures` applies it to every fetched fixture list, so all fixture-backed commands inherit it — including the `liveodds` and `footystats` types, which fetch through `live.py:fetch_live_fixtures`. Adding a league to the dict is the whole change; there is no per-command wiring.
-
-The one exception is the upcoming-fixtures path: a team-filtered league can't use the `next=N` parameter, since the soonest N league-wide fixtures rarely include the clubs being filtered for. `upcoming.py` routes those leagues to `fetch_upcoming_fixtures_by_date_range` (a `from`/`to` request spanning `UPCOMING_FIXTURE_WINDOW_DAYS`) instead, so the fixtures survive long enough to be filtered.
 
 ## Code Style
 

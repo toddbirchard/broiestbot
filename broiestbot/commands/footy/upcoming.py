@@ -9,7 +9,6 @@ from http_client import get_http_session
 from logger import LOGGER
 
 from config import (
-    CLUB_FRIENDLIES_LEAGUE_ID,
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_LEAGUES,
@@ -18,10 +17,11 @@ from config import (
 from .util import (
     abbreviate_team_name,
     check_fixture_start_date,
-    filter_friendly_fixtures,
+    filter_league_fixtures,
     get_preferred_time_format,
     get_preferred_timezone,
     get_season_year,
+    league_is_team_filtered,
 )
 
 # Number of days ahead for which upcoming fixtures are displayed.
@@ -116,8 +116,9 @@ async def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: st
     :returns: Optional[List[dict]]
     """
     try:
-        if league_id == CLUB_FRIENDLIES_LEAGUE_ID:
-            return filter_friendly_fixtures(await fetch_upcoming_friendlies(tz_name), league_id)
+        if league_is_team_filtered(league_id):
+            fixtures = await fetch_upcoming_fixtures_by_date_range(league_id, tz_name)
+            return filter_league_fixtures(fixtures, league_id)
         params = {
             "next": (
                 8
@@ -138,23 +139,25 @@ async def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: st
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-async def fetch_upcoming_friendlies(tz_name: str) -> Optional[List[dict]]:
+async def fetch_upcoming_fixtures_by_date_range(league_id: int, tz_name: str) -> Optional[List[dict]]:
     """
-    Fetch club friendlies scheduled within the upcoming fixture window.
+    Fetch every fixture a team-filtered league has scheduled within the upcoming fixture window.
 
-    Hundreds of clubs worldwide play friendlies, so the `next` parameter (capped at 99
-    by the API) only ever spans a couple of days — nowhere near the displayed window.
-    Requesting the full date range instead ensures fixtures belonging to
-    `FOOTY_FRIENDLY_CLUBS` aren't truncated away before they can be filtered for.
+    Only a handful of a team-filtered league's fixtures are ever displayed, so the `next`
+    parameter would truncate the response long before the clubs we care about appear in it:
+    hundreds of clubs worldwide play friendlies, and Benfica feature in one Primeira Liga
+    fixture per matchday. Requesting the full date range instead ensures fixtures belonging
+    to `FOOTY_LEAGUE_TEAM_FILTERS` survive to be filtered for.
 
+    :param int league_id: ID of footy league/cup.
     :param str tz_name: User's preferred timezone (ie: `America/New_York`).
 
     :returns: Optional[List[dict]]
     """
     today = datetime.now()
     params = {
-        "league": CLUB_FRIENDLIES_LEAGUE_ID,
-        "season": get_season_year(CLUB_FRIENDLIES_LEAGUE_ID),
+        "league": league_id,
+        "season": get_season_year(league_id),
         "from": today.strftime("%Y-%m-%d"),
         "to": (today + timedelta(days=UPCOMING_FIXTURE_WINDOW_DAYS)).strftime("%Y-%m-%d"),
         "status": "NS-1H-2H",

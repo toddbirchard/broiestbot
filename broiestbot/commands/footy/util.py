@@ -1,7 +1,7 @@
 """Helpers for footy commands."""
 
 from datetime import datetime, timedelta, tzinfo
-from typing import List, Optional, Tuple
+from typing import Collection, List, Optional, Tuple
 
 import pytz
 from pytz import BaseTzInfo
@@ -22,7 +22,7 @@ from config import (
     EPL_SUMMER_SERIES_LEAGUE_ID,
     EUROS_LEAGUE_ID,
     EUROS_QUALIFIERS_ID,
-    FOOTY_FRIENDLY_CLUBS,
+    FOOTY_LEAGUE_TEAM_FILTERS,
     INT_FRIENDLIES_LEAGUE_ID,
     METRIC_SYSTEM_USERS,
     MLS_LEAGUE_ID,
@@ -120,36 +120,50 @@ def get_current_day(room: str) -> datetime:
     return datetime.now(pytz.timezone("America/New_York"))
 
 
-def fixture_features_friendly_club(fixture: dict) -> bool:
+def league_is_team_filtered(league_id: int) -> bool:
+    """
+    Determine whether a league only surfaces fixtures featuring specific clubs.
+
+    :param int league_id: ID of footy league/cup.
+
+    :returns: bool
+    """
+    return league_id in FOOTY_LEAGUE_TEAM_FILTERS
+
+
+def fixture_features_team(fixture: dict, team_ids: Collection[int]) -> bool:
     """
     Determine whether either side of a fixture is a club we care about.
 
     :param dict fixture: Single fixture's data.
+    :param Collection[int] team_ids: IDs of clubs worth surfacing a fixture for.
 
     :returns: bool
     """
     teams = fixture.get("teams") or {}
     home_team_id = (teams.get("home") or {}).get("id")
     away_team_id = (teams.get("away") or {}).get("id")
-    return home_team_id in FOOTY_FRIENDLY_CLUBS or away_team_id in FOOTY_FRIENDLY_CLUBS
+    return home_team_id in team_ids or away_team_id in team_ids
 
 
-def filter_friendly_fixtures(fixtures: Optional[List[dict]], league_id: int) -> Optional[List[dict]]:
+def filter_league_fixtures(fixtures: Optional[List[dict]], league_id: int) -> Optional[List[dict]]:
     """
-    Discard club friendlies which don't feature a club we care about.
+    Discard fixtures of a team-filtered league which don't feature a club we care about.
 
-    Club friendlies span every club on earth, so friendlies are only kept when either
-    side appears in `FOOTY_FRIENDLY_CLUBS`. Fixtures of any other league pass through
-    untouched.
+    Some leagues are only interesting for a handful of clubs: club friendlies span every
+    club on earth, and the Primeira Liga is only followed for Benfica. Fixtures of a league
+    listed in `FOOTY_LEAGUE_TEAM_FILTERS` are kept only when either side is one of that
+    league's clubs; fixtures of any other league pass through untouched.
 
     :param Optional[List[dict]] fixtures: Fixtures fetched for a single league/cup.
     :param int league_id: ID of footy league/cup the fixtures belong to.
 
     :returns: Optional[List[dict]]
     """
-    if league_id != CLUB_FRIENDLIES_LEAGUE_ID or not fixtures:
+    team_ids = FOOTY_LEAGUE_TEAM_FILTERS.get(league_id)
+    if not team_ids or not fixtures:
         return fixtures
-    return [fixture for fixture in fixtures if fixture_features_friendly_club(fixture)]
+    return [fixture for fixture in fixtures if fixture_features_team(fixture, team_ids)]
 
 
 def abbreviate_team_name(team_name: str) -> str:
