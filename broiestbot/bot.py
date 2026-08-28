@@ -277,9 +277,9 @@ class Bot(chatango.Client):
         elif cmd_type == "allfixtures" and room_name and user_name:
             return await footy_all_upcoming_fixtures(room_name, user_name)
         elif cmd_type == "livefixtures" and user_name:
-            return await footy_live_fixtures(user_name, subs=True)
+            return await footy_live_fixtures(user_name, subs=False)
         elif cmd_type == "livefixtureswithsubs" and user_name:
-            return await footy_live_fixtures(user_name, subs=True)
+            return await footy_live_fixtures(user_name, subs=False)
         elif cmd_type == "livefixturestats" and room_name and user_name:
             return await footy_stats_for_live_fixtures(room_name, user_name)
         elif cmd_type == "footystats" and room_name and user_name:
