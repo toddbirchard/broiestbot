@@ -118,6 +118,14 @@ SQLALCHEMY_DATABASE_URI = getenv("SQLALCHEMY_DATABASE_URI")
 DATABASE_USERS_TABLE = getenv("DATABASE_USERS_TABLE")
 DATABASE_ARGS = {"ssl": {"ca": f"{BASE_DIR}/creds/ca-certificate.crt"}}
 
+# Connection pooling for the async engine. Every chat message costs several DB round trips,
+# and each one is a TLS handshake against a remote MySQL when connections aren't reused.
+DATABASE_POOL_SIZE = int(getenv("DATABASE_POOL_SIZE", "10"))
+DATABASE_MAX_OVERFLOW = int(getenv("DATABASE_MAX_OVERFLOW", "20"))
+# Recycle well under MySQL's `wait_timeout` so pooled connections are replaced before the
+# server drops them.
+DATABASE_POOL_RECYCLE = int(getenv("DATABASE_POOL_RECYCLE", "1800"))
+
 # Redis
 # -------------------------------------------------
 REDIS_HOST = getenv("REDIS_HOST")

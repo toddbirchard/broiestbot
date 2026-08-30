@@ -1,7 +1,7 @@
 """PSN Commands"""
 
 from math import floor
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from emoji import emojize
 from logger import LOGGER
@@ -17,12 +17,13 @@ def get_psn_online_friends() -> str:
 
     :returns: str
     """
+    psn_account = "BROIESTBRO"
     try:
         psn_account = psn.account.online_id
         online_friends = psn.get_online_friends()
         if bool(online_friends):
             active_friends = get_active_friends(online_friends)
-            if active_friends or online_friends:
+            if active_friends:
                 return create_psn_response(active_friends)
         return emojize(f"\n\n:video_game: <b>{psn_account}</b> has no friends.", language="en")
     except Exception as e:
@@ -30,47 +31,57 @@ def get_psn_online_friends() -> str:
         return emojize(f"\n\n:video_game: <b>{psn_account}</b> has no friends.", language="en")
 
 
-def get_active_friends(online_friends: List[User]) -> List[Optional[User]]:
+def get_active_friends(online_friends: List[User]) -> List[Tuple[User, dict]]:
     """
-    Get PSN user profile for a given online ID.
+    Pair each friend who is currently in a game with their presence payload.
 
-    :param friends List[User]: List of PSN friends.
-    :returns: List[Optional[User]]
+    The presence payload is carried alongside the friend rather than re-fetched when the
+    response is built: `get_presence()` is a network call, and fetching it once per friend
+    instead of twice halves the round trips this command makes.
+
+    :param List[User] online_friends: PSN friends who are currently online.
+
+    :returns: List[Tuple[User, dict]]
     """
-    return [
-        friend
-        for friend in online_friends
-        if friend.get_presence()["basicPresence"].get("gameTitleInfoList") is not None
-    ]
+    active_friends = []
+    for friend in online_friends:
+        try:
+            presence = friend.get_presence()
+        except Exception as e:
+            # One unreachable friend shouldn't cost the whole roster.
+            LOGGER.warning(f"Could not fetch PSN presence for `{getattr(friend, 'online_id', friend)}`: {e}")
+            continue
+        if presence["basicPresence"].get("gameTitleInfoList") is not None:
+            active_friends.append((friend, presence))
+    return active_friends
 
 
-def create_psn_response(active_friends: List[User]) -> str:
+def create_psn_response(active_friends: List[Tuple[User, dict]]) -> str:
     """
     Construct chat response of active PSN friends.
 
-    :param List[User] active_friends: PSN friends who are online.
+    :param List[Tuple[User, dict]] active_friends: Online PSN friends & their presence data.
 
     :returns: str
     """
     response = emojize("\n\n:video_game: <b>BROIESTBRO's online PSN friends</b>:\n", language="en")
-    for active_friend in active_friends:
-        friend = create_active_psn_user_response(active_friend)
+    for active_friend, presence in active_friends:
+        friend = create_active_psn_user_response(active_friend, presence)
         if friend:
             response += friend
     return response
 
 
-def create_active_psn_user_response(active_friend: User) -> Optional[str]:
+def create_active_psn_user_response(active_friend: User, friend_meta: dict) -> Optional[str]:
     """
     Create response for active PSN user.
 
-    :param str account_name: PSN User ID.
-    :param str friend_meta: PSN User online presence data.
+    :param User active_friend: PSN friend who is currently online.
+    :param dict friend_meta: PSN user online presence data, already fetched by `get_active_friends`.
 
     :returns: Optional[str]
     """
     try:
-        friend_meta = active_friend.get_presence()
         playing_game = friend_meta["basicPresence"]["gameTitleInfoList"][0]["titleName"]
         platform = friend_meta["basicPresence"]["primaryPlatformInfo"]["platform"]
         return f"• <b>{active_friend.online_id}</b>: playing {playing_game} on {platform}\n"
