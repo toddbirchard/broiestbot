@@ -12,6 +12,7 @@ from .standings import (
 from .stats import footy_stats_for_live_fixtures
 from .teams import fetch_aafk_fixture_data, fetch_fox_fixtures
 from .today import today_upcoming_fixtures
+from .transfers import epl_recent_transfers, league_recent_transfers
 from .upcoming import (
     footy_all_upcoming_fixtures,
     footy_upcoming_fixtures,

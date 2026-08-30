@@ -19,6 +19,7 @@ from broiestbot.commands import (  # get_crypto_chart,
     covid_cases_usa,
     create_wiki_preview,
     epl_golden_boot,
+    epl_recent_transfers,
     f1_grand_prix,
     fetch_aafk_fixture_data,
     fetch_fox_fixtures,
@@ -292,6 +293,8 @@ class Bot(chatango.Client):
             return await epl_golden_boot()
         elif cmd_type == "goldenshoe":
             return await all_leagues_golden_boot()
+        elif cmd_type == "epltransfers":
+            return await epl_recent_transfers()
         elif cmd_type == "footypredicts" and room_name and user_name:
             return await footy_today_fixtures_odds(room_name, user_name)
         elif cmd_type == "foxtures" and room_name and user_name:

@@ -14,6 +14,7 @@ from .footy import (
     aafk_league_table_standings,
     all_leagues_golden_boot,
     epl_golden_boot,
+    epl_recent_transfers,
     fetch_aafk_fixture_data,
     fetch_fox_fixtures,
     footy_all_upcoming_fixtures,
