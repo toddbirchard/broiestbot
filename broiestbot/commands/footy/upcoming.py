@@ -93,7 +93,7 @@ async def footy_upcoming_fixtures_per_league(
             for fixture in fixtures:
                 fixture_date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
                 if fixture_date.date() <= datetime.now().date() + timedelta(days=UPCOMING_FIXTURE_WINDOW_DAYS):
-                    upcoming_fixture = await add_upcoming_fixture(fixture, fixture_date, room, username)
+                    upcoming_fixture = await add_upcoming_fixture(fixture, fixture_date, room, username, tz_name)
                     if upcoming_fixture:
                         upcoming_fixtures += upcoming_fixture
             # Avoid rendering a bare league header when every fixture was filtered out.
@@ -186,7 +186,9 @@ async def fetch_upcoming_fixtures_by_league(params: dict) -> Optional[List[dict]
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-async def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str) -> str:
+async def add_upcoming_fixture(
+    fixture: dict, date: datetime, room: str, username: str, tz_name: Optional[str] = None
+) -> str:
     """
     Construct upcoming fixture match-up.
 
@@ -194,12 +196,13 @@ async def add_upcoming_fixture(fixture: dict, date: datetime, room: str, usernam
     :param datetime date: Fixture start time/date displayed in preferred timezone.
     :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
+    :param Optional[str] tz_name: Already-resolved preferred timezone of the requesting user.
 
     :returns: str
     """
     home_team = abbreviate_team_name(fixture["teams"]["home"]["name"])
     away_team = abbreviate_team_name(fixture["teams"]["away"]["name"])
-    display_date, tz = await get_preferred_time_format(date, room, username)
+    display_date, tz = await get_preferred_time_format(date, room, username, tz_name)
     display_date = check_fixture_start_date(date, tz, display_date)
     matchup = f"{away_team} @ {home_team}"
     return f"{matchup:<40} | <i>{display_date}</i>\n"

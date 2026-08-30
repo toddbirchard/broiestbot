@@ -58,8 +58,6 @@ async def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]
         )
         user = result.scalars().first()
     if user and user.time_zone_name is not None:
-        # TODO: Prevent fetching for preferred TZ per fixture
-        # LOGGER.info(f"Found user {username} in database with tz: {user.time_zone_name}")
         return user.time_zone_name
 
 
@@ -81,17 +79,24 @@ async def get_preferred_timezone(room: str, username: str) -> str:
     return "America/New_York"
 
 
-async def get_preferred_time_format(start_time: datetime, room: str, username: str) -> Tuple[str, BaseTzInfo]:
+async def get_preferred_time_format(
+    start_time: datetime, room: str, username: str, tz_name: Optional[str] = None
+) -> Tuple[str, BaseTzInfo]:
     """
     Display fixture times depending on preferred timezone of requesting user/room.
+
+    A user's preferred timezone is the same for every fixture in a single command, so callers
+    which format fixtures in a loop should resolve it once with `get_preferred_timezone` and
+    pass it as `tz_name`. Omitting it costs a database round trip per fixture.
 
     :param datetime start_time: Fixture start time/date defaulted to UTC time.
     :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
+    :param Optional[str] tz_name: Already-resolved preferred timezone, looked up when omitted.
 
     :returns: Tuple[str, BaseTzInfo]
     """
-    timezone_name = await get_preferred_timezone(room, username)
+    timezone_name = tz_name if tz_name else await get_preferred_timezone(room, username)
     if "America" in timezone_name:
         return (
             start_time.strftime("%b %d, %l:%M%p").replace("AM", "am").replace("PM", "pm"),
@@ -218,7 +223,9 @@ def check_fixture_start_date(fixture_start_date: datetime, tz: tzinfo, display_d
     return display_date
 
 
-async def add_upcoming_fixture(fixture: dict, date: datetime, room: str, username: str) -> str:
+async def add_upcoming_fixture(
+    fixture: dict, date: datetime, room: str, username: str, tz_name: Optional[str] = None
+) -> str:
     """
     Construct upcoming fixture match-up.
 
@@ -226,12 +233,13 @@ async def add_upcoming_fixture(fixture: dict, date: datetime, room: str, usernam
     :param datetime date: Fixture start time/date displayed in preferred timezone.
     :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
+    :param Optional[str] tz_name: Already-resolved preferred timezone of the requesting user.
 
     :returns: str
     """
     home_team = abbreviate_team_name(fixture["teams"]["home"]["name"])
     away_team = abbreviate_team_name(fixture["teams"]["away"]["name"])
-    display_date, tz = await get_preferred_time_format(date, room, username)
+    display_date, tz = await get_preferred_time_format(date, room, username, tz_name)
     display_date = check_fixture_start_date(date, tz, display_date)
     matchup = f"{away_team} @ {home_team}"
     return f"{matchup:<30} | <i>{display_date}</i>\n"

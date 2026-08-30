@@ -7,7 +7,6 @@ from imdb import Cinemagoer
 from redis import Redis
 from rq_scheduler import Scheduler
 from twilio.rest import Client
-import redgifs
 
 from config import (
     ALPHA_VANTAGE_API_KEY,
@@ -53,10 +52,15 @@ cch = CryptoChartHandler(
 )
 
 # Wikipedia API Python SDK
-wiki = wikipediaapi.Wikipedia(
-    "BroiestBot/1.0 (https://github.com/toddbirchard/broiestbot; broiestbot@eample.com)",
-    language="en",
-)
+WIKI_USER_AGENT = "BroiestBot/1.0 (https://github.com/toddbirchard/broiestbot; broiestbot@eample.com)"
+
+# Blocking client, for the handlers dispatched through `asyncio.to_thread`.
+wiki = wikipediaapi.Wikipedia(WIKI_USER_AGENT, language="en")
+
+# Non-blocking client (httpx.AsyncClient under the hood), for handlers awaited on the event
+# loop. A `WikipediaPage` fetches lazily on attribute access, so a page held by the blocking
+# client blocks the loop wherever its attributes are read — use this one from `async def`.
+async_wiki = wikipediaapi.AsyncWikipedia(WIKI_USER_AGENT, language="en")
 
 # Twilio SMS Client
 sms = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -90,5 +94,5 @@ psn = PlaystationClient(PLAYSTATION_SSO_TOKEN)
 # Anthropic LLM Client
 claude = LLMClient()
 
-# Redgifs Client
-redgifs_client = redgifs.API()
+# Redgifs: `redgifs.aio.API` opens an `aiohttp.ClientSession` in its constructor, so it needs a
+# running event loop and cannot be built here at import time. See `commands/afterdark.py`.

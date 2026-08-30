@@ -104,10 +104,11 @@ async def fetch_next_five_fixtures_per_team(
                 home_team = fixture["teams"]["home"]["name"]
                 away_team = fixture["teams"]["away"]["name"]
                 date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
-                display_date, tz = await get_preferred_time_format(date, room, username)
-                display_date = check_fixture_start_date(date, tz, display_date)
-                if room == CHATANGO_OBI_ROOM:
-                    display_date, tz = await get_preferred_time_format(date, room, username)
+                display_date, tz = await get_preferred_time_format(date, room, username, tz_name)
+                # The OBI room shows the absolute date rather than the Today/Tomorrow shorthand,
+                # which the second identical lookup used to achieve by overwriting it.
+                if room != CHATANGO_OBI_ROOM:
+                    display_date = check_fixture_start_date(date, tz, display_date)
                 upcoming_fixtures = upcoming_fixtures + f"{away_team} @ {home_team} | <i>{display_date}</i>\n"
             return emojize(upcoming_fixtures, language="en")
         return emojize(":warning: Couldn't find fixtures, has season started yet? :warning:", language="en")
@@ -141,10 +142,11 @@ async def fetch_fox_fixtures(room: str, username: str) -> Optional[str]:
                 home_team = fixture["teams"]["home"]["name"]
                 away_team = fixture["teams"]["away"]["name"]
                 date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
-                display_date, tz = await get_preferred_time_format(date, room, username)
-                display_date = check_fixture_start_date(date, tz, display_date)
-                if room == CHATANGO_OBI_ROOM:
-                    display_date, tz = await get_preferred_time_format(date, room, username)
+                display_date, tz = await get_preferred_time_format(date, room, username, tz_name)
+                # The OBI room shows the absolute date rather than the Today/Tomorrow shorthand,
+                # which the second identical lookup used to achieve by overwriting it.
+                if room != CHATANGO_OBI_ROOM:
+                    display_date = check_fixture_start_date(date, tz, display_date)
                 upcoming_foxtures = upcoming_foxtures + f"{away_team} @ {home_team} | <i>{display_date}</i>\n"
             return emojize(upcoming_foxtures, language="en")
         return emojize(":warning: Couldn't find fixtures, has season started yet? :warning:", language="en")

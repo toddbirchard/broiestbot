@@ -5,13 +5,14 @@ from random import randint
 from typing import Optional
 
 import pytz
+import redgifs.aio
 from aiohttp import ClientError
 from emoji import emojize
 from http_client import get_http_session
 from logger import LOGGER
 from redgifs import Order
+from redgifs.errors import HTTPException, RedGifsError
 
-from clients import redgifs_client
 from config import (
     REDGIFS_ACCESS_KEY,
     REDGIFS_IMAGE_SEARCH_ENDPOINT,
@@ -37,7 +38,50 @@ def is_after_dark() -> bool:
     return False
 
 
-def fetch_redgifs_gif(query: str, username: str, after_dark_only: bool = False) -> Optional[str]:
+# `redgifs.aio.API` opens an `aiohttp.ClientSession` in its constructor, so it needs a running
+# loop and can't be built at import time alongside the other SDK clients. It also can't be
+# handed the shared session: its type guard reads `session is not isinstance(session, ...)`,
+# which is true for every session object, so passing one always raises. Hence a lazily-built
+# client owning its own session, closed by `close_redgifs_client` on shutdown.
+_redgifs_client: Optional["redgifs.aio.API"] = None
+_logged_in = False
+
+
+async def get_redgifs_client(force_login: bool = False) -> "redgifs.aio.API":
+    """
+    Return the shared async redgifs client, authenticating it on first use.
+
+    The client used to re-authenticate on every single search, costing an extra round trip
+    per command for a token which stays valid; the token is now reused across commands.
+
+    :param bool force_login: Re-authenticate even if a token was already obtained.
+
+    :returns: redgifs.aio.API
+    """
+    global _redgifs_client, _logged_in
+    if _redgifs_client is None:
+        _redgifs_client = redgifs.aio.API()
+        _logged_in = False
+    if force_login or not _logged_in:
+        await _redgifs_client.login()
+        _logged_in = True
+    return _redgifs_client
+
+
+async def close_redgifs_client() -> None:
+    """
+    Close the redgifs client's session; called when the bot shuts down.
+
+    :returns: None
+    """
+    global _redgifs_client, _logged_in
+    if _redgifs_client is not None:
+        await _redgifs_client.close()
+    _redgifs_client = None
+    _logged_in = False
+
+
+async def fetch_redgifs_gif(query: str, username: str, after_dark_only: bool = False) -> Optional[str]:
     """
     Fetch a special kind of gif, if you know what I mean ;).
 
@@ -50,8 +94,13 @@ def fetch_redgifs_gif(query: str, username: str, after_dark_only: bool = False) 
     try:
         night_mode = is_after_dark()
         if (after_dark_only and night_mode) or after_dark_only is False:
-            redgifs_client.login()
-            results = redgifs_client.search(search_text=query, order=Order.TRENDING, count=20)
+            client = await get_redgifs_client()
+            try:
+                results = await client.search(search_text=query, order=Order.TRENDING, count=20)
+            except HTTPException:
+                # Temporary tokens expire; re-authenticate once before giving up.
+                client = await get_redgifs_client(force_login=True)
+                results = await client.search(search_text=query, order=Order.TRENDING, count=20)
             gifs = results.gifs
             if gifs:
                 gif = gifs[randint(0, len(gifs) - 1)]
@@ -68,6 +117,11 @@ def fetch_redgifs_gif(query: str, username: str, after_dark_only: bool = False) 
                 return "🍕 *h* wow pizza ur taste in lesbians is so dank that I coughldnt find nething sry :( *h* 🍕"
             return f"⚠️ wow @{username} u must b a freak tf r u even searching foughr jfc ⚠️"
         return "https://i.imgur.com/oGMHkqT.jpg"
+    except RedGifsError as e:
+        # `RedGifsError` derives from BaseException rather than Exception, so it slips past a
+        # bare `except Exception` — an unknown search tag would otherwise answer with silence.
+        LOGGER.warning(f"RedGifs rejected the search for `{query}`: {e}")
+        return f"⚠️ wow @{username} u must b a freak tf r u even searching foughr jfc ⚠️"
     except Exception as e:
         LOGGER.warning(f"Unexpected error while fetching nsfw image for `{query}`: {e}")
         return f"⚠️ @{username} dude u must b a freak cuz that just broke bot ⚠️"
