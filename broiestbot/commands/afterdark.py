@@ -46,18 +46,7 @@ def is_after_dark() -> bool:
 # client owning its own session, closed by `close_redgifs_client` on shutdown.
 _redgifs_client: Optional["redgifs.aio.API"] = None
 _logged_in = False
-_redgifs_lock: Optional[asyncio.Lock] = None
-_redgifs_lock_loop: Optional[asyncio.AbstractEventLoop] = None
-
-
-def get_redgifs_lock() -> asyncio.Lock:
-    """Return an async lock scoped to the currently running event loop."""
-    global _redgifs_lock, _redgifs_lock_loop
-    loop = asyncio.get_running_loop()
-    if _redgifs_lock is None or _redgifs_lock_loop is not loop:
-        _redgifs_lock = asyncio.Lock()
-        _redgifs_lock_loop = loop
-    return _redgifs_lock
+_redgifs_lock = asyncio.Lock()
 
 
 async def get_redgifs_client(force_login: bool = False) -> "redgifs.aio.API":
@@ -72,7 +61,7 @@ async def get_redgifs_client(force_login: bool = False) -> "redgifs.aio.API":
     :returns: redgifs.aio.API
     """
     global _redgifs_client, _logged_in
-    async with get_redgifs_lock():
+    async with _redgifs_lock:
         if _redgifs_client is None:
             _redgifs_client = redgifs.aio.API()
             _logged_in = False
@@ -89,7 +78,7 @@ async def close_redgifs_client() -> None:
     :returns: None
     """
     global _redgifs_client, _logged_in
-    async with get_redgifs_lock():
+    async with _redgifs_lock:
         if _redgifs_client is not None:
             await _redgifs_client.close()
         _redgifs_client = None
