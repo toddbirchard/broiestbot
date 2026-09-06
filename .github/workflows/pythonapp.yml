@@ -26,6 +26,7 @@ jobs:
         python3 -m pip install flake8 pylint pytest
         python3 -m pip install -r requirements.txt
     - name: Authenticate to Google Cloud
+      if: ${{ secrets.GOOGLE_CREDENTIALS != '' }}
       uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
