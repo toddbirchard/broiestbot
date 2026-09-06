@@ -1,5 +1,6 @@
 """Commands only available from 10pm to 5am EST."""
 
+import asyncio
 from datetime import datetime
 from random import randint
 from typing import Optional
@@ -45,6 +46,18 @@ def is_after_dark() -> bool:
 # client owning its own session, closed by `close_redgifs_client` on shutdown.
 _redgifs_client: Optional["redgifs.aio.API"] = None
 _logged_in = False
+_redgifs_lock: Optional[asyncio.Lock] = None
+_redgifs_lock_loop: Optional[asyncio.AbstractEventLoop] = None
+
+
+def get_redgifs_lock() -> asyncio.Lock:
+    """Return an async lock scoped to the currently running event loop."""
+    global _redgifs_lock, _redgifs_lock_loop
+    loop = asyncio.get_running_loop()
+    if _redgifs_lock is None or _redgifs_lock_loop is not loop:
+        _redgifs_lock = asyncio.Lock()
+        _redgifs_lock_loop = loop
+    return _redgifs_lock
 
 
 async def get_redgifs_client(force_login: bool = False) -> "redgifs.aio.API":
@@ -59,13 +72,14 @@ async def get_redgifs_client(force_login: bool = False) -> "redgifs.aio.API":
     :returns: redgifs.aio.API
     """
     global _redgifs_client, _logged_in
-    if _redgifs_client is None:
-        _redgifs_client = redgifs.aio.API()
-        _logged_in = False
-    if force_login or not _logged_in:
-        await _redgifs_client.login()
-        _logged_in = True
-    return _redgifs_client
+    async with get_redgifs_lock():
+        if _redgifs_client is None:
+            _redgifs_client = redgifs.aio.API()
+            _logged_in = False
+        if force_login or not _logged_in:
+            await _redgifs_client.login()
+            _logged_in = True
+        return _redgifs_client
 
 
 async def close_redgifs_client() -> None:
@@ -75,10 +89,11 @@ async def close_redgifs_client() -> None:
     :returns: None
     """
     global _redgifs_client, _logged_in
-    if _redgifs_client is not None:
-        await _redgifs_client.close()
-    _redgifs_client = None
-    _logged_in = False
+    async with get_redgifs_lock():
+        if _redgifs_client is not None:
+            await _redgifs_client.close()
+        _redgifs_client = None
+        _logged_in = False
 
 
 async def fetch_redgifs_gif(query: str, username: str, after_dark_only: bool = False) -> Optional[str]:
