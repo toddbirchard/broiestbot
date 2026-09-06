@@ -52,7 +52,7 @@ cch = CryptoChartHandler(
 )
 
 # Wikipedia API Python SDK
-WIKI_USER_AGENT = "BroiestBot/1.0 (https://github.com/toddbirchard/broiestbot; broiestbot@eample.com)"
+WIKI_USER_AGENT = "BroiestBot/1.0 (https://github.com/toddbirchard/broiestbot; broiestbot@example.com)"
 
 # Blocking client, for the handlers dispatched through `asyncio.to_thread`.
 wiki = wikipediaapi.Wikipedia(WIKI_USER_AGENT, language="en")
