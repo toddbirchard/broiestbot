@@ -104,7 +104,7 @@ async def get_preferred_time_format(
         )
     if "anon" not in username and timezone_name:
         return start_time.strftime("%b %d, %H:%M"), pytz.timezone(timezone_name)
-    if room == CHATANGO_OBI_ROOM or (METRIC_SYSTEM_USERS is not None and username in METRIC_SYSTEM_USERS):
+    if room == CHATANGO_OBI_ROOM or username in METRIC_SYSTEM_USERS:
         return start_time.strftime("%b %d, %H:%M"), pytz.timezone("Europe/London")
     return (
         start_time.strftime("%b %d, %l:%M%p").replace("AM", "am").replace("PM", "pm"),

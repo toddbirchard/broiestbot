@@ -36,7 +36,6 @@ jobs:
         REDDIT_CLIENT_ID: ci
         REDDIT_CLIENT_SECRET: ci
         GENIUS_ACCESS_TOKEN: ci
-        METRIC_SYSTEM_USERS: ''
       run: |
         # database/__init__.py builds an ssl.SSLContext at import time; the real CA cert lives
         # in creds/, which is gitignored, so stand in a throwaway self-signed one.

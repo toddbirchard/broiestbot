@@ -183,7 +183,10 @@ PLOTLY_USERNAME = getenv("PLOTLY_USERNAME")
 # -------------------------------------------------
 WEATHERSTACK_API_ENDPOINT = "http://api.weatherstack.com/current"
 WEATHERSTACK_API_KEY = getenv("WEATHERSTACK_API_KEY")
-METRIC_SYSTEM_USERS = getenv("METRIC_SYSTEM_USERS")
+# Users who prefer metric units, as a comma-separated env var. Parsed into a list so that a
+# lookup is an exact membership test rather than a substring match ("led" would otherwise
+# match "ledhed"), and so an unset value yields an empty list instead of None.
+METRIC_SYSTEM_USERS = [user.strip() for user in getenv("METRIC_SYSTEM_USERS", "").split(",") if user.strip()]
 
 # Email
 # -------------------------------------------------
