@@ -133,6 +133,8 @@ nohup.*
 *.out
 *.log
 *.json
+# ...but channels.json is data the tuner reads at import, not a log.
+!channels.json
 logs/*
 
 # IDEs

@@ -44,12 +44,13 @@ def test_sms_logger(log_local_directory: str, info_log_filepath: str, json_log_f
     LOGGER.error("This is a TEST_ERROR log from Broiestbot")
     assert path.exists(log_local_directory)
     assert path.isfile(info_log_filepath)
+    # Scan the whole file rather than just the last line: emitting an ERROR also fires the
+    # Twilio SMS handler, which appends a WARNING of its own whenever the send fails (as it
+    # does in CI, where the credentials are placeholders).
     with open(info_log_filepath, "r", encoding="utf-8") as f:
-        last_line = f.readlines()[-1]
-        assert "TEST_ERROR" in last_line
+        assert any("TEST_ERROR" in line for line in f)
     with open(json_log_filepath, "r", encoding="utf-8") as f:
-        last_line = f.readlines()[-1]
-        assert "TEST_ERROR" in last_line
+        assert any("TEST_ERROR" in line for line in f)
 
 
 def log_creation_helper(log_local_directory: str):

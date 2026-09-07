@@ -38,19 +38,35 @@ The bot is not a web server — uvicorn is used purely as a process manager. `as
    - YouTube/X/Wikipedia URLs → auto-generate link previews
    - `@bro` → LLM response via Anthropic Claude
    - Everything else → `_process_phrase` → DB phrase match
+
+   These branches are mutually exclusive: the `?<query>` and `!<cmd>` branches `return` once
+   handled, so a command never also pays for the link-preview checks or a `phrases` lookup it
+   could never match. `broiestbot/tests/test_message_routing.py` locks that in.
 3. `create_message` is a large **async** `if/elif` dispatch on `cmd_type` (the `type` column of the `commands` table), calling the appropriate function from `broiestbot/commands/`.
 
 ### Sync/Async Boundary
 
-Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `create_message` awaits them directly. The LLM handler is likewise a coroutine, built on the Anthropic SDK's `AsyncAnthropic` client. Handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb, PSN, Genius, `praw`, `wikipediaapi`, `youtube_search`, `pandas.read_html`) stay synchronous and are dispatched with `asyncio.to_thread(...)` so they never block the event loop.
+Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `create_message` awaits them directly. The LLM handler is likewise a coroutine, built on the Anthropic SDK's `AsyncAnthropic` client, and the redgifs handler on `redgifs.aio.API`. Handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb, PSN, Genius, `praw`, `youtube_search`, `pandas.read_html`) stay synchronous and are dispatched with `asyncio.to_thread(...)` so they never block the event loop.
+
+Two traps when deciding whether something is safe to await:
+
+- **Lazy SDKs defeat `to_thread`.** A `wikipediaapi` page does no I/O when it is built — it fetches on *attribute access*, so `to_thread(wiki.page, …)` offloads nothing and every later `.summary` / `.sections` read blocks the loop. `clients/__init__.py` exposes both `wiki` (blocking, for `to_thread` handlers) and `async_wiki` (`AsyncWikipedia`, whose equivalents are awaitables) — use the latter from any `async def`.
+- **`to_thread` hides serial I/O.** Offloading keeps the loop free but the work inside the thread is still sequential, so a wrapper making N calls in a loop stays N round trips. Prefer removing the redundant calls (see `playstation.py`, which carries each friend's presence payload rather than re-fetching it) over widening the thread.
 
 - **`http_client.py`** owns the process-wide `aiohttp.ClientSession`. Call `get_http_session()` inside a handler rather than creating a session per request; `asgi.py` closes it on lifespan shutdown. Pass `request_timeout(n)` per request only when overriding the session-wide `HTTP_REQUEST_TIMEOUT`.
 - Decode bodies with `await resp.json(content_type=None)` — several of these APIs serve JSON under the wrong content type.
 - Catch `aiohttp.ClientError` (and `ClientResponseError` before it, when the status matters) where `requests.exceptions.HTTPError` used to be caught.
 
 `database/__init__.py` exposes both engines to match:
-- `async_session` (aiomysql, `NullPool`) — for `await`ed DB access on the event loop; used by `bot.py`'s command/phrase lookups and by any async handler (`footy/util.py`, `weather.py`).
+- `async_session` (aiomysql) — for `await`ed DB access on the event loop; used by `bot.py`'s command/phrase lookups and by any async handler (`footy/util.py`, `weather.py`).
 - `Session` (pymysql) — for the synchronous handlers running inside `to_thread` (e.g. `polls/`).
+
+The async engine pools its connections (`DATABASE_POOL_SIZE` / `DATABASE_MAX_OVERFLOW` /
+`DATABASE_POOL_RECYCLE` in `config.py`), because every chat message costs several round trips
+and an unpooled query pays a fresh TCP + TLS handshake each time — measured at ~523ms against
+~111ms pooled. An aiomysql connection belongs to the event loop which opened it, so the engine
+falls back to `NullPool` under pytest, where each test drives its own `asyncio.run(...)`;
+`asgi.py` disposes the pool via `close_db()` on lifespan shutdown.
 
 ### Package Layout
 
@@ -58,7 +74,7 @@ Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `c
 - **`broiestbot/commands/`** — One module or package per domain (`footy/`, `f1/`, `nba/`, `nfl/`, `mlb/`, `sumo/`, `odds/`, `polls/`, `images/`, plus flat modules like `llm.py`, `weather.py`, `movies.py`). All public command functions are re-exported through `broiestbot/commands/__init__.py`.
 - **`broiestbot/data/`** — Persists chat logs and user geo/IP data to the DB after every message.
 - **`broiestbot/moderation/`** — Ban/mute logic for blacklisted users, anon accounts, IPs, and specific phrases. Every entry point is gated on `privileges.py:bot_is_moderator(room)` — see "Room Privileges" below.
-- **`clients/__init__.py`** — Instantiates all third-party SDK clients at import time (Redis, Twilio, GCS, Wikipedia, IMDB, Reddit, Genius, PSN, Anthropic, Redgifs). Import from here rather than re-instantiating.
+- **`clients/__init__.py`** — Instantiates all third-party SDK clients at import time (Redis, Twilio, GCS, Wikipedia sync + async, IMDB, Reddit, Genius, PSN, Anthropic). Import from here rather than re-instantiating. The exception is redgifs: `redgifs.aio.API` opens an `aiohttp.ClientSession` in its constructor, so it needs a running loop and is built lazily by `commands/afterdark.py:get_redgifs_client` (which also caches its auth token) and closed on lifespan shutdown.
 - **`database/models.py`** — ORM models: `Command`, `Phrase`, `Chat`, `ChatangoUser`, `Weather`, `PollResult`, `Sport`, `League`.
 - **`config.py`** — All configuration and constants loaded from `.env`. Includes hundreds of league/team IDs and API endpoints. Import constants from here; never hardcode them.
 - **`http_client.py`** — Shared `aiohttp` session (`get_http_session`, `request_timeout`, `close_http_session`) used by every HTTP-backed command.

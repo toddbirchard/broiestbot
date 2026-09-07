@@ -5,9 +5,9 @@ name: Python application
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -25,10 +25,25 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install flake8 pylint pytest
         python3 -m pip install -r requirements.txt
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
-      with:
-        credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+    - name: Run tests
+      env:
+        # Placeholders, not secrets. clients/__init__.py builds every third-party SDK client at
+        # import time and several reject empty credentials, so collection fails without *some*
+        # value here. No test makes a live call -- HTTP is faked via tests/aiohttp_mocks.py and
+        # the DB engines are created lazily, so the dummy URI is never connected to.
+        ENVIRONMENT: development
+        SQLALCHEMY_DATABASE_URI: mysql+pymysql://ci:ci@127.0.0.1:3306/ci
+        REDDIT_CLIENT_ID: ci
+        REDDIT_CLIENT_SECRET: ci
+        GENIUS_ACCESS_TOKEN: ci
+      run: |
+        # database/__init__.py builds an ssl.SSLContext at import time; the real CA cert lives
+        # in creds/, which is gitignored, so stand in a throwaway self-signed one.
+        mkdir -p creds
+        openssl req -x509 -newkey rsa:2048 -nodes -keyout /dev/null \
+          -out creds/ca-certificate.crt -days 1 -subj '/CN=ci'
+        # tests/ is excluded: its autouse cleanup fixture opens a real MySQL session.
+        pytest broiestbot -q
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

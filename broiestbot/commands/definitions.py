@@ -10,7 +10,7 @@ from http_client import get_http_session, request_timeout
 from logger import LOGGER
 from PyMultiDictionary import MultiDictionary
 
-from clients import wiki
+from clients import async_wiki, wiki
 from config import (
     GOOGLE_TRANSLATE_ENDPOINT,
     RAPID_API_KEY,
@@ -118,33 +118,69 @@ async def create_wiki_preview(url: str) -> Optional[str]:
     :returns: Optional[str]
     """
     try:
-        headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Max-Age": "3600",
-            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0",
-        }
-        session = await get_http_session()
-        async with session.get(url, headers=headers) as resp:
-            page_html = await resp.read()
-        wiki_preview = "\n\n\n\n"
         page_title = url.split("/")[-1]
-        # `wikipediaapi` is a blocking SDK, so keep it off the event loop.
-        page = await asyncio.to_thread(wiki.page, page_title)
-        html = BeautifulSoup(page_html, "html.parser")
-        img_tag = html.find("meta", property="og:image")
-        wiki_preview += f"<b>{page.displaytitle}</b>\n\n"
-        wiki_preview += f"{page.summary}\n\n"
-        wiki_preview += f"{img_tag.get('content')} \n\n" if img_tag is not None else ""
-        wiki_preview += f"{page.sections[0].text[0:500]}\n\n" if page.sections_by_title else "\n\n"
-        wiki_preview += (
-            "- " + "\n- ".join([section._title for section in page.sections if section._title != "See also"]) + "\n\n"
+        # `AsyncWikipedia.page()` builds a stub without touching the network; each property
+        # below is an awaitable which fetches (and caches) on first await. The blocking client
+        # fetches on plain attribute access instead, which would stall the event loop here.
+        page = async_wiki.page(page_title)
+        # Scraping the page for its `og:image` is independent of the API lookups, so overlap
+        # them. `displaytitle` costs an `info` call & `summary` an `extracts` call; `sections`
+        # is then served from the `extracts` response already cached on the page.
+        page_html, display_title, summary = await asyncio.gather(
+            _fetch_wiki_page_html(url),
+            page.displaytitle,
+            page.summary,
         )
+        # Served from the `info` response `displaytitle` already fetched, so this costs nothing.
+        # Without it a dead link renders a preview card reading "<b>None</b>".
+        if not await page.exists():
+            LOGGER.info(f"No Wikipedia page exists for `{page_title}`; skipping preview.")
+            return None
+        sections = await page.sections
+
+        wiki_preview = "\n\n\n\n"
+        wiki_preview += f"<b>{display_title}</b>\n\n"
+        wiki_preview += f"{summary}\n\n"
+        img_tag = BeautifulSoup(page_html, "html.parser").find("meta", property="og:image") if page_html else None
+        wiki_preview += f"{img_tag.get('content')} \n\n" if img_tag is not None else ""
+        # Guarded on the sections themselves; the old check named a bound method, so it was
+        # always true and `sections[0]` raised on a page which had none.
+        wiki_preview += f"{sections[0].text[0:500]}\n\n" if sections else "\n\n"
+        section_titles = [section._title for section in sections if section._title != "See also"]
+        wiki_preview += "- " + "\n- ".join(section_titles) + "\n\n" if section_titles else ""
         return wiki_preview
     except Exception as e:
         LOGGER.exception(f"Unexpected error while creating Wikipedia preview for `{url}`: {e}")
         return None
+
+
+async def _fetch_wiki_page_html(url: str) -> Optional[bytes]:
+    """
+    Fetch the raw HTML of a Wikipedia page, used only to scrape its `og:image`.
+
+    Returns None rather than raising, so a failed scrape costs the preview its image
+    instead of the whole preview.
+
+    :param str url: URL of the Wikipedia page.
+
+    :returns: Optional[bytes]
+    """
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "3600",
+        "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0",
+    }
+    try:
+        session = await get_http_session()
+        async with session.get(url, headers=headers) as resp:
+            return await resp.read()
+    except ClientError as e:
+        LOGGER.warning(f"ClientError while fetching Wikipedia page HTML for `{url}`: {e}")
+    except Exception as e:
+        LOGGER.warning(f"Unexpected error while fetching Wikipedia page HTML for `{url}`: {e}")
+    return None
 
 
 async def get_english_translation(language_symbol: str, language_full_name: str, phrase: str) -> str:

@@ -7,6 +7,7 @@ from http_client import close_http_session
 from logger import LOGGER
 
 from broiestbot.bot import Bot
+from broiestbot.commands import close_redgifs_client
 from clients import claude
 from config import (
     CHATANGO_ROOMS,
@@ -14,7 +15,7 @@ from config import (
     CHATANGO_USERS,
     ENVIRONMENT,
 )
-from database import init_db
+from database import close_db, init_db
 
 _bot_task: asyncio.Task = None
 
@@ -61,6 +62,8 @@ async def _handle_lifespan(receive, send) -> None:
                     pass
             await close_http_session()
             await claude.close()
+            await close_redgifs_client()
+            await close_db()
             await send({"type": "lifespan.shutdown.complete"})
             return
 

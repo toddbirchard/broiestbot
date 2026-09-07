@@ -49,7 +49,7 @@ async def footy_team_lineups(room: str, username: str) -> Optional[str]:
                 for fixture_xi in league_fixtures_with_lineups:
                     if bool(fixture_xi):
                         fixture_id = fixture_xi["fixture"]["id"]
-                        fixture_summary = await build_fixture_summary(fixture_xi, room, username)
+                        fixture_summary = await build_fixture_summary(fixture_xi, room, username, tz_name)
                         fixture_lineups = await fetch_lineups_per_fixture(fixture_id)
                         if fixture_lineups == []:
                             today_fixture_lineups += f"{fixture_summary} \
@@ -154,11 +154,16 @@ async def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name
 
 
 @LOGGER.catch
-async def build_fixture_summary(fixture: dict, room: str, username: str) -> Optional[str]:
+async def build_fixture_summary(
+    fixture: dict, room: str, username: str, tz_name: Optional[str] = None
+) -> Optional[str]:
     """
     Summarize basic details about a fixture.
 
     :param dict fixture: JSON Response containing fixture details.
+    :param str room: Chatango room in which command was triggered.
+    :param str username: Name of user who triggered the command.
+    :param Optional[str] tz_name: Already-resolved preferred timezone of the requesting user.
 
     :returns: str
     """
@@ -169,7 +174,7 @@ async def build_fixture_summary(fixture: dict, room: str, username: str) -> Opti
         status_detail = fixture["fixture"]["status"]["long"]
         elapsed = fixture["fixture"]["status"]["elapsed"]
         date = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
-        display_date, tz = await get_preferred_time_format(date, room, username)
+        display_date, tz = await get_preferred_time_format(date, room, username, tz_name)
         display_date = check_fixture_start_date(date, tz, display_date)
         if status == "FT":
             return f"<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({status})</i>\n"

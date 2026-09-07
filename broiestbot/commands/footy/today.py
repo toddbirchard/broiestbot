@@ -31,8 +31,9 @@ async def today_upcoming_fixtures(room: str, username: str) -> str:
     :returns: str
     """
     upcoming_fixtures = "\n\n\n\n"
+    tz_name = await get_preferred_timezone(room, username)
     for league_name, league_id in FOOTY_LEAGUES.items():
-        league_fixtures = await today_upcoming_fixtures_per_league(league_name, league_id, room, username)
+        league_fixtures = await today_upcoming_fixtures_per_league(league_name, league_id, room, username, tz_name)
         if league_fixtures is not None:
             upcoming_fixtures += f"{league_fixtures}\n"
     if upcoming_fixtures != "\n\n\n\n":
@@ -44,7 +45,7 @@ async def today_upcoming_fixtures(room: str, username: str) -> str:
 
 
 async def today_upcoming_fixtures_per_league(
-    league_name: str, league_id: int, room: str, username: str
+    league_name: str, league_id: int, room: str, username: str, tz_name: str
 ) -> Optional[str]:
     """
     Get this week's upcoming fixtures for a given league or tournament.
@@ -58,7 +59,6 @@ async def today_upcoming_fixtures_per_league(
     """
     try:
         league_upcoming_fixtures = ""
-        tz_name = await get_preferred_timezone(room, username)
         fixtures = await fetch_today_fixtures_by_league(league_id, room, tz_name)
         if fixtures:
             for i, fixture in enumerate(fixtures):
@@ -67,7 +67,7 @@ async def today_upcoming_fixtures_per_league(
                     league_upcoming_fixtures += emojize(f"<b>{league_name}</b>\n", language="en")
                 if i <= 5:
                     league_upcoming_fixtures += await parse_upcoming_fixture(
-                        fixture, fixture_start_time, room, username
+                        fixture, fixture_start_time, room, username, tz_name
                     )
             return league_upcoming_fixtures
     except ClientError as e:
@@ -108,7 +108,9 @@ async def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
 
 
-async def parse_upcoming_fixture(fixture: dict, fixture_start_time: datetime, room: str, username: str) -> str:
+async def parse_upcoming_fixture(
+    fixture: dict, fixture_start_time: datetime, room: str, username: str, tz_name: Optional[str] = None
+) -> str:
     """
     Construct upcoming fixture match-up.
 
@@ -116,12 +118,13 @@ async def parse_upcoming_fixture(fixture: dict, fixture_start_time: datetime, ro
     :param datetime fixture_start_time: Fixture start time/date displayed in preferred timezone.
     :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
+    :param Optional[str] tz_name: Already-resolved preferred timezone of the requesting user.
 
     :returns: str
     """
     home_team = abbreviate_team_name(fixture["teams"]["home"]["name"])
     away_team = abbreviate_team_name(fixture["teams"]["away"]["name"])
-    display_date, tz = await get_preferred_time_format(fixture_start_time, room, username)
+    display_date, tz = await get_preferred_time_format(fixture_start_time, room, username, tz_name)
     display_date = check_fixture_start_date(fixture_start_time, tz, display_date)
     display_date = display_date.replace("<b>Today</b>, ", "")
     matchup = f"{away_team} @ {home_team}"

@@ -370,9 +370,9 @@ class Bot(chatango.Client):
         # elif cmd_type == "cryptochart" and args:
         #     return await get_crypto_chart(args)
         elif cmd_type == "lesbians" and user_name:
-            return await asyncio.to_thread(fetch_redgifs_gif, "lesbians", user_name)
+            return await fetch_redgifs_gif("lesbians", user_name)
         elif cmd_type == "nsfw" and args and user_name:
-            return await asyncio.to_thread(fetch_redgifs_gif, args, user_name, True)
+            return await fetch_redgifs_gif(args, user_name, True)
         elif cmd_type == "psn":
             return await asyncio.to_thread(get_psn_online_friends)
         # elif cmd_type == "philliesgames":
@@ -404,13 +404,18 @@ class Bot(chatango.Client):
         await ban_daddy_anons(room, user, message)
         await persist_user_data(room_name, user, message, bot_username)
         await persist_chat_logs(user_name, room_name, chat_message, bot_username)
+        # `?search` and `!command` messages are fully handled here. Returning keeps them out of
+        # the link-preview/phrase chain below, which would otherwise cost every command an extra
+        # phrase lookup against a `phrases` table it can never match.
         if chat_message.startswith("?") and len(chat_message) > 3:
             search_query = chat_message[1:].strip()
             yt_video_result = await asyncio.to_thread(search_youtube_video, search_query)
             if yt_video_result:
                 await room.send_message(yt_video_result, use_html=True)
+            return
         if chat_message.startswith("!"):
             await self._process_command(chat_message, room, user_name, message)
+            return
         if (
             YOUTUBE_VIDEO_ID_REGEX.search(chat_message)
             and user_name != bot_username
