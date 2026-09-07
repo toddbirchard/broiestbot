@@ -409,9 +409,12 @@ class Bot(chatango.Client):
         # phrase lookup against a `phrases` table it can never match.
         if chat_message.startswith("?") and len(chat_message) > 3:
             search_query = chat_message[1:].strip()
-            yt_video_result = await asyncio.to_thread(search_youtube_video, search_query)
-            if yt_video_result:
-                await room.send_message(yt_video_result, use_html=True)
+            # A `?search` is an explicit ask, so it's always answered: `search_youtube_video`
+            # returns an excuse rather than nothing when YouTube can't be scraped.
+            if search_query:
+                yt_video_result = await asyncio.to_thread(search_youtube_video, search_query)
+                if yt_video_result:
+                    await room.send_message(yt_video_result, use_html=True)
             return
         if chat_message.startswith("!"):
             await self._process_command(chat_message, room, user_name, message)
