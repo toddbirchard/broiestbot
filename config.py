@@ -265,6 +265,27 @@ YOUTUBE_SEARCH_ATTEMPTS = 2
 # Short canonical URL rendered in link previews.
 YOUTUBE_VIDEO_SHORT_URL = "https://youtu.be/{video_id}"
 
+# `youtube_search` has no API to call: it fetches a search results page & scrapes the JSON blob
+# embedded in its markup, re-requesting the page when that blob is missing. A lookup therefore
+# costs up to (retries + 1) requests, so both halves are capped to keep a YouTube outage from
+# tying up a worker thread for a minute per chat message.
+YOUTUBE_SEARCH_REQUEST_TIMEOUT = 5
+YOUTUBE_SEARCH_REQUEST_RETRIES = 1
+
+# Longest search query forwarded to YouTube; anything past this is truncated.
+YOUTUBE_SEARCH_QUERY_MAX_LENGTH = 250
+
+# Consecutive failed scrapes which stop YouTube lookups being attempted, & for how many seconds.
+# YouTube serving pages this scraper can't read (consent walls, captchas, a markup change) is an
+# outage measured in minutes rather than requests, so the bot stops paying for it after a few.
+YOUTUBE_SEARCH_FAILURE_THRESHOLD = 3
+YOUTUBE_SEARCH_COOLDOWN = 300
+
+# Fields a scraped result must carry before it's fit to render into chat. `youtube_search` builds
+# every result out of `.get()` chains, so a result it couldn't read comes back fully-formed with
+# empty values rather than missing keys.
+YOUTUBE_VIDEO_REQUIRED_FIELDS = ("id", "title", "thumbnails")
+
 # Anthropic
 # -------------------------------------------------
 ANTHROPIC_API_KEY = getenv("ANTHROPIC_API_KEY")

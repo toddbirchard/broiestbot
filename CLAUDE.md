@@ -110,6 +110,34 @@ Consequences for anyone editing this path:
 - A tool loop which hits its iteration cap stops with `stop_reason == "pause_turn"`; the turn is re-sent unchanged (no extra user message) up to `MAX_PAUSE_TURN_RESUMES` times.
 - A blocked host comes back as a `web_fetch_tool_result` whose content is `web_fetch_tool_result_error` with `error_code: "url_not_allowed"` — an ordinary HTTP 200, not a raised exception.
 
+### YouTube Lookups
+
+Both YouTube paths — the `?<query>` search and the automatic link preview — go through
+`commands/video.py:search_youtube`, which wraps `youtube_search`. That package has no API behind
+it: it fetches a search results page and slices the JSON blob out of its markup, so YouTube's bad
+days surface as whatever exception the slice happens to raise — a consent wall or captcha has no
+blob (`ValueError`), shifted markup slices to something which isn't JSON (`JSONDecodeError`), and a
+page rendered for another layout parses but holds no results (`KeyError`). `search_youtube` catches
+all of them and returns `None` for a failed lookup, distinct from `[]` for "YouTube answered, no
+matches"; callers never see an exception.
+
+Three guardrails hang off that choke point:
+
+- **Results are validated, not trusted.** `youtube_search` builds each result from `.get()` chains,
+  so a result it couldn't read comes back fully-formed with `None` values rather than missing keys —
+  rendering one puts a literal `None` in chat. `validate_youtube_video` drops anything without the
+  `YOUTUBE_VIDEO_REQUIRED_FIELDS`, and `format_youtube_video` omits the optional fields YouTube
+  withheld instead of printing them blank.
+- **Every scrape is bounded.** `YOUTUBE_SEARCH_REQUEST_TIMEOUT` / `YOUTUBE_SEARCH_REQUEST_RETRIES`
+  cap what one lookup costs; the library's own defaults (10s × 4 requests) would otherwise tie up a
+  `to_thread` worker for the better part of a minute per chat message.
+- **Repeated failures pause lookups.** YouTube refusing to be scraped lasts minutes, not one
+  request, so `YOUTUBE_SEARCH_FAILURE_THRESHOLD` consecutive failures stop lookups being attempted
+  for `YOUTUBE_SEARCH_COOLDOWN` seconds. Any readable scrape clears the count.
+
+A failed `?<query>` search answers with `YOUTUBE_FAILURE_RESPONSE` rather than staying silent — the
+user explicitly asked. An automatic link preview stays silent, since nobody asked for it.
+
 ### Room Privileges
 
 Chatango grants moderator powers **per room**, so the bot must not assume it can moderate everywhere. `broiestbot/moderation/privileges.py` exposes `bot_privilege_level(room)` and `bot_is_moderator(room)`, both reading `Room.get_level()` and failing closed (`PrivilegeLevel.USER`) when the level can't be determined.
