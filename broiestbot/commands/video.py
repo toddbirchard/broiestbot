@@ -1,6 +1,7 @@
 """Commands for fetching video stream info from Twitch and YouTube."""
 
 from datetime import datetime
+from threading import Lock
 from time import monotonic
 from typing import List, Optional
 
@@ -145,6 +146,7 @@ async def get_twitch_auth_token() -> Optional[str]:
 # are skipped outright. Reset on any scrape which comes back readable.
 _youtube_failure_count = 0
 _youtube_paused_until = 0.0
+_youtube_state_lock = Lock()
 
 
 def _youtube_search_is_paused() -> bool:
@@ -153,26 +155,29 @@ def _youtube_search_is_paused() -> bool:
 
     :returns: bool
     """
-    return monotonic() < _youtube_paused_until
+    with _youtube_state_lock:
+        return monotonic() < _youtube_paused_until
 
 
 def _record_youtube_failure() -> None:
     """Count a failed scrape, pausing YouTube lookups once enough of them fail back to back."""
     global _youtube_failure_count, _youtube_paused_until
-    _youtube_failure_count += 1
-    if _youtube_failure_count >= YOUTUBE_SEARCH_FAILURE_THRESHOLD:
-        _youtube_failure_count = 0
-        _youtube_paused_until = monotonic() + YOUTUBE_SEARCH_COOLDOWN
-        LOGGER.warning(
-            f"YouTube search failed {YOUTUBE_SEARCH_FAILURE_THRESHOLD} times in a row; "
-            f"skipping YouTube lookups for {YOUTUBE_SEARCH_COOLDOWN} seconds."
-        )
+    with _youtube_state_lock:
+        _youtube_failure_count += 1
+        if _youtube_failure_count >= YOUTUBE_SEARCH_FAILURE_THRESHOLD:
+            _youtube_failure_count = 0
+            _youtube_paused_until = monotonic() + YOUTUBE_SEARCH_COOLDOWN
+            LOGGER.warning(
+                f"YouTube search failed {YOUTUBE_SEARCH_FAILURE_THRESHOLD} times in a row; "
+                f"skipping YouTube lookups for {YOUTUBE_SEARCH_COOLDOWN} seconds."
+            )
 
 
 def _record_youtube_success() -> None:
     """Forget past failures after a scrape YouTube served readable results for."""
     global _youtube_failure_count
-    _youtube_failure_count = 0
+    with _youtube_state_lock:
+        _youtube_failure_count = 0
 
 
 def sanitize_youtube_query(query: Optional[str]) -> Optional[str]:
