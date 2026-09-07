@@ -43,9 +43,6 @@ jobs:
         mkdir -p creds
         openssl req -x509 -newkey rsa:2048 -nodes -keyout /dev/null \
           -out creds/ca-certificate.crt -days 1 -subj '/CN=ci'
-        # commands/tuner.py reads channels.json at import time; it is gitignored by the *.json
-        # rule, and no test exercises the channel data, so an empty listing satisfies the import.
-        echo '{"result":{"channels":[]}}' > channels.json
         # tests/ is excluded: its autouse cleanup fixture opens a real MySQL session.
         pytest broiestbot -q
     - name: Lint with flake8
