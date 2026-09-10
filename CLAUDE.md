@@ -36,7 +36,7 @@ The bot is not a web server — uvicorn is used purely as a process manager. `as
    - `!<cmd>` → `_process_command` → DB lookup → `create_message` → `room.send_message()`
    - `!!<query>` → skip the DB, go straight to the image-search fallback
    - YouTube/X/Wikipedia URLs → auto-generate link previews
-   - `@bro` → LLM response via Anthropic Claude
+   - `@bro` → LLM response via the provider `LLM_TYPE` selects (Claude or ChatGPT)
    - Everything else → `_process_phrase` → DB phrase match
 
    These branches are mutually exclusive: the `?<query>` and `!<cmd>` branches `return` once
@@ -46,7 +46,7 @@ The bot is not a web server — uvicorn is used purely as a process manager. `as
 
 ### Sync/Async Boundary
 
-Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `create_message` awaits them directly. The LLM handler is likewise a coroutine, built on the Anthropic SDK's `AsyncAnthropic` client, and the redgifs handler on `redgifs.aio.API`. Handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb, PSN, Genius, `praw`, `youtube_search`, `pandas.read_html`) stay synchronous and are dispatched with `asyncio.to_thread(...)` so they never block the event loop.
+Handlers which talk to an HTTP API are **coroutines** built on `aiohttp`, and `create_message` awaits them directly. The LLM handler is likewise a coroutine, built on either the Anthropic SDK's `AsyncAnthropic` client or the OpenAI SDK's `AsyncOpenAI` client, and the redgifs handler on `redgifs.aio.API`. Handlers still backed by a blocking third-party SDK (GCS, Twilio, IMDb, PSN, Genius, `praw`, `youtube_search`, `pandas.read_html`) stay synchronous and are dispatched with `asyncio.to_thread(...)` so they never block the event loop.
 
 Two traps when deciding whether something is safe to await:
 
@@ -74,7 +74,7 @@ falls back to `NullPool` under pytest, where each test drives its own `asyncio.r
 - **`broiestbot/commands/`** — One module or package per domain (`footy/`, `f1/`, `nba/`, `nfl/`, `mlb/`, `sumo/`, `odds/`, `polls/`, `images/`, plus flat modules like `llm.py`, `weather.py`, `movies.py`). All public command functions are re-exported through `broiestbot/commands/__init__.py`.
 - **`broiestbot/data/`** — Persists chat logs and user geo/IP data to the DB after every message.
 - **`broiestbot/moderation/`** — Ban/mute logic for blacklisted users, anon accounts, IPs, and specific phrases. Every entry point is gated on `privileges.py:bot_is_moderator(room)` — see "Room Privileges" below.
-- **`clients/__init__.py`** — Instantiates all third-party SDK clients at import time (Redis, Twilio, GCS, Wikipedia sync + async, IMDB, Reddit, Genius, PSN, Anthropic). Import from here rather than re-instantiating. The exception is redgifs: `redgifs.aio.API` opens an `aiohttp.ClientSession` in its constructor, so it needs a running loop and is built lazily by `commands/afterdark.py:get_redgifs_client` (which also caches its auth token) and closed on lifespan shutdown.
+- **`clients/__init__.py`** — Instantiates all third-party SDK clients at import time (Redis, Twilio, GCS, Wikipedia sync + async, IMDB, Reddit, Genius, PSN, and the LLM provider). Import from here rather than re-instantiating. The exception is redgifs: `redgifs.aio.API` opens an `aiohttp.ClientSession` in its constructor, so it needs a running loop and is built lazily by `commands/afterdark.py:get_redgifs_client` (which also caches its auth token) and closed on lifespan shutdown.
 - **`database/models.py`** — ORM models: `Command`, `Phrase`, `Chat`, `ChatangoUser`, `Weather`, `PollResult`, `Sport`, `League`.
 - **`config.py`** — All configuration and constants loaded from `.env`. Includes hundreds of league/team IDs and API endpoints. Import constants from here; never hardcode them.
 - **`http_client.py`** — Shared `aiohttp` session (`get_http_session`, `request_timeout`, `close_http_session`) used by every HTTP-backed command.
@@ -92,23 +92,65 @@ Tests live beside the code they cover (`broiestbot/commands/<domain>/tests/`), w
 
 ### LLM Integration
 
-`@bro <message>` triggers `_respond_llm_prompt` → `generate_llm_response` → `clients/llm.py:LLMClient`, which awaits Claude via the Anthropic SDK's `AsyncAnthropic` client with a persona system prompt. Room history (`room.history`) is formatted into a structured `messages` list, and the markdown reply is converted to HTML before being sent. `asgi.py` closes the client on lifespan shutdown.
+`@bro <message>` triggers `_respond_llm_prompt` → `generate_llm_response` → `clients.llm_client`, which awaits the model with a persona system prompt. Room history (`room.history`) is formatted into a structured `messages` list, and the markdown reply is converted to HTML before being sent. `asgi.py` closes the client on lifespan shutdown.
+
+#### Two providers, one flag
+
+`config.LLM_TYPE` picks the provider — `claude` builds `AnthropicClient` (Anthropic's `AsyncAnthropic`), `chatgpt` builds `OpenAIClient` (OpenAI's `AsyncOpenAI`) — and nothing downstream branches on the answer. `clients/llm/` is split to keep it that way:
+
+- **`base.py`** — `BaseLLMClient`: the persona prompt, `system_prompt`, `fetchable_hosts`, `format_chat_history`, `format_response_for_html`, and `LLMRefusalError`. Everything here is provider-agnostic by definition; nothing provider-specific belongs in it. `generate_response` takes the raw `chat_message` alongside the formatted history so a provider can gate on the sender's own words — Anthropic accepts and ignores it, keeping one signature across both.
+- **`anthropic.py` / `openai.py`** — one subclass each, owning that provider's SDK client, model, request shape, link-reading tool and reply parsing.
+- **`__init__.py`** — `LLMClient()` is now a *factory*, not a class: it reads `LLM_TYPE`, looks it up in `LLM_CLIENTS` and returns a `BaseLLMClient`. An unknown value raises `ValueError` at import time rather than picking a provider silently. Adding a third provider is a subclass plus a row in `LLM_CLIENTS`.
+
+Model ids live in `config.py` (`ANTHROPIC_LLM_MODEL`, `CHATGPT_LLM_MODEL`), not in the client classes.
+
+Because the two SDKs define same-named but unrelated exception classes, each subclass exposes its own as `RATE_LIMIT_ERROR` / `API_ERROR`, and `commands/llm.py` catches those off the live client instead of importing either SDK. `RATE_LIMIT_ERROR` must stay a subclass of `API_ERROR`'s class *and* be caught first, or the rate-limit reply is swallowed by the general handler — `test_llm_base.py` asserts both.
+
+Tests split the same way: `clients/tests/test_llm_base.py` covers the shared surface and the factory, `test_llm_anthropic.py` and `test_llm_openai.py` the provider specifics.
+
+#### Claude specifics (`LLM_TYPE=claude`)
 
 The call goes through `client.beta.messages.create` because it opts into server-side refusal fallbacks (`fallbacks="default"` plus the `SERVER_SIDE_FALLBACK_BETA` header): if Claude's safety classifiers decline the prompt, Anthropic re-runs it on a fallback model within the same request. Two consequences worth knowing:
 
 - Reply text must be selected by block type (`block.type == "text"`) — `content[0]` may be a thinking or `fallback` block.
 - If the whole chain still declines, `generate_response` raises `LLMRefusalError` and `generate_llm_response` returns an in-persona brush-off rather than staying silent.
 
-#### Reading links (`web_fetch`)
+#### ChatGPT specifics (`LLM_TYPE=chatgpt`)
 
-The LLM can read a link, using Anthropic's server-side `web_fetch` tool, but **only when the message tagging the bot carries that link itself**. `LLMClient.fetchable_hosts` strips quoted text (a quoted link is not the sender's own ask) and returns the hosts of any URLs left; `generate_response` then attaches the tool scoped to those hosts via `allowed_domains`. With no link in the prompt the tool is omitted from the request entirely, so links merely sitting in `room.history` can never be fetched — this is why `_respond_llm_prompt` takes the triggering `chat_message` separately from the history.
+The call goes through the **Responses API** (`client.responses.create`): the persona rides in `instructions`, the formatted history in `input` unchanged, and `store=False` keeps a private room's chat logs out of OpenAI's dashboard. There is no fallback-model concept, so a decline is detected rather than rescued — `_refusal` raises `LLMRefusalError` on either a `refusal` content part or a response left `incomplete` by `content_filter` (an `incomplete` response cut short by `max_output_tokens` is *not* a refusal, and whatever was said is still sent).
 
-Consequences for anyone editing this path:
+##### Vision
 
-- Reply text is whatever follows the **last non-text block** (`LLMClient._reply_text`), not the first text block: a turn that used a tool opens with a throwaway preamble before the tool call, and the answer comes after the results.
+ChatGPT can look at an image from the room; Claude currently cannot, so this lives entirely in `openai.py`. `_vision_images` decides what it sees, in two tiers:
+
+- A prompt **carrying its own image link** is an explicit ask and needs no further gate.
+- Otherwise the history is searched **only when the prompt reads as being about an image**, per `config.IMAGE_PROMPT_REGEX`. This is the one place the LLM path deliberately reaches past the triggering message — unlike link reading, which never does — so the gate is what stops "@bro who won the derby" dragging in the last gif somebody posted.
+
+Either way the newest images win, capped at `VISION_MAX_IMAGES` (2) and sent at `detail: "low"` (~85 tokens each) to keep the chat path fast.
+
+`image_urls` classifies a link as an image by `IMAGE_FILE_EXTENSIONS` against the **path only** (Giphy always appends `?cid=`), or by `IMAGE_URL_HOSTS` matched on host or subdomain, which is what catches the extensionless ones (Twitter puts the format in `?format=jpg`).
+
+Two things constrain this path:
+
+- Images are **hoisted onto the last `user` turn** (`_attach_images`), not rewritten into whichever message carried the link. The bot posts images itself via `!gif`, and an `assistant` turn cannot hold an `input_image`. The caller's message list is copied, never mutated.
+- An image URL is whatever somebody typed into chat, so it can 404, sit behind hotlink protection, or be an HTML page that merely looked like an image. OpenAI rejects the **whole request** with a 400 for any of those, so `_create` catches `BadRequestError`, strips the images and the `vision_prompt` rule, and re-sends once — a bad link costs the picture, not the answer. A 400 on a request that carried no images is re-raised as the real error it is.
+
+#### Reading links
+
+The LLM can read a link **only when the message tagging the bot carries that link itself** (images are the exception — see Vision above). `BaseLLMClient.fetchable_hosts` strips quoted text (a quoted link is not the sender's own ask) and returns the hosts of any URLs left; each subclass then attaches its own tool scoped to those hosts. With no link in the prompt the tool is omitted from the request entirely, so links merely sitting in `room.history` can never be fetched — this is why `_respond_llm_prompt` takes the triggering `chat_message` separately from the history. The extra persona rule naming the tool (`link_prompt`) is appended only on the requests which carry it.
+
+Both providers parse the reply the same way: it is whatever follows the **last non-text block** (Claude) or **last non-message output item** (ChatGPT), never the first — a turn that used a tool opens with a throwaway preamble before the tool call, and the answer comes after the results.
+
+Claude uses the server-side `web_fetch` tool, pinned via `allowed_domains`:
+
 - Dynamic filtering runs code execution server-side, so responses contain `code_execution_tool_result` blocks. Do **not** also declare a `code_execution` tool — a second execution environment confuses the model.
 - A tool loop which hits its iteration cap stops with `stop_reason == "pause_turn"`; the turn is re-sent unchanged (no extra user message) up to `MAX_PAUSE_TURN_RESUMES` times.
 - A blocked host comes back as a `web_fetch_tool_result` whose content is `web_fetch_tool_result_error` with `error_code: "url_not_allowed"` — an ordinary HTTP 200, not a raised exception.
+
+ChatGPT uses the hosted `web_search` tool, pinned via `filters.allowed_domains`:
+
+- It is a *search* scoped to the host, not a fetch of that exact URL, so the model may answer from a neighbouring page on the same site. This is the closest analogue OpenAI offers.
+- The hosted tool loop runs to completion server-side, so there is no `pause_turn` to resume; it is bounded up-front with `max_tool_calls`.
 
 ### YouTube Lookups
 
@@ -176,4 +218,4 @@ A `.env` file is required. Required keys:
 - `SQLALCHEMY_DATABASE_URI` (MySQL with SSL; cert at `creds/ca-certificate.crt`)
 - Room names — one `CHATANGO_*_ROOM` var per room referenced in `config.py`, including `CHATANGO_TEST_ROOM`
 
-Optional keys enable specific features (GCS images, Klipy/Giphy, Twitch, Twilio SMS, weather, crypto, PSN, Redgifs, Anthropic LLM, etc.). See `config.py` for the authoritative list.
+Optional keys enable specific features (GCS images, Klipy/Giphy, Twitch, Twilio SMS, weather, crypto, PSN, Redgifs, `LLM_TYPE` + the matching provider key, etc.). See `config.py` for the authoritative list.

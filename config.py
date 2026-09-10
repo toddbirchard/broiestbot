@@ -286,14 +286,46 @@ YOUTUBE_SEARCH_COOLDOWN = 300
 # empty values rather than missing keys.
 YOUTUBE_VIDEO_REQUIRED_FIELDS = ("id", "title", "thumbnails")
 
-# Anthropic
+# LLM link & image reading
 # -------------------------------------------------
-ANTHROPIC_API_KEY = getenv("ANTHROPIC_API_KEY")
-
 # Matches an `http(s)` URL in a chat message. Trailing sentence punctuation is excluded so a link
 # at the end of a sentence still parses. Used to decide whether an `@bro` prompt hands the bot a
 # link to read — the LLM is given the web fetch tool only for links found by this.
-URL_REGEX = re.compile(r"https?://[^\s<>\"']*[^\s<>\"'.,!?;:)\]]", re.IGNORECASE)
+# The backtick is excluded because it delimits a Chatango quote (see `CHATANGO_QUOTE_REGEX`): a
+# link at the end of a quoted message would otherwise swallow the closing backtick, which is
+# harmless for a host but produces an unfetchable URL for an image.
+URL_REGEX = re.compile(r"https?://[^\s<>\"'`]*[^\s<>\"'`.,!?;:)\]]", re.IGNORECASE)
+
+# Extensions which mark a URL as an image outright. Matched against the *path* only, so Giphy's
+# mandatory `?cid=...` query string doesn't hide the `.gif`.
+IMAGE_FILE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".gif", ".webp")
+
+# Hosts which serve an image directly, for the image links carrying no extension to match — most
+# notably Twitter, whose format lives in `?format=jpg`. Matched on the host or any subdomain of it,
+# since Giphy and Tenor spread their CDN across numbered nodes (`media0.giphy.com`).
+IMAGE_URL_HOSTS = (
+    "i.imgur.com",
+    "giphy.com",
+    "tenor.com",
+    "i.redd.it",
+    "pbs.twimg.com",
+    "cdn.discordapp.com",
+    "media.discordapp.net",
+)
+
+# Marks an `@bro` prompt as being *about* an image, which is what lets the bot go looking for one
+# in the room history. A prompt carrying its own image link skips this check — see
+# `clients/llm/openai.py:_vision_images`. Without it, every unrelated `@bro` in a gif-heavy room
+# would drag the last gif posted into the request.
+IMAGE_PROMPT_REGEX = re.compile(
+    r"\b(?:pic|pics|picture|pictures|image|images|photo|photos|pfp|gif|gifs|meme|memes|screenshot"
+    r"|screenshots|thumbnail|avatar|selfie)\b"
+    r"|\b(?:wtf|what|whats|what's|who|whos|who's|where|why|how)\s+(?:the\s+\w+\s+)?(?:is|are)\s+"
+    r"(?:this|that|these|those|it)\b"
+    r"|\b(?:look|looking|peep|peeping|check)\s+at\s+(?:this|that|it)\b"
+    r"|\b(?:describe|explain|read|translate|identify|caption|rate)\s+(?:this|that|it)\b",
+    re.IGNORECASE,
+)
 
 # Twitch
 # -------------------------------------------------
@@ -997,9 +1029,16 @@ OMDB_API_KEY = getenv("OMDB_API_KEY")
 # -------------------------------------------------
 SLEEPER_LEAGUE_ID = getenv("SLEEPER_LEAGUE_ID")
 
-# Anthropic
+# LLMs
 # ------------------------------------------------
+# Provider answers prompts: `claude` builds the Anthropic client, `chatgpt` the OpenAI one.
+LLM_TYPE = getenv("LLM_TYPE", "chatgpt")
+
 ANTHROPIC_API_KEY = getenv("ANTHROPIC_API_KEY")
+ANTHROPIC_LLM_MODEL = getenv("ANTHROPIC_LLM_MODEL", "claude-opus-5")
+
+CHATGPT_API_KEY = getenv("CHATGPT_API_KEY")
+CHATGPT_LLM_MODEL = getenv("CHATGPT_LLM_MODEL", "gpt-5.5")
 
 # Twitter (Unused)
 # -------------------------------------------------

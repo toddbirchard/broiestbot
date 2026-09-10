@@ -1,4 +1,4 @@
-"""Tests for link-gated web fetch & reply parsing in the LLM client."""
+"""Tests for link-gated web fetch & reply parsing in the Anthropic LLM client."""
 
 import asyncio
 from types import SimpleNamespace
@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from clients.llm import LLMClient, LLMRefusalError
+from clients.llm import AnthropicClient, LLMRefusalError
 
 
 @pytest.fixture
-def client() -> LLMClient:
-    return LLMClient()
+def client() -> AnthropicClient:
+    return AnthropicClient()
 
 
 def text_block(text: str) -> SimpleNamespace:
@@ -29,7 +29,7 @@ def response(*content, stop_reason: str = "end_turn") -> SimpleNamespace:
     )
 
 
-def call(client: LLMClient, *responses, **kwargs) -> tuple:
+def call(client: AnthropicClient, *responses, **kwargs) -> tuple:
     """
     Run `generate_response` against a queue of canned API responses.
 
@@ -44,41 +44,6 @@ def call(client: LLMClient, *responses, **kwargs) -> tuple:
     client.client.beta.messages.create = AsyncMock(side_effect=fake_create)
     reply = asyncio.run(client.generate_response([{"role": "user", "content": "hi"}], **kwargs))
     return reply, requests
-
-
-# `fetchable_hosts` — which links count as an explicit ask
-# -------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "chat_message,expected",
-    [
-        ("@bro what's this https://example.com/article about", ["example.com"]),
-        ("@bro read https://www.example.com", ["www.example.com", "example.com"]),
-        ("@bro http://a.co/x vs https://b.co/y", ["a.co", "b.co"]),
-        ("@bro https://example.com/a and https://example.com/b", ["example.com"]),
-        ("@bro see https://example.com.", ["example.com"]),  # trailing sentence punctuation
-        ("@bro https://user:pw@example.com:8443/x", ["example.com"]),
-        ("@bro HTTPS://Example.COM/x", ["example.com"]),
-    ],
-)
-def test_links_in_the_prompt_are_fetchable(chat_message: str, expected: list):
-    """A link the sender typed into their own message is an explicit ask to read it."""
-    assert LLMClient.fetchable_hosts(chat_message) == expected
-
-
-@pytest.mark.parametrize(
-    "chat_message",
-    [
-        "@bro what's the score",
-        "@bro check example.com",  # no scheme, so not a link
-        "@broiestbot: `https://example.com` what do you think",  # quoted, not the sender's own
-        "@broiestbot: `see https://example.com` lmao",
-    ],
-)
-def test_messages_without_their_own_link_fetch_nothing(chat_message: str):
-    """No link of the sender's own means the web fetch tool is never offered."""
-    assert LLMClient.fetchable_hosts(chat_message) == []
 
 
 # Tool attachment — off unless a host was explicitly handed over

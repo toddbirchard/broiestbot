@@ -12,7 +12,6 @@ from config import (
     ALPHA_VANTAGE_API_KEY,
     ALPHA_VANTAGE_CHART_BASE_URL,
     ALPHA_VANTAGE_PRICE_BASE_URL,
-    ANTHROPIC_API_KEY,
     GOOGLE_BUCKET_NAME,
     GOOGLE_BUCKET_URL,
     IEX_API_BASE_URL,
@@ -91,8 +90,8 @@ redis_scheduler = Scheduler(connection=r)
 # Playstation
 psn = PlaystationClient(PLAYSTATION_SSO_TOKEN)
 
-# Anthropic LLM Client
-claude = LLMClient()
+# LLM Client — Anthropic or OpenAI, per `LLM_TYPE`. See `clients/llm/`.
+llm_client = LLMClient()
 
 # Redgifs: `redgifs.aio.API` opens an `aiohttp.ClientSession` in its constructor, so it needs a
 # running event loop and cannot be built here at import time. See `commands/afterdark.py`.
