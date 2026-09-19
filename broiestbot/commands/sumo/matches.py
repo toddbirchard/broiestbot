@@ -224,7 +224,7 @@ def _format_head_to_head_line(bout: dict, head_to_heads: Dict[str, dict]) -> str
 def _format_last_meeting(last_meeting: Optional[dict]) -> str:
     """
     Format a head-to-head's most recent meeting
-    (`:crossed_swords: Last met: Onosato (Natsu Basho 2026 Day 8)`).
+    (`:crossed_swords: Last met: Onosato (Natsu Basho 2026)`).
 
     :param Optional[dict] last_meeting: `lastMeeting` entry from a head-to-head summary.
 
@@ -236,8 +236,7 @@ def _format_last_meeting(last_meeting: Optional[dict]) -> str:
     year, month = basho_id[:4], int(basho_id[4:6]) if len(basho_id) == 6 else None
     basho_name = SUMO_BASHO_NAMES.get(month, "Basho")
     winner = last_meeting.get("winnerEn") or "unknown"
-    day = last_meeting.get("day", "?")
-    return emojize(f":crossed_swords: Last met: {winner} ({basho_name} {year} Day {day})", language="en")
+    return emojize(f":crossed_swords: Last met: {winner} ({basho_name} {year})", language="en")
 
 
 def _format_bout_detail(

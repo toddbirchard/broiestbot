@@ -281,7 +281,7 @@ def test_format_stat_comparison_empty_when_either_side_missing():
 def test_format_last_meeting_renders_basho_day_and_result():
     """Basho ID is resolved to its name; winner and kimarite are shown, with a lead-in emoji."""
     last_meeting = {"bashoId": "202605", "day": 15, "winnerEn": "Hoshoryu", "kimarite": "yorikiri"}
-    assert _format_last_meeting(last_meeting) == "⚔️ Last met: Hoshoryu (Natsu Basho 2026 Day 15)"
+    assert _format_last_meeting(last_meeting) == "⚔️ Last met: Hoshoryu (Natsu Basho 2026)"
 
 
 def test_format_last_meeting_empty_when_no_prior_meeting():
@@ -306,7 +306,7 @@ def test_format_bout_detail_joins_available_comparisons(bout_completed):
     # bolded); last basho is one-sided (Hoshoryu absent) and omitted.
     assert result == (
         "🤼 Hoshoryu leads 6-3\n"
-        "📏 188cm vs <b>192cm</b>\n⚖️ 148kg vs <b>180kg</b>\n⚔️ Last met: Hoshoryu (Natsu Basho 2026 Day 15)"
+        "📏 188cm vs <b>192cm</b>\n⚖️ 148kg vs <b>180kg</b>\n⚔️ Last met: Hoshoryu (Natsu Basho 2026)"
     )
 
 
