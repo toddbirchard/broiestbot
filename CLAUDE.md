@@ -180,6 +180,49 @@ Three guardrails hang off that choke point:
 A failed `?<query>` search answers with `YOUTUBE_FAILURE_RESPONSE` rather than staying silent — the
 user explicitly asked. An automatic link preview stays silent, since nobody asked for it.
 
+### Sumo
+
+`!sumo` (upcoming bouts) and `!todaysumo` (today's card) both render torikumi from sumo-api.com,
+which is free and keyless. Each bout line is enriched from two further endpoints, both handled in
+`commands/sumo/records.py` and both **best-effort** — a failed lookup drops that detail from the
+line, never the message:
+
+- **Basho records** (`5-1`, or `5-1-2` with absences) come from the division banzuke — one request
+  per call, keyed by rikishi ID. A rikishi missing from it (a Juryo visitor) or with nothing on the
+  board yet (day 1) simply gets no record, so lines never read `0-0`.
+- **Head-to-head** (`Onosato leads 14-3` / `tied 2-2` / `first meeting`) costs one request per
+  bout, so lookups run under `SUMO_MAX_CONCURRENT_REQUESTS` and are cached in-process for
+  `SUMO_HEAD_TO_HEAD_CACHE_TTL`. The cache key is `(bout id, fought)`: a bout's series changes
+  exactly once, when it is fought, so an early `!sumo` never serves a stale record to a later
+  `!todaysumo`. There is no Redis here — `clients.r` is synchronous and one restart per basho is
+  the whole cost of losing the cache.
+
+`!todaysumo` no longer shows the full day's card. It shows only the top `SUMO_DETAILED_BOUT_COUNT`
+bouts still to be fought — fought bouts and anything past that cutoff are dropped, since the full
+remaining card (without the expanded detail) is what `!sumo` is for. Each of the surviving bouts
+gets a multi-line detail block (`_format_bout_detail` in `matches.py`): the head-to-head series on
+its own line (`_format_head_to_head_line`, since `!todaysumo`'s summary line is built with
+`_format_bout(..., include_head_to_head=False)` — `!sumo` still gets it inline), then an
+east-vs-west comparison of height, weight, and last basho's record, each on its own
+`:emoji: east vs west` line (`_format_stat_comparison`), plus when the pair last met. Whichever
+side is higher on a given line is bolded (for the record line, "higher" means more wins — the
+comparison key is passed separately from the display string, since `9-6` can't be compared as a
+number); a tie leaves both sides plain. This selection is a hard cutoff on the *bout*, separate
+from the *detail lines* being best-effort within a surviving bout: a bout that makes the top N
+still shows (with whatever it has, even just its summary line) if every detail lookup for it
+happens to fail; a comparison missing either side is simply omitted rather than shown one-sided.
+
+- **Height/weight** comes from `GET /rikishi/{id}`, cached per rikishi for
+  `SUMO_RIKISHI_PROFILE_CACHE_TTL` (it changes at most once a basho).
+- **Last basho's record** comes from the *previous* basho's banzuke (`_previous_basho_id` steps
+  back two months, wrapping January to November). Both Makuuchi and Juryo are checked so a
+  recently promoted or demoted rikishi is still found. A finished basho's results never change, so
+  this is cached in-process for the life of the process — but only on a successful (non-empty)
+  fetch, so one failed request doesn't poison the cache permanently.
+- **Last meeting** rides along on the head-to-head fetch already made for the inline series badge
+  (`fetch_head_to_head`'s `lastMeeting`, the newest entry in that endpoint's `matches` list) rather
+  than costing a second request.
+
 ### Room Privileges
 
 Chatango grants moderator powers **per room**, so the bot must not assume it can moderate everywhere. `broiestbot/moderation/privileges.py` exposes `bot_privilege_level(room)` and `bot_is_moderator(room)`, both reading `Room.get_level()` and failing closed (`PrivilegeLevel.USER`) when the level can't be determined.

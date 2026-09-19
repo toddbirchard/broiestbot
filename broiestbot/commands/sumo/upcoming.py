@@ -16,6 +16,7 @@ from .matches import (
     fetch_torikumi,
     get_current_or_next_basho,
 )
+from .records import fetch_basho_records, fetch_head_to_heads
 
 
 def _is_listable(bout: dict) -> bool:
@@ -47,6 +48,7 @@ async def upcoming_sumo_matches_for_date(today: date) -> str:
         basho_start = _parse_basho_date(basho["startDate"])
         basho_name = SUMO_BASHO_NAMES.get(basho_start.month, "Basho")
         first_day = max((today - basho_start).days + 1, 1)
+        records = await fetch_basho_records(basho["date"])
         bouts_by_day = ""
         for day in range(first_day, SUMO_BASHO_FINAL_DAY + 1):
             torikumi = await fetch_torikumi(basho["date"], day)
@@ -55,13 +57,14 @@ async def upcoming_sumo_matches_for_date(today: date) -> str:
                 break
             upcoming_bouts = [bout for bout in bouts if _is_listable(bout)]
             if upcoming_bouts:
+                head_to_heads = await fetch_head_to_heads(upcoming_bouts)
                 bout_date = basho_start + timedelta(days=day - 1)
                 bouts_by_day += emojize(
                     f"\n:calendar: <b>Day {day}</b> ({bout_date.strftime('%a %-m/%-d')})\n", language="en"
                 )
                 # Torikumi are listed lowest-ranked first; reverse so marquee bouts lead.
                 for bout in reversed(upcoming_bouts):
-                    bouts_by_day += f"{_format_bout(bout)}\n"
+                    bouts_by_day += f"{_format_bout(bout, records, head_to_heads)}\n"
         if not bouts_by_day:
             if today < basho_start:
                 return emojize(

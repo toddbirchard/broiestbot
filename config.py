@@ -904,6 +904,15 @@ NBA_SEASON_YEAR = "2024-2025"
 # -------------------------------------------------
 SUMO_API_BASE_URL = "https://sumo-api.com/api"
 SUMO_DIVISION = "Makuuchi"
+SUMO_JURYO_DIVISION = "Juryo"
+# Head-to-head records cost one request per bout, so parallel lookups are capped and each result
+# is cached in-process (see `commands/sumo/records.py`).
+SUMO_MAX_CONCURRENT_REQUESTS = 5
+SUMO_HEAD_TO_HEAD_CACHE_TTL = 6 * 60 * 60
+# `!todaysumo` shows an expanded profile (height/weight, last basho record, last meeting) for
+# only the top N remaining bouts of the day — the full card is too dense for all of them.
+SUMO_DETAILED_BOUT_COUNT = 5
+SUMO_RIKISHI_PROFILE_CACHE_TTL = 24 * 60 * 60
 
 # Formula 1 (Hyprace API)
 # -------------------------------------------------
