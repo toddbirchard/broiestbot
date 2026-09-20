@@ -106,53 +106,84 @@ def test_messages_without_their_own_link_fetch_nothing(chat_message: str):
     assert BaseLLMClient.fetchable_hosts(chat_message) == []
 
 
-# Dubs mode — per-room persona switching
+# Alt modes — per-room persona switching
 # -------------------------------------------------
 
 
 @pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
 def test_room_defaults_to_base_prompt(client_class):
-    """A room which never toggled dubs mode always gets the default persona."""
+    """A room which never switched modes always gets the default persona."""
     client = client_class()
-    assert client.is_dubs_mode("room-a") is False
+    assert client.active_mode("room-a") is None
     assert client.system_prompt(room_name="room-a") == client.base_prompt
     assert client.system_prompt() == client.base_prompt  # no room_name at all
 
 
 @pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
-def test_activating_dubs_mode_swaps_the_persona_for_that_room(client_class):
-    """Activating in one room switches only that room's system prompt."""
+@pytest.mark.parametrize(
+    "mode,prompt_attr",
+    [("dubs", "dubs_prompt"), ("cryptkeeper", "cryptkeeper_prompt"), ("motherinlaw", "motherinlaw_prompt")],
+)
+def test_activating_a_mode_swaps_the_persona_for_that_room(client_class, mode, prompt_attr):
+    """Activating a mode in one room switches only that room's system prompt."""
     client = client_class()
-    client.activate_dubs_mode("room-a")
-    assert client.is_dubs_mode("room-a") is True
-    assert client.system_prompt(room_name="room-a") == client.dubs_prompt
+    client.activate_mode("room-a", mode)
+    assert client.active_mode("room-a") == mode
+    assert client.system_prompt(room_name="room-a") == getattr(client, prompt_attr)
     # An untouched room is unaffected.
-    assert client.is_dubs_mode("room-b") is False
+    assert client.active_mode("room-b") is None
     assert client.system_prompt(room_name="room-b") == client.base_prompt
 
 
 @pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
-def test_deactivating_dubs_mode_restores_the_base_prompt(client_class):
+def test_activating_a_second_mode_replaces_the_first(client_class):
+    """A room runs at most one mode at a time — switching modes doesn't stack them."""
+    client = client_class()
+    client.activate_mode("room-a", "dubs")
+    client.activate_mode("room-a", "cryptkeeper")
+    assert client.active_mode("room-a") == "cryptkeeper"
+    assert client.system_prompt(room_name="room-a") == client.cryptkeeper_prompt
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_unknown_mode_is_rejected(client_class):
+    """A typo'd mode key fails loudly rather than silently doing nothing."""
+    client = client_class()
+    with pytest.raises(KeyError):
+        client.activate_mode("room-a", "not-a-real-mode")
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_deactivating_a_mode_restores_the_base_prompt(client_class):
     """The reverse trigger switches a room back to its default persona."""
     client = client_class()
-    client.activate_dubs_mode("room-a")
-    client.deactivate_dubs_mode("room-a")
-    assert client.is_dubs_mode("room-a") is False
+    client.activate_mode("room-a", "dubs")
+    client.deactivate_mode("room-a", "dubs")
+    assert client.active_mode("room-a") is None
     assert client.system_prompt(room_name="room-a") == client.base_prompt
 
 
 @pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
 def test_deactivating_an_untouched_room_is_a_noop(client_class):
-    """Deactivating a room never in dubs mode raises nothing and changes nothing."""
+    """Deactivating a room never in that mode raises nothing and changes nothing."""
     client = client_class()
-    client.deactivate_dubs_mode("room-a")
-    assert client.is_dubs_mode("room-a") is False
+    client.deactivate_mode("room-a", "dubs")
+    assert client.active_mode("room-a") is None
 
 
 @pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
-def test_dubs_mode_persona_still_gets_link_rules(client_class):
+def test_deactivating_the_wrong_mode_is_a_noop(client_class):
+    """A stale deactivate for a mode that isn't the room's current one doesn't clear it."""
+    client = client_class()
+    client.activate_mode("room-a", "cryptkeeper")
+    client.deactivate_mode("room-a", "dubs")
+    assert client.active_mode("room-a") == "cryptkeeper"
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_active_mode_persona_still_gets_link_rules(client_class):
     """The link-reading rules are appended regardless of which persona is active."""
     client = client_class()
-    client.activate_dubs_mode("room-a")
+    client.activate_mode("room-a", "dubs")
     with_link = client.system_prompt(["example.com"], room_name="room-a")
     assert with_link == client.dubs_prompt + client.link_prompt

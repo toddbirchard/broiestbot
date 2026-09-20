@@ -1,6 +1,6 @@
 """Provider-agnostic half of the LLM client: persona, history formatting & link gating."""
 
-from typing import ClassVar, Optional, Set, Type, Union
+from typing import ClassVar, Dict, Optional, Type, Union
 from urllib.parse import urlparse
 
 import markdown
@@ -58,7 +58,7 @@ class BaseLLMClient:
         # Alternate persona, swapped in per-room via `activate_dubs_mode` / `deactivate_dubs_mode`.
         self.dubs_prompt = f"""
         You are a loud Austrian who speaks broken english named dubs. You are emotionally volatile and prone to sudden outbursts.
-        1. Randomly insert one of “KEKEKE,” “SIGH,” or “:@“ into your responses, by cycling through one of those three random snippets and inserting them into your responses about every 6 to 10 words. 
+        1. Randomly insert one of “KEKEKE,” “SIGH,” or “:@“ into your responses, by cycling through one of those three random snippets and inserting them into your responses about every 8 to 16 words. 
         2. Address others as “YOUGHHHHH :@“ and occasionally just insert this phrase at random. 
         3. Replace all instances of the letter “o” in your responses with “ough”, and occasionally add additional instances of “ough” while doing so, resulting in instances of double or triple “ough”s (e.g. “o” can become either “oughough”, or “oughoughough”). 
         4. Sometimes add “ough” as a suffix to words at random. 
@@ -70,10 +70,47 @@ class BaseLLMClient:
         10. Provide a relevant response to that specific message, addressing **only** the user's explicit request.
         11. Use the provided chat history for contextual understanding if necessary, but but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
         """
-        # Room names currently running `dubs_prompt` instead of `base_prompt`. Membership only —
-        # a room absent from this set is always on the default persona. Each joined Chatango room
-        # tracks its own mode independently, since one shared `LLMClient()` answers every room.
-        self._dubs_mode_rooms: Set[str] = set()
+        # Alternate persona, swapped in per-room via `activate_mode` / `deactivate_mode`. Content
+        # to be supplied.
+        self.cryptkeeper_prompt = f"""
+        You are the Crypt Keeper, the decaying zombie storyteller from the 90s TV show 'Tales From the Crypt'. 
+        1. Phrase every response as though you're narrating an intro to an episode of 'Tales From the Crypt'.
+        2. Always respond in the style of the Crypt Keeper, using macabre humor and excesssive puns related to spooky themes.
+        3. Incorporate cackling and eerie laughter into your responses, in emulation of the Crypt Keeper character.
+        4. If you're unsure of any facts being asked of you, pivot to narrating an intro to an episode of 'Tales From the Crypt' with the context you have.
+        5. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}.
+        6. Provide a relevant response to that specific message, addressing **only** the user's explicit request. Even when being asked for explicit information, phrase your responses as though you are narrating an intro to an episode of 'Tales From the Crypt'.
+        7. Use the provided chat history for contextual understanding if necessary, but but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
+        """
+
+        # Alternate persona, swapped in per-room via `activate_mode` / `deactivate_mode`. Content
+        # to be supplied.
+        self.motherinlaw_prompt = f"""
+        You're an 80-year-old mother-in-law and former english teacher with liberal values who speaks with a holier-than-thou attitude.
+        1. You constantly find yourself speaking to a non-responsive audience who are intentionally ignoring you, which does not deter you from speaking in length.
+        2. You were molested as a child, and you constantly work this into conversation via tangents, as if to intentionally bring down the mood in the room. 
+        3. You are hell-bent on steering conversations into political opinions that are almost entirely focused on criticising conservative viewpoints and the current US administration.
+        4. You weirdly align yourself with all things French, because you may or may not have a distant relative who was French and use this as a crutch for your identity.
+        5. You frequently reference France positively in your responses regardless of whether or not it is relevant. 
+        6. You are fervent in your political views, which are informed entirely by watching a mix of France 24 and Rachel Maddow. 
+        7. You had a minor stroke fairly recently, which negatively affects your memory and focus.
+        8. If you're unsure of any facts being asked of you, quickly pivot to nonsequitor poorly-informed political commentary or anecdotes about France.
+        9. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}.
+        10. Provide a relevant response to that specific message, addressing **only** the user's explicit request. Even when being asked for explicit information, phrase your responses as though you are narrating an intro to an episode of 'Tales From the Crypt'.
+        11. Use the provided chat history for contextual understanding if necessary, but but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
+        """
+
+        # Registered alt personas, keyed by the mode name `activate_mode`/`deactivate_mode` take.
+        # Adding a mode is a new key here plus its prompt text above — no new methods required.
+        self._mode_prompts: Dict[str, str] = {
+            "dubs": self.dubs_prompt,
+            "cryptkeeper": self.cryptkeeper_prompt,
+            "motherinlaw": self.motherinlaw_prompt,
+        }
+        # room_name -> active mode key. A room absent from this dict is always on `base_prompt`.
+        # Each joined Chatango room tracks its own mode independently, since one shared
+        # `LLMClient()` answers every room; a room can run at most one mode at a time.
+        self._active_modes: Dict[str, str] = {}
 
     async def generate_response(
         self,
@@ -119,40 +156,52 @@ class BaseLLMClient:
 
         :returns str: The persona, plus the link-reading rules when a tool is attached.
         """
-        prompt = self.dubs_prompt if room_name and self.is_dubs_mode(room_name) else self.base_prompt
+        mode = self.active_mode(room_name) if room_name else None
+        prompt = self._mode_prompts[mode] if mode else self.base_prompt
         if fetch_hosts:
             return prompt + self.link_prompt
         return prompt
 
-    def activate_dubs_mode(self, room_name: str) -> None:
+    def activate_mode(self, room_name: str, mode: str) -> None:
         """
-        Switch a room's `@bro` persona to `dubs_prompt`.
+        Switch a room's `@bro` persona to a registered alt mode, replacing any mode already
+        active there — a room runs at most one mode at a time.
 
-        :param str room_name: Room to switch into dubs mode.
+        :param str room_name: Room to switch.
+        :param str mode: Key into `_mode_prompts` (e.g. "dubs", "cryptkeeper").
+
+        :raises KeyError: If `mode` names no registered persona.
 
         :returns: None
         """
-        self._dubs_mode_rooms.add(room_name)
+        if mode not in self._mode_prompts:
+            raise KeyError(f"Unknown LLM mode '{mode}'; expected one of {sorted(self._mode_prompts)}")
+        self._active_modes[room_name] = mode
 
-    def deactivate_dubs_mode(self, room_name: str) -> None:
+    def deactivate_mode(self, room_name: str, mode: str) -> None:
         """
-        Switch a room's `@bro` persona back to `base_prompt`.
+        Switch a room back to `base_prompt`, but only if `mode` is the one currently active there.
 
-        :param str room_name: Room to switch out of dubs mode.
+        A stale "deactivate X mode" for a room already switched to a *different* mode (or never
+        switched at all) is a no-op, so it can't undo a mode switch it wasn't meant to touch.
+
+        :param str room_name: Room to switch.
+        :param str mode: Mode this room is expected to currently be running.
 
         :returns: None
         """
-        self._dubs_mode_rooms.discard(room_name)
+        if self._active_modes.get(room_name) == mode:
+            del self._active_modes[room_name]
 
-    def is_dubs_mode(self, room_name: str) -> bool:
+    def active_mode(self, room_name: str) -> Optional[str]:
         """
-        Whether a room is currently running `dubs_prompt` instead of `base_prompt`.
+        The mode key currently active for a room, if any.
 
         :param str room_name: Room to check.
 
-        :returns bool: True if the room is in dubs mode.
+        :returns Optional[str]: The active mode's key, or None if the room is on `base_prompt`.
         """
-        return room_name in self._dubs_mode_rooms
+        return self._active_modes.get(room_name)
 
     @staticmethod
     def fetchable_hosts(chat_message: str) -> list:

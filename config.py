@@ -5,6 +5,7 @@ from os import environ, getenv, path
 
 import pytz
 from dotenv import load_dotenv
+from emoji import emojize
 
 BASE_DIR = path.abspath(path.dirname(__file__))
 load_dotenv(path.join(BASE_DIR, ".env"))
@@ -327,15 +328,41 @@ IMAGE_PROMPT_REGEX = re.compile(
     re.IGNORECASE,
 )
 
-# Matches an explicit ask to switch `@bro`'s persona into (or out of) "dubs mode" — see
-# `clients/llm/base.py:BaseLLMClient.activate_dubs_mode`. Caught deterministically, the same way
-# `IMAGE_PROMPT_REGEX` gates vision, so the switch is instant, free, and never mis-read by the model.
-DUBS_MODE_ACTIVATE_REGEX = re.compile(
-    r"\b(?:activate|enable|turn on)\s+dubs\s+mode\b|\bdubs\s+mode\s+on\b", re.IGNORECASE
-)
-DUBS_MODE_DEACTIVATE_REGEX = re.compile(
-    r"\b(?:deactivate|disable|turn off|exit)\s+dubs\s+mode\b|\bdubs\s+mode\s+off\b", re.IGNORECASE
-)
+
+def _llm_mode_triggers(mode_word: str) -> tuple:
+    """
+    Build the activate/deactivate regex pair for one named `@bro` persona mode.
+
+    :param str mode_word: The mode's name as chat refers to it (e.g. "dubs", "cryptkeeper").
+
+    :returns tuple: (activate_regex, deactivate_regex)
+    """
+    activate = re.compile(
+        rf"\b(?:activate|enable|turn on)\s+{mode_word}\s+mode\b|\b{mode_word}\s+mode\s+on\b", re.IGNORECASE
+    )
+    deactivate = re.compile(
+        rf"\b(?:deactivate|disable|turn off|exit)\s+{mode_word}\s+mode\b|\b{mode_word}\s+mode\s+off\b", re.IGNORECASE
+    )
+    return activate, deactivate
+
+
+# Explicit asks to switch `@bro`'s persona into (or out of) a named mode — see
+# `clients/llm/base.py:BaseLLMClient.activate_mode`. Caught deterministically, the same way
+# `IMAGE_PROMPT_REGEX` gates vision, so the switch is instant, free, and never mis-read by the
+# model. Adding a mode is a new key here plus its prompt text in `BaseLLMClient.__init__`.
+LLM_MODE_TRIGGERS = {
+    "dubs": _llm_mode_triggers("dubs"),
+    "cryptkeeper": _llm_mode_triggers("cryptkeeper"),
+    "motherinlaw": _llm_mode_triggers("motherinlaw"),
+}
+
+# Emoji shown alongside a mode's "activated" confirmation — see `commands/llm.py`. Every key in
+# `LLM_MODE_TRIGGERS` must have one here.
+LLM_MODE_EMOJIS = {
+    "dubs": emojize(":Austria:", language="en"),
+    "cryptkeeper": emojize(":headstone:", language="en"),
+    "motherinlaw": emojize(":old_woman:", language="en"),
+}
 
 # Twitch
 # -------------------------------------------------

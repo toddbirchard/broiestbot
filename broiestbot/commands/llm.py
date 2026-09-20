@@ -6,11 +6,7 @@ from logger import LOGGER
 
 from clients import llm_client
 from clients.llm import LLMRefusalError
-from config import (
-    CHATANGO_QUOTE_REGEX,
-    DUBS_MODE_ACTIVATE_REGEX,
-    DUBS_MODE_DEACTIVATE_REGEX,
-)
+from config import CHATANGO_QUOTE_REGEX, LLM_MODE_EMOJIS, LLM_MODE_TRIGGERS
 
 
 async def generate_llm_response(user_name: str, room_name: str, history, chat_message: str) -> Optional[str]:
@@ -20,11 +16,10 @@ async def generate_llm_response(user_name: str, room_name: str, history, chat_me
     Which provider answers is `config.LLM_TYPE`'s business, not this function's — the SDK error
     classes are read off the live client so a rate limit still reads as one either way.
 
-    An explicit ask to switch the room's persona (`DUBS_MODE_ACTIVATE_REGEX` /
-    `DUBS_MODE_DEACTIVATE_REGEX`) is caught here, before the LLM is ever called: the switch is
-    deterministic, so it costs no request and can't be missed or misread by the model. Quoted text
-    is stripped first, matching `fetchable_hosts` — quoting someone else's trigger phrase isn't a
-    request to flip your own room's mode.
+    An explicit ask to switch the room's persona (`config.LLM_MODE_TRIGGERS`) is caught here,
+    before the LLM is ever called: the switch is deterministic, so it costs no request and can't
+    be missed or misread by the model. Quoted text is stripped first, matching `fetchable_hosts` —
+    quoting someone else's trigger phrase isn't a request to flip your own room's mode.
 
     :param str user_name: Username of the Chatango user who triggered the LLM response.
     :param str room_name: Room the prompt was sent from, whose persona mode this may switch.
@@ -36,14 +31,15 @@ async def generate_llm_response(user_name: str, room_name: str, history, chat_me
     :returns Optional[str]: HTML formatted response to be sent back to the chat
     """
     unquoted_message = CHATANGO_QUOTE_REGEX.sub(" ", chat_message)
-    if DUBS_MODE_ACTIVATE_REGEX.search(unquoted_message):
-        llm_client.activate_dubs_mode(room_name)
-        LOGGER.info(f"Dubs mode activated in {room_name} by @{user_name}")
-        return f"@{user_name} dubs mode: activated 🎰"
-    if DUBS_MODE_DEACTIVATE_REGEX.search(unquoted_message):
-        llm_client.deactivate_dubs_mode(room_name)
-        LOGGER.info(f"Dubs mode deactivated in {room_name} by @{user_name}")
-        return f"@{user_name} dubs mode: deactivated"
+    for mode, (activate_regex, deactivate_regex) in LLM_MODE_TRIGGERS.items():
+        if activate_regex.search(unquoted_message):
+            llm_client.activate_mode(room_name, mode)
+            LOGGER.info(f"{mode} mode activated in {room_name} by @{user_name}")
+            return f"@{user_name} {mode} mode: activated {LLM_MODE_EMOJIS[mode]}"
+        if deactivate_regex.search(unquoted_message):
+            llm_client.deactivate_mode(room_name, mode)
+            LOGGER.info(f"{mode} mode deactivated in {room_name} by @{user_name}")
+            return f"@{user_name} {mode} mode: deactivated"
     try:
         messages = llm_client.format_chat_history(history, format_type="messages")
         fetch_hosts = llm_client.fetchable_hosts(chat_message)
