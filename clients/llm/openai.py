@@ -58,6 +58,7 @@ class OpenAIClient(BaseLLMClient):
         max_tokens=4096,
         fetch_hosts: Optional[list] = None,
         chat_message: Optional[str] = None,
+        room_name: Optional[str] = None,
     ) -> Optional[str]:
         """
         Generate a response for a single prompt.
@@ -71,6 +72,8 @@ class OpenAIClient(BaseLLMClient):
             omitted means the tool is not offered at all, so no link can be read.
         :param Optional[str] chat_message: The raw message which tagged the bot, used to decide
             whether this prompt is about an image. Omitted means no image is ever attached.
+        :param Optional[str] room_name: Room the prompt was sent from, used to pick that room's
+            active persona.
 
         :raises LLMRefusalError: If the model declines the prompt.
 
@@ -79,7 +82,7 @@ class OpenAIClient(BaseLLMClient):
         images = self._vision_images(messages, chat_message)
         request = {
             "model": self.model,
-            "instructions": self.system_prompt(fetch_hosts),
+            "instructions": self.system_prompt(fetch_hosts, room_name),
             "input": messages,
             "max_output_tokens": max_tokens,
             "reasoning": {"effort": self.REASONING_EFFORT},

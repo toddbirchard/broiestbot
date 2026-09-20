@@ -40,6 +40,7 @@ class AnthropicClient(BaseLLMClient):
         max_tokens=4096,
         fetch_hosts: Optional[list] = None,
         chat_message: Optional[str] = None,
+        room_name: Optional[str] = None,
     ) -> Optional[str]:
         """
         Generate a response for a single prompt.
@@ -54,6 +55,8 @@ class AnthropicClient(BaseLLMClient):
             omitted means the tool is not offered at all, so no link can be fetched.
         :param Optional[str] chat_message: Unused — the link gate is already applied upstream, in
             `fetch_hosts`. Accepted so both providers share one signature.
+        :param Optional[str] room_name: Room the prompt was sent from, used to pick that room's
+            active persona.
 
         :raises LLMRefusalError: If the prompt is declined and no fallback model rescues it.
 
@@ -61,7 +64,7 @@ class AnthropicClient(BaseLLMClient):
         """
         request = {
             "max_tokens": max_tokens,
-            "system": self.system_prompt(fetch_hosts),
+            "system": self.system_prompt(fetch_hosts, room_name),
             "messages": messages,
             "model": self.model,
             "thinking": {"type": "adaptive"},

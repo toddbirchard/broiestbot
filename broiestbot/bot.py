@@ -628,6 +628,6 @@ class Bot(chatango.Client):
         :returns: None
         """
         LOGGER.info(f"Generating LLM response for message directed at bot in room {room.name}")
-        response = await generate_llm_response(user_name, list(room.history), chat_message)
+        response = await generate_llm_response(user_name, room.name, list(room.history), chat_message)
         if response:
             await room.send_message(response, use_html=True)

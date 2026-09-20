@@ -104,3 +104,55 @@ def test_links_in_the_prompt_are_fetchable(chat_message: str, expected: list):
 def test_messages_without_their_own_link_fetch_nothing(chat_message: str):
     """No link of the sender's own means the web fetch tool is never offered."""
     assert BaseLLMClient.fetchable_hosts(chat_message) == []
+
+
+# Dubs mode — per-room persona switching
+# -------------------------------------------------
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_room_defaults_to_base_prompt(client_class):
+    """A room which never toggled dubs mode always gets the default persona."""
+    client = client_class()
+    assert client.is_dubs_mode("room-a") is False
+    assert client.system_prompt(room_name="room-a") == client.base_prompt
+    assert client.system_prompt() == client.base_prompt  # no room_name at all
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_activating_dubs_mode_swaps_the_persona_for_that_room(client_class):
+    """Activating in one room switches only that room's system prompt."""
+    client = client_class()
+    client.activate_dubs_mode("room-a")
+    assert client.is_dubs_mode("room-a") is True
+    assert client.system_prompt(room_name="room-a") == client.dubs_prompt
+    # An untouched room is unaffected.
+    assert client.is_dubs_mode("room-b") is False
+    assert client.system_prompt(room_name="room-b") == client.base_prompt
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_deactivating_dubs_mode_restores_the_base_prompt(client_class):
+    """The reverse trigger switches a room back to its default persona."""
+    client = client_class()
+    client.activate_dubs_mode("room-a")
+    client.deactivate_dubs_mode("room-a")
+    assert client.is_dubs_mode("room-a") is False
+    assert client.system_prompt(room_name="room-a") == client.base_prompt
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_deactivating_an_untouched_room_is_a_noop(client_class):
+    """Deactivating a room never in dubs mode raises nothing and changes nothing."""
+    client = client_class()
+    client.deactivate_dubs_mode("room-a")
+    assert client.is_dubs_mode("room-a") is False
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_dubs_mode_persona_still_gets_link_rules(client_class):
+    """The link-reading rules are appended regardless of which persona is active."""
+    client = client_class()
+    client.activate_dubs_mode("room-a")
+    with_link = client.system_prompt(["example.com"], room_name="room-a")
+    assert with_link == client.dubs_prompt + client.link_prompt

@@ -327,6 +327,16 @@ IMAGE_PROMPT_REGEX = re.compile(
     re.IGNORECASE,
 )
 
+# Matches an explicit ask to switch `@bro`'s persona into (or out of) "dubs mode" — see
+# `clients/llm/base.py:BaseLLMClient.activate_dubs_mode`. Caught deterministically, the same way
+# `IMAGE_PROMPT_REGEX` gates vision, so the switch is instant, free, and never mis-read by the model.
+DUBS_MODE_ACTIVATE_REGEX = re.compile(
+    r"\b(?:activate|enable|turn on)\s+dubs\s+mode\b|\bdubs\s+mode\s+on\b", re.IGNORECASE
+)
+DUBS_MODE_DEACTIVATE_REGEX = re.compile(
+    r"\b(?:deactivate|disable|turn off|exit)\s+dubs\s+mode\b|\bdubs\s+mode\s+off\b", re.IGNORECASE
+)
+
 # Twitch
 # -------------------------------------------------
 

@@ -6,16 +6,28 @@ from logger import LOGGER
 
 from clients import llm_client
 from clients.llm import LLMRefusalError
+from config import (
+    CHATANGO_QUOTE_REGEX,
+    DUBS_MODE_ACTIVATE_REGEX,
+    DUBS_MODE_DEACTIVATE_REGEX,
+)
 
 
-async def generate_llm_response(user_name: str, history, chat_message: str) -> Optional[str]:
+async def generate_llm_response(user_name: str, room_name: str, history, chat_message: str) -> Optional[str]:
     """
     Generate a response from the LLM based on the input prompt and chat history.
 
     Which provider answers is `config.LLM_TYPE`'s business, not this function's — the SDK error
     classes are read off the live client so a rate limit still reads as one either way.
 
+    An explicit ask to switch the room's persona (`DUBS_MODE_ACTIVATE_REGEX` /
+    `DUBS_MODE_DEACTIVATE_REGEX`) is caught here, before the LLM is ever called: the switch is
+    deterministic, so it costs no request and can't be missed or misread by the model. Quoted text
+    is stripped first, matching `fetchable_hosts` — quoting someone else's trigger phrase isn't a
+    request to flip your own room's mode.
+
     :param str user_name: Username of the Chatango user who triggered the LLM response.
+    :param str room_name: Room the prompt was sent from, whose persona mode this may switch.
     :param list history: List of message objects representing the chat history.
     :param str chat_message: The message which tagged the bot, used to decide whether the LLM is
         allowed to read a link, and whether it should go looking for an image. Links elsewhere in
@@ -23,12 +35,23 @@ async def generate_llm_response(user_name: str, history, chat_message: str) -> O
 
     :returns Optional[str]: HTML formatted response to be sent back to the chat
     """
+    unquoted_message = CHATANGO_QUOTE_REGEX.sub(" ", chat_message)
+    if DUBS_MODE_ACTIVATE_REGEX.search(unquoted_message):
+        llm_client.activate_dubs_mode(room_name)
+        LOGGER.info(f"Dubs mode activated in {room_name} by @{user_name}")
+        return f"@{user_name} dubs mode: activated 🎰"
+    if DUBS_MODE_DEACTIVATE_REGEX.search(unquoted_message):
+        llm_client.deactivate_dubs_mode(room_name)
+        LOGGER.info(f"Dubs mode deactivated in {room_name} by @{user_name}")
+        return f"@{user_name} dubs mode: deactivated"
     try:
         messages = llm_client.format_chat_history(history, format_type="messages")
         fetch_hosts = llm_client.fetchable_hosts(chat_message)
         if fetch_hosts:
             LOGGER.info(f"Allowing LLM to read links from {fetch_hosts} for @{user_name}")
-        return await llm_client.generate_response(messages, fetch_hosts=fetch_hosts, chat_message=chat_message)
+        return await llm_client.generate_response(
+            messages, fetch_hosts=fetch_hosts, chat_message=chat_message, room_name=room_name
+        )
     except LLMRefusalError as e:
         LOGGER.warning(f"LLM declined to respond: {e}")
         return f"@{user_name} nah bro, i ain't touching that one."

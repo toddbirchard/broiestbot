@@ -1146,15 +1146,15 @@ dev = ["coverage", "pytest (>=7.4.4)"]
 
 [[package]]
 name = "filelock"
-version = "4.0.0"
+version = "4.0.1"
 description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
 files = [
-    {file = "filelock-4.0.0-py3-none-any.whl", hash = "sha256:a850aa9ec2acba8db9ca2e9fcf8a327fbc2f85e432725715b37bd76b7dd1f798"},
-    {file = "filelock-4.0.0.tar.gz", hash = "sha256:3611eca5d818ca9b00ec3cc7db1dcfe1e2aafc8d44fb4920d8cf60ad1f6bfda6"},
+    {file = "filelock-4.0.1-py3-none-any.whl", hash = "sha256:481a321a27bef441e23c53371c6abc8d7d16e26b97090074ba44f7538a3fd55a"},
+    {file = "filelock-4.0.1.tar.gz", hash = "sha256:fdefc3f3e87716d855ae2b732c1cfd521dd99799ef2b4d00e8c0d4dcdc7cc94b"},
 ]
 
 [[package]]
@@ -2917,15 +2917,15 @@ re2 = ["google-re2 (>=1.1)"]
 
 [[package]]
 name = "platformdirs"
-version = "4.11.10"
+version = "4.11.11"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
 files = [
-    {file = "platformdirs-4.11.10-py3-none-any.whl", hash = "sha256:973c4c082b964958c71588448488d2b14fb253893dfbdb82325a14c84e540e8f"},
-    {file = "platformdirs-4.11.10.tar.gz", hash = "sha256:9cd351c078ccf7dda1fdc5f8ccb9d8f5258984c63990e6df3627dde0b70b51d0"},
+    {file = "platformdirs-4.11.11-py3-none-any.whl", hash = "sha256:972ea6b2b387155a536226a0750e46923d731d459a387c4a255c583ed2f64547"},
+    {file = "platformdirs-4.11.11.tar.gz", hash = "sha256:b0befe8a90759e4a9a8b9820d434ae226a6549063210b596da0038a7a05aede4"},
 ]
 
 [[package]]
