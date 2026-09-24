@@ -98,7 +98,7 @@ Tests live beside the code they cover (`broiestbot/commands/<domain>/tests/`), w
 
 `config.LLM_TYPE` picks the provider — `claude` builds `AnthropicClient` (Anthropic's `AsyncAnthropic`), `chatgpt` builds `OpenAIClient` (OpenAI's `AsyncOpenAI`) — and nothing downstream branches on the answer. `clients/llm/` is split to keep it that way:
 
-- **`base.py`** — `BaseLLMClient`: the persona prompt, `system_prompt`, `fetchable_hosts`, `format_chat_history`, `format_response_for_html`, and `LLMRefusalError`. Everything here is provider-agnostic by definition; nothing provider-specific belongs in it. `generate_response` takes the raw `chat_message` alongside the formatted history so a provider can gate on the sender's own words — Anthropic accepts and ignores it, keeping one signature across both.
+- **`base.py`** — `BaseLLMClient`: the persona prompt, `system_prompt`, `fetchable_hosts`, `format_chat_history`, `format_response_for_html`, `LLMRefusalError`, and the vision gate (`_vision_images`, `image_urls`, `vision_prompt`). Everything here is provider-agnostic by definition; nothing provider-specific belongs in it. `generate_response` takes the raw `chat_message` alongside the formatted history so a provider can gate on the sender's own words — used for both link reading and vision.
 - **`anthropic.py` / `openai.py`** — one subclass each, owning that provider's SDK client, model, request shape, link-reading tool and reply parsing.
 - **`__init__.py`** — `LLMClient()` is now a *factory*, not a class: it reads `LLM_TYPE`, looks it up in `LLM_CLIENTS` and returns a `BaseLLMClient`. An unknown value raises `ValueError` at import time rather than picking a provider silently. Adding a third provider is a subclass plus a row in `LLM_CLIENTS`.
 
@@ -119,21 +119,28 @@ The call goes through `client.beta.messages.create` because it opts into server-
 
 The call goes through the **Responses API** (`client.responses.create`): the persona rides in `instructions`, the formatted history in `input` unchanged, and `store=False` keeps a private room's chat logs out of OpenAI's dashboard. There is no fallback-model concept, so a decline is detected rather than rescued — `_refusal` raises `LLMRefusalError` on either a `refusal` content part or a response left `incomplete` by `content_filter` (an `incomplete` response cut short by `max_output_tokens` is *not* a refusal, and whatever was said is still sent).
 
-##### Vision
+#### Vision
 
-ChatGPT can look at an image from the room; Claude currently cannot, so this lives entirely in `openai.py`. `_vision_images` decides what it sees, in two tiers:
+Both providers can look at an image from the room. The gate deciding *what* the model gets to see is shared, in `base.py`; only *how* the image reaches the API is provider-specific, in `anthropic.py` / `openai.py`.
+
+`BaseLLMClient._vision_images` decides what it sees, in two tiers:
 
 - A prompt **carrying its own image link** is an explicit ask and needs no further gate.
 - Otherwise the history is searched **only when the prompt reads as being about an image**, per `config.IMAGE_PROMPT_REGEX`. This is the one place the LLM path deliberately reaches past the triggering message — unlike link reading, which never does — so the gate is what stops "@bro who won the derby" dragging in the last gif somebody posted.
 
-Either way the newest images win, capped at `VISION_MAX_IMAGES` (2) and sent at `detail: "low"` (~85 tokens each) to keep the chat path fast.
+Either way the newest images win, capped at `VISION_MAX_IMAGES` (2, defined on `BaseLLMClient` and overridable per provider) to keep the chat path fast.
 
 `image_urls` classifies a link as an image by `IMAGE_FILE_EXTENSIONS` against the **path only** (Giphy always appends `?cid=`), or by `IMAGE_URL_HOSTS` matched on host or subdomain, which is what catches the extensionless ones (Twitter puts the format in `?format=jpg`).
 
-Two things constrain this path:
+Two things constrain this path, both implemented once per provider:
 
-- Images are **hoisted onto the last `user` turn** (`_attach_images`), not rewritten into whichever message carried the link. The bot posts images itself via `!gif`, and an `assistant` turn cannot hold an `input_image`. The caller's message list is copied, never mutated.
-- An image URL is whatever somebody typed into chat, so it can 404, sit behind hotlink protection, or be an HTML page that merely looked like an image. OpenAI rejects the **whole request** with a 400 for any of those, so `_create` catches `BadRequestError`, strips the images and the `vision_prompt` rule, and re-sends once — a bad link costs the picture, not the answer. A 400 on a request that carried no images is re-raised as the real error it is.
+- Images are **hoisted onto the last `user` turn** (`_attach_images`), not rewritten into whichever message carried the link. The bot posts images itself via `!gif`, and an `assistant` turn cannot hold an image part. The caller's message list is copied, never mutated.
+- An image URL is whatever somebody typed into chat, so it can 404, sit behind hotlink protection, or be an HTML page that merely looked like an image. Both APIs reject the **whole request** with a 400 for any of those, so each subclass's `_create` catches `BadRequestError`, strips the images and the `vision_prompt` rule, and re-sends once — a bad link costs the picture, not the answer. A 400 on a request that carried no images is re-raised as the real error it is.
+
+The two providers differ in shape and in what they let you tune:
+
+- **ChatGPT** attaches `input_image` parts at `detail: "low"` (~85 tokens each) — an explicit, cheap-vision knob with no equivalent on the other side.
+- **Claude** attaches `image` content blocks with a `url` source and fetches the image itself, the same way `web_fetch` fetches a page. There is no `detail` knob: token cost scales with the image's own resolution instead, so `VISION_MAX_IMAGES` is the only lever controlling vision's cost on this path.
 
 #### Reading links
 

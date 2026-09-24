@@ -175,12 +175,11 @@ def test_length_cutoff_is_not_a_refusal(client):
     assert reply.strip() == "ran long"
 
 
-# Vision — which images the model gets to see
+# Vision — request shape (image selection itself is covered in test_llm_base.py)
 # -------------------------------------------------
 
 IMAGE = "https://i.imgur.com/wppfinC.png"
 GIF = "https://media0.giphy.com/media/abc/giphy.gif?cid=xyz"
-TWEET_IMAGE = "https://pbs.twimg.com/media/ABC123?format=jpg&name=large"
 
 
 def history(*bodies) -> list:
@@ -199,23 +198,6 @@ def image_parts(request) -> list:
     ]
 
 
-@pytest.mark.parametrize(
-    "url,expected",
-    [
-        (IMAGE, [IMAGE]),
-        (GIF, [GIF]),  # extension survives Giphy's mandatory query string
-        (TWEET_IMAGE, [TWEET_IMAGE]),  # extensionless, matched on host
-        ("https://media.tenor.com/x/y.gif", ["https://media.tenor.com/x/y.gif"]),  # subdomain host
-        ("https://example.com/article", []),
-        ("https://example.com/notanimage.html", []),
-        ("no link here at all", []),
-    ],
-)
-def test_image_urls_detection(url: str, expected: list):
-    """A link counts as an image by extension or by host, and nothing else does."""
-    assert OpenAIClient.image_urls(f"<sean>: check {url} out") == expected
-
-
 def test_prompt_carrying_its_own_image_needs_no_intent(client):
     """A link in the prompt is an explicit ask, so it skips the "is this about an image" gate."""
     _, request = call(
@@ -225,53 +207,6 @@ def test_prompt_carrying_its_own_image_needs_no_intent(client):
     )
     assert [part["image_url"] for part in image_parts(request)] == [IMAGE]
     assert client.vision_prompt in request["instructions"]
-
-
-def test_image_prompt_reaches_back_into_history(client):
-    """A prompt about an image picks up one somebody else posted earlier."""
-    _, request = call(
-        client,
-        response(message(text_part("it's a dog"))),
-        chat_message="@bro what is that pic",
-        messages=history(f"<sean>: {IMAGE}", "<sean>: @bro what is that pic"),
-    )
-    assert [part["image_url"] for part in image_parts(request)] == [IMAGE]
-
-
-def test_unrelated_prompt_ignores_images_in_history(client):
-    """A gif six lines up has nothing to do with "who won the derby"."""
-    _, request = call(
-        client,
-        response(message(text_part("liverpool"))),
-        chat_message="@bro who won the derby",
-        messages=history(f"<sean>: {GIF}", "<sean>: @bro who won the derby"),
-    )
-    assert image_parts(request) == []
-    assert isinstance(request["input"][0]["content"], str)
-    assert client.vision_prompt not in request["instructions"]
-
-
-def test_image_prompt_with_no_image_in_history_attaches_nothing(client):
-    """Asking about a picture nobody posted must not invent one."""
-    _, request = call(
-        client,
-        response(message(text_part("what pic"))),
-        chat_message="@bro what is that pic",
-        messages=history("<sean>: @bro what is that pic"),
-    )
-    assert image_parts(request) == []
-
-
-def test_newest_images_win_and_are_capped(client):
-    """Only the most recent `VISION_MAX_IMAGES` are shipped, oldest of those first."""
-    urls = [f"https://i.imgur.com/{n}.png" for n in range(4)]
-    _, request = call(
-        client,
-        response(message(text_part("ok"))),
-        chat_message="@bro describe this",
-        messages=history(*[f"<sean>: {url}" for url in urls], "<sean>: @bro describe this"),
-    )
-    assert [part["image_url"] for part in image_parts(request)] == urls[-client.VISION_MAX_IMAGES :]
 
 
 def test_images_are_hoisted_onto_the_last_user_turn(client):
@@ -300,16 +235,6 @@ def test_attaching_images_does_not_mutate_the_caller_history(client):
     original = [dict(message) for message in messages]
     call(client, response(message(text_part("ok"))), chat_message="@bro what is that pic", messages=messages)
     assert messages == original
-
-
-def test_missing_chat_message_never_attaches_images(client):
-    """Without the triggering message there is no gate to apply, so vision stays off."""
-    _, request = call(
-        client,
-        response(message(text_part("ok"))),
-        messages=history(f"<sean>: {IMAGE}"),
-    )
-    assert image_parts(request) == []
 
 
 def test_unreadable_image_falls_back_to_text(client):
@@ -348,54 +273,6 @@ def test_bad_request_without_images_is_not_retried(client):
     assert client.client.responses.create.await_count == 1
 
 
-def test_quoted_image_is_still_readable(client):
-    """
-    Quoting the image you're asking about is the natural way to ask, so it stays eligible.
-
-    This differs from link reading on purpose, where a quote means "not my ask". The closing
-    backtick of the quote must not survive into the URL — an image URL is sent verbatim, so a
-    stray character makes it unfetchable rather than merely untidy.
-    """
-    quoted = f"@bro `<sean>: {IMAGE}` what is this pic"
-    assert OpenAIClient.image_urls(quoted) == [IMAGE]
-    _, request = call(client, response(message(text_part("a dog"))), chat_message=quoted)
-    assert [part["image_url"] for part in image_parts(request)] == [IMAGE]
-
-
-def test_duplicate_links_in_one_message_are_collapsed(client):
-    """The same image posted twice in one breath is one image, not two."""
-    assert OpenAIClient.image_urls(f"<sean>: {IMAGE} lol {IMAGE}") == [IMAGE]
-
-
-def test_a_repost_moves_an_image_back_to_newest(client):
-    """An image posted early and reposted later is recent again, and survives the cap."""
-    old_image, new_image = "https://i.imgur.com/old.png", "https://i.imgur.com/new.png"
-    _, request = call(
-        client,
-        response(message(text_part("ok"))),
-        chat_message="@bro describe this pic",
-        messages=history(
-            f"<sean>: {old_image}",
-            f"<bob>: {new_image}",
-            f"<sean>: {old_image} again",
-            "<sean>: @bro describe this pic",
-        ),
-    )
-    # Without the move-to-newest, the cap would have dropped the reposted image.
-    assert [part["image_url"] for part in image_parts(request)] == [new_image, old_image]
-
-
-def test_own_link_wins_over_older_images_in_history(client):
-    """The image in the prompt is the ask; an older one in history must not crowd it out."""
-    _, request = call(
-        client,
-        response(message(text_part("ok"))),
-        chat_message=f"@bro what is {IMAGE}",
-        messages=history(f"<bob>: {GIF}", f"<sean>: @bro what is {IMAGE}"),
-    )
-    assert [part["image_url"] for part in image_parts(request)] == [IMAGE]
-
-
 def test_history_with_no_user_turn_is_left_alone(client):
     """With nowhere valid to hang an image, the history is sent unchanged rather than corrupted."""
     messages = [{"role": "assistant", "content": f"here u go {IMAGE}"}]
@@ -406,18 +283,6 @@ def test_history_with_no_user_turn_is_left_alone(client):
         messages=messages,
     )
     assert request["input"] == messages
-    assert image_parts(request) == []
-
-
-def test_already_multimodal_history_entries_are_skipped(client):
-    """A caller who pre-built content parts must not crash the image scan."""
-    messages = [
-        {"role": "user", "content": [{"type": "input_text", "text": f"<bob>: {IMAGE}"}]},
-        {"role": "user", "content": "<sean>: @bro what is that pic"},
-    ]
-    _, request = call(
-        client, response(message(text_part("ok"))), chat_message="@bro what is that pic", messages=messages
-    )
     assert image_parts(request) == []
 
 

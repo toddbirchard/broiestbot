@@ -1,8 +1,8 @@
-"""Anthropic-backed LLM client: server-side fallbacks, `web_fetch` & `pause_turn` resumption."""
+"""Anthropic-backed LLM client: server-side fallbacks, `web_fetch`, vision & `pause_turn` resumption."""
 
-from typing import ClassVar, Optional, Type
+from typing import ClassVar, List, Optional, Type
 
-from anthropic import APIError, AsyncAnthropic, RateLimitError
+from anthropic import APIError, AsyncAnthropic, BadRequestError, RateLimitError
 
 from config import ANTHROPIC_API_KEY, ANTHROPIC_LLM_MODEL
 
@@ -22,6 +22,12 @@ class AnthropicClient(BaseLLMClient):
     # A server-side tool loop which hits its iteration cap stops with `pause_turn` and must be
     # re-sent to continue. Chat replies are latency-sensitive, so resumes are kept few.
     MAX_PAUSE_TURN_RESUMES = 2
+
+    # Vision. Claude fetches the image itself from a `url` source, same as `web_fetch` above, so
+    # `_attach_images` needs no local download step. `VISION_MAX_IMAGES` is inherited from
+    # `BaseLLMClient`. Unlike OpenAI there is no `detail` knob to shrink the token cost of a given
+    # image — cost instead scales with the image's own resolution — so the image cap is what keeps
+    # this bounded.
 
     LINK_TOOL_NAME: ClassVar[str] = "web_fetch"
     RATE_LIMIT_ERROR: ClassVar[Type[Exception]] = RateLimitError
@@ -53,8 +59,8 @@ class AnthropicClient(BaseLLMClient):
         :param max_tokens: Maximum number of tokens to generate, including thinking
         :param Optional[list] fetch_hosts: Hosts the LLM may read with the web fetch tool. Empty or
             omitted means the tool is not offered at all, so no link can be fetched.
-        :param Optional[str] chat_message: Unused — the link gate is already applied upstream, in
-            `fetch_hosts`. Accepted so both providers share one signature.
+        :param Optional[str] chat_message: The raw message which tagged the bot, used to decide
+            whether this prompt is about an image. Omitted means no image is ever attached.
         :param Optional[str] room_name: Room the prompt was sent from, used to pick that room's
             active persona.
 
@@ -62,6 +68,7 @@ class AnthropicClient(BaseLLMClient):
 
         :returns: str Generated response text
         """
+        images = self._vision_images(messages, chat_message)
         request = {
             "max_tokens": max_tokens,
             "system": self.system_prompt(fetch_hosts, room_name),
@@ -84,7 +91,10 @@ class AnthropicClient(BaseLLMClient):
                     "max_content_tokens": self.WEB_FETCH_MAX_CONTENT_TOKENS,
                 }
             ]
-        message = await self.client.beta.messages.create(**request)
+        if images:
+            request["messages"] = self._attach_images(messages, images)
+            request["system"] += self.vision_prompt
+        message = await self._create(request, images)
         for _ in range(self.MAX_PAUSE_TURN_RESUMES):
             if message.stop_reason != "pause_turn":
                 break
@@ -100,6 +110,68 @@ class AnthropicClient(BaseLLMClient):
         if raw_response:
             return self.format_response_for_html(raw_response)
         return None
+
+    async def _create(self, request: dict, images: List[str]):
+        """
+        Send the request, dropping the images rather than the whole reply if they're rejected.
+
+        An image URL is whatever somebody typed into chat: it can 404, sit behind hotlink
+        protection, or point at an HTML page which merely looked like an image. A source Claude
+        can't fetch answers with a 400 for the *request*, so without this a bad link costs the
+        user their answer instead of just the picture.
+
+        :param dict request: Fully-built request kwargs.
+        :param List[str] images: Images attached to it, if any.
+
+        :returns: Response returned by the Anthropic API.
+        """
+        try:
+            return await self.client.beta.messages.create(**request)
+        except BadRequestError as e:
+            if not images:
+                raise
+            # Imported lazily: `logger` imports `clients`, so a module-level import would cycle.
+            from logger import LOGGER
+
+            LOGGER.warning(f"Retrying LLM request without unreadable image(s) {images}: {e}")
+            request["messages"] = [dict(message) for message in request["messages"]]
+            for message in request["messages"]:
+                if not isinstance(message["content"], str):
+                    message["content"] = "\n".join(
+                        block["text"] for block in message["content"] if block["type"] == "text"
+                    )
+            request["system"] = request["system"].removesuffix(self.vision_prompt)
+            return await self.client.beta.messages.create(**request)
+
+    def _attach_images(self, messages, images: List[str]) -> list:
+        """
+        Hoist the images onto the turn which tagged the bot.
+
+        They are attached to the last *user* turn rather than rewritten into whichever message
+        carried the link, because the bot posts images too (`!gif`) and an `assistant` turn cannot
+        hold an image block. The caller's messages are left untouched.
+
+        :param messages: The formatted chat history, oldest first.
+        :param List[str] images: Image URLs to attach.
+
+        :returns list: A copy of the history with the images attached, or it unchanged if there is
+            no user turn to attach them to.
+        """
+        target = next(
+            (index for index in reversed(range(len(messages))) if messages[index].get("role") == "user"),
+            None,
+        )
+        if target is None:
+            return messages
+        attached = list(messages)
+        attached[target] = {
+            **messages[target],
+            "content": [
+                {"type": "text", "text": messages[target]["content"]},
+                *({"type": "image", "source": {"type": "url", "url": url}} for url in images),
+            ],
+        }
+        return attached
 
     @staticmethod
     def _reply_text(message) -> Optional[str]:
