@@ -68,7 +68,7 @@ CHATANGO_LMAO_ROOM = getenv("CHATANGO_LMAO_ROOM")
 
 # Chatango rooms to be joined by the bot
 CHATANGO_ROOMS = [
-    # CHATANGO_ACLEE_ROOM,
+    CHATANGO_ACLEE_ROOM,
     # CHATANGO_SIXERS_ROOM,
     # CHATANGO_PHILLIES_ROOM,
     # CHATANGO_FLYERS_ROOM,
@@ -872,6 +872,11 @@ FOOTY_LEAGUE_TEAM_FILTERS = {
     PRIMEIRA_LIGA_ID: [BENFICA_TEAM_ID],
     ELITESERIEN_LEAGUE_ID: [AALESUND_TEAM_ID],
 }
+
+# Friendlies fill international breaks & preseasons with youth sides (`England U17`, `Arsenal U21`),
+# which are dropped from every footy command. Reserve sides (`Barcelona B`, `Rangers II`) are kept.
+FOOTY_YOUTH_FILTERED_LEAGUES = (INT_FRIENDLIES_LEAGUE_ID, CLUB_FRIENDLIES_LEAGUE_ID)
+FOOTY_YOUTH_TEAM_REGEX = re.compile(r"\bU\d{2}\b")
 
 # Specify team IDs to be prioritized whe fetching starting XIs
 FOOTY_TEAMS_PRIORITY = {

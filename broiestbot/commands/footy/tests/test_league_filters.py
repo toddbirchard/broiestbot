@@ -9,6 +9,7 @@ from broiestbot.commands.footy.upcoming import upcoming_fixture_fetcher
 from broiestbot.commands.footy.util import (
     filter_league_fixtures,
     fixture_features_team,
+    fixture_features_youth_team,
     league_is_team_filtered,
 )
 from config import (
@@ -18,6 +19,7 @@ from config import (
     ELITESERIEN_LEAGUE_ID,
     EPL_LEAGUE_ID,
     FOOTY_LEAGUE_TEAM_FILTERS,
+    INT_FRIENDLIES_LEAGUE_ID,
     LIVERPOOL_TEAM_ID,
     PRIMEIRA_LIGA_ID,
 )
@@ -122,6 +124,61 @@ def test_club_friendlies_still_filtered_by_friendly_clubs():
     unknown_friendly = build_fixture(999999, 999998, CLUB_FRIENDLIES_LEAGUE_ID)
     fixtures = [liverpool_friendly, unknown_friendly]
     assert filter_league_fixtures(fixtures, CLUB_FRIENDLIES_LEAGUE_ID) == [liverpool_friendly]
+
+
+def build_named_fixture(home_team_name: str, away_team_name: str, league_id: int = INT_FRIENDLIES_LEAGUE_ID) -> dict:
+    """
+    Build a minimal fixture between two named sides.
+
+    :param str home_team_name: Name of the home side.
+    :param str away_team_name: Name of the away side.
+    :param int league_id: ID of the league the fixture belongs to.
+
+    :returns: dict
+    """
+    fixture = build_fixture(OTHER_TEAM_ID, ANOTHER_TEAM_ID, league_id)
+    fixture["teams"]["home"]["name"] = home_team_name
+    fixture["teams"]["away"]["name"] = away_team_name
+    return fixture
+
+
+@pytest.mark.parametrize(
+    "home_team_name,away_team_name,expected",
+    [
+        ("England U17", "Spain U17", True),
+        ("Arsenal U21", "Brighton", True),
+        ("Brazil", "Canada W U17", True),
+        ("England", "Spain", False),
+        ("Barcelona B", "Rangers II", False),
+        ("U Craiova 1948", "FC Schalke 04", False),
+    ],
+)
+def test_youth_teams_are_detected_by_age_group(home_team_name: str, away_team_name: str, expected: bool):
+    """A side named for an age group is a youth team; reserve & numbered club names are not."""
+    fixture = build_named_fixture(home_team_name, away_team_name)
+    assert fixture_features_youth_team(fixture) is expected
+
+
+def test_int_friendlies_drop_youth_fixtures():
+    """International friendlies between youth sides are discarded; senior ones are kept."""
+    senior = build_named_fixture("England", "Spain")
+    youth = build_named_fixture("England U19", "Spain U19")
+    assert filter_league_fixtures([senior, youth], INT_FRIENDLIES_LEAGUE_ID) == [senior]
+
+
+def test_club_friendlies_drop_youth_fixtures_of_friendly_clubs():
+    """A friendly club's youth side is discarded even though its team filter would keep it."""
+    senior = build_named_fixture("Liverpool", "Athletic Club", CLUB_FRIENDLIES_LEAGUE_ID)
+    youth = build_named_fixture("Liverpool U21", "Everton U21", CLUB_FRIENDLIES_LEAGUE_ID)
+    senior["teams"]["home"]["id"] = LIVERPOOL_TEAM_ID
+    youth["teams"]["home"]["id"] = LIVERPOOL_TEAM_ID
+    assert filter_league_fixtures([senior, youth], CLUB_FRIENDLIES_LEAGUE_ID) == [senior]
+
+
+def test_youth_fixtures_of_other_leagues_are_kept():
+    """Only friendlies are youth-filtered; a youth competition keeps its youth fixtures."""
+    youth = build_named_fixture("England U21", "Spain U21", EPL_LEAGUE_ID)
+    assert filter_league_fixtures([youth], EPL_LEAGUE_ID) == [youth]
 
 
 @pytest.mark.parametrize("fixtures", [None, []])

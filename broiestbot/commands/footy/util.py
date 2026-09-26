@@ -23,6 +23,8 @@ from config import (
     EUROS_LEAGUE_ID,
     EUROS_QUALIFIERS_ID,
     FOOTY_LEAGUE_TEAM_FILTERS,
+    FOOTY_YOUTH_FILTERED_LEAGUES,
+    FOOTY_YOUTH_TEAM_REGEX,
     INT_FRIENDLIES_LEAGUE_ID,
     METRIC_SYSTEM_USERS,
     MLS_LEAGUE_ID,
@@ -151,22 +153,39 @@ def fixture_features_team(fixture: dict, team_ids: Collection[int]) -> bool:
     return home_team_id in team_ids or away_team_id in team_ids
 
 
+def fixture_features_youth_team(fixture: dict) -> bool:
+    """
+    Determine whether either side of a fixture is a youth team, ie: `England U17`.
+
+    :param dict fixture: Single fixture's data.
+
+    :returns: bool
+    """
+    teams = fixture.get("teams") or {}
+    return any(FOOTY_YOUTH_TEAM_REGEX.search((teams.get(side) or {}).get("name") or "") for side in ("home", "away"))
+
+
 def filter_league_fixtures(fixtures: Optional[List[dict]], league_id: int) -> Optional[List[dict]]:
     """
-    Discard fixtures of a team-filtered league which don't feature a club we care about.
+    Discard fixtures of a league which aren't worth surfacing.
 
     Some leagues are only interesting for a handful of clubs: club friendlies span every
     club on earth, and the Primeira Liga is only followed for Benfica. Fixtures of a league
     listed in `FOOTY_LEAGUE_TEAM_FILTERS` are kept only when either side is one of that
-    league's clubs; fixtures of any other league pass through untouched.
+    league's clubs. Friendlies (`FOOTY_YOUTH_FILTERED_LEAGUES`) additionally drop any fixture
+    involving a youth team. Fixtures of any other league pass through untouched.
 
     :param Optional[List[dict]] fixtures: Fixtures fetched for a single league/cup.
     :param int league_id: ID of footy league/cup the fixtures belong to.
 
     :returns: Optional[List[dict]]
     """
+    if not fixtures:
+        return fixtures
+    if league_id in FOOTY_YOUTH_FILTERED_LEAGUES:
+        fixtures = [fixture for fixture in fixtures if not fixture_features_youth_team(fixture)]
     team_ids = FOOTY_LEAGUE_TEAM_FILTERS.get(league_id)
-    if not team_ids or not fixtures:
+    if not team_ids:
         return fixtures
     return [fixture for fixture in fixtures if fixture_features_team(fixture, team_ids)]
 
