@@ -80,7 +80,7 @@ def test_standings_are_resolved_to_names_and_sorted():
         (2, "Lewis Hamilton", 159),
         (3, "George Russell", 154),
     ]
-    assert standings[0]["team"] == "Mercedes AMG F1 Team"
+    assert standings[0]["team"] == "Mercedes"
 
 
 def test_driver_roster_is_cached():

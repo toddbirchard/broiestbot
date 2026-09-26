@@ -1,8 +1,8 @@
 """Resolve F1 driver IDs to names, codes & teams."""
 
-from typing import Dict
+from typing import Dict, Optional
 
-from config import F1_SEASONS_ENDPOINT
+from config import F1_SEASONS_ENDPOINT, F1_TEAM_SHORT_NAMES
 
 from .races import fetch_all_pages
 
@@ -34,7 +34,22 @@ async def driver_roster(season_id: str) -> Dict[str, dict]:
         roster[driver_id] = {
             "name": name or None,
             "tla": driver.get("tla"),
-            "team": team.get("shortName"),
+            "team": short_team_name(team.get("shortName")),
         }
     _DRIVER_ROSTERS[season_id] = roster
     return roster
+
+
+def short_team_name(team: Optional[str]) -> Optional[str]:
+    """
+    Name a team goes by in chat, ie: `Mercedes` rather than `Mercedes AMG F1 Team`.
+
+    Teams missing from the mapping (a newcomer, a rebrand) just lose the `F1 Team` boilerplate.
+
+    :param Optional[str] team: Team name as reported by the API.
+
+    :returns: Optional[str]
+    """
+    if not team:
+        return team
+    return F1_TEAM_SHORT_NAMES.get(team, team.removesuffix(" F1 Team"))

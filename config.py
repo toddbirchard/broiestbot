@@ -972,9 +972,28 @@ F1_MAX_PAGES = 20
 F1_STANDINGS_LIMIT = 10
 # Number of drivers to list on the starting grid of an upcoming grand prix.
 F1_GRID_LIMIT = 10
+# Number of drivers to list in the results of a grand prix which has just been run.
+F1_RESULTS_LIMIT = 10
+
+# Team names as reported by the API, mapped to the short names they go by in chat.
+F1_TEAM_SHORT_NAMES = {
+    "Alpine F1 Team": "Alpine",
+    "Aston Martin F1 Team": "Aston Martin",
+    "Audi F1 Team": "Audi",
+    "Cadillac F1 Team": "Cadillac",
+    "Haas F1 Team": "Haas",
+    "McLaren F1 Team": "McLaren",
+    "Mercedes AMG F1 Team": "Mercedes",
+    "Racing Bulls": "RB",
+    "Red Bull Racing": "Red Bull",
+    "Scuderia Ferrari": "Ferrari",
+    "Williams F1 Team": "Williams",
+}
 
 # A grand prix whose race session started within this many hours is considered live (red flags & all).
 F1_RACE_LIVE_WINDOW_HOURS = 4
+# A grand prix whose race session started within this many hours reports its results rather than the next race.
+F1_RECENT_RACE_WINDOW_HOURS = 24
 
 # Driver nationalities as reported by the API, mapped to ISO 3166-1 alpha-2 codes.
 F1_NATIONALITY_COUNTRY_CODES = {

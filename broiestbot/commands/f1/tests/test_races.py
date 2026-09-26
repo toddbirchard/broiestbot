@@ -9,6 +9,7 @@ from broiestbot.commands.f1.races import (
     fetch_season_races,
     find_live_race,
     find_next_race,
+    find_recent_race,
     is_race_abandoned,
     is_race_finished,
     is_race_live,
@@ -126,6 +127,32 @@ def test_next_race_is_the_soonest_scheduled_race(race_completed, race_upcoming, 
 def test_no_next_race_once_the_season_ends(race_completed):
     """A season of finished races has no next race."""
     assert find_next_race([race_completed], datetime(2026, 12, 20, tzinfo=timezone.utc)) is None
+
+
+def test_recent_race_is_found_the_evening_after(race_completed, race_upcoming):
+    """A race run earlier the same day is picked out as the most recent one."""
+    races = [race_completed, race_upcoming]
+    assert find_recent_race(races, datetime(2026, 3, 1, 20, tzinfo=timezone.utc)) == race_completed
+
+
+def test_recent_race_is_found_as_soon_as_it_finishes(race_completed):
+    """A race flagged as finished is recent even while it's still within the live window."""
+    assert find_recent_race([race_completed], datetime(2026, 3, 1, 7, tzinfo=timezone.utc)) == race_completed
+
+
+def test_live_race_isnt_recent(race_live):
+    """A race still being run hasn't got results to report yet."""
+    assert find_recent_race([race_live], datetime(2026, 3, 8, 16, tzinfo=timezone.utc)) is None
+
+
+def test_race_is_no_longer_recent_a_day_later(race_completed):
+    """A race run more than a day ago is old news."""
+    assert find_recent_race([race_completed], datetime(2026, 3, 2, 6, tzinfo=timezone.utc)) is None
+
+
+def test_cancelled_race_is_never_recent(race_cancelled):
+    """A race which was called off has no results to report."""
+    assert find_recent_race([race_cancelled], datetime(2026, 3, 22, 20, tzinfo=timezone.utc)) is None
 
 
 # ---------------------------------------------------------------------------

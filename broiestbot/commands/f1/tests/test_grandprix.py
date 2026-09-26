@@ -58,6 +58,140 @@ def test_live_race_reports_championship(race_live, circuit_bahrain):
 
 
 # ---------------------------------------------------------------------------
+# Grand prix which has just been run
+# ---------------------------------------------------------------------------
+
+RACE_RESULTS = [
+    {
+        "position": 1,
+        "name": "George Russell",
+        "team": "Mercedes AMG F1 Team",
+        "time": "1:38:02.143",
+        "gap": "0",
+        "laps_behind": 0,
+        "status": "Ok",
+    },
+    {
+        "position": 2,
+        "name": "Max Verstappen",
+        "team": "Red Bull Racing",
+        "time": "1:38:02.339",
+        "gap": "0.196",
+        "laps_behind": 0,
+        "status": "Ok",
+    },
+    {
+        "position": 3,
+        "name": "Carlos Sainz",
+        "team": "Williams F1 Team",
+        "time": "1:39:40.001",
+        "gap": "0",
+        "laps_behind": 1,
+        "status": "Ok",
+    },
+    {
+        "position": 4,
+        "name": "Lewis Hamilton",
+        "team": "Scuderia Ferrari",
+        "time": "1:07:36.051",
+        "gap": "0",
+        "status": "Dnf",
+    },
+]
+
+
+def test_recent_race_reports_results_and_next_race(race_completed, race_upcoming):
+    """A race run within the last day reports its finishing order & the race after it."""
+    with (
+        patch(
+            "broiestbot.commands.f1.grandprix.fetch_season_races",
+            new_callable=AsyncMock,
+            return_value=[race_completed, race_upcoming],
+        ),
+        patch(
+            "broiestbot.commands.f1.grandprix.fetch_circuit",
+            new_callable=AsyncMock,
+            return_value=race_completed["circuit"],
+        ),
+        patch(
+            "broiestbot.commands.f1.grandprix.fetch_race_results", new_callable=AsyncMock, return_value=RACE_RESULTS
+        ) as mock_results,
+    ):
+        result = asyncio.run(f1_grand_prix_at(datetime(2026, 3, 1, 20, tzinfo=timezone.utc)))
+
+    mock_results.assert_awaited_once_with("gp-australia", 2026)
+    assert "RESULTS: AUSTRALIAN GRAND PRIX" in result
+    assert "🇦🇺" in result
+    assert "<b>1.</b> 🇬🇧 George Russell <i>(Mercedes AMG F1 Team)</i> — 1:38:02.143" in result
+    assert "<b>2.</b> 🇳🇱 Max Verstappen <i>(Red Bull Racing)</i> — +0.196s" in result
+    assert "<b>3.</b> 🇪🇸 Carlos Sainz <i>(Williams F1 Team)</i> — +1 lap" in result
+    assert "<b>4.</b> 🇬🇧 Lewis Hamilton <i>(Scuderia Ferrari)</i> — <i>DNF</i>" in result
+    assert "Next up: <b>Bahrain Grand Prix</b>" in result
+    assert "(in 6 days)" in result
+
+
+def test_final_race_of_the_season_reports_results(race_completed):
+    """The season finale still reports its results, just without a race to look ahead to."""
+    with (
+        patch(
+            "broiestbot.commands.f1.grandprix.fetch_season_races", new_callable=AsyncMock, return_value=[race_completed]
+        ),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", new_callable=AsyncMock, return_value={}),
+        patch("broiestbot.commands.f1.grandprix.fetch_race_results", new_callable=AsyncMock, return_value=RACE_RESULTS),
+    ):
+        result = asyncio.run(f1_grand_prix_at(datetime(2026, 3, 1, 20, tzinfo=timezone.utc)))
+
+    assert "RESULTS: AUSTRALIAN GRAND PRIX" in result
+    assert "Next up" not in result
+    assert "season is over" not in result
+
+
+def test_unpublished_results_fall_back_to_next_race(race_completed, race_upcoming, circuit_bahrain):
+    """Until a race's results are published, the next race is reported instead."""
+    with (
+        patch(
+            "broiestbot.commands.f1.grandprix.fetch_season_races",
+            new_callable=AsyncMock,
+            return_value=[race_completed, race_upcoming],
+        ),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", new_callable=AsyncMock, return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_race_results", new_callable=AsyncMock, return_value=[]),
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", new_callable=AsyncMock, return_value=[]),
+        patch(
+            "broiestbot.commands.f1.grandprix.fetch_driver_standings",
+            new_callable=AsyncMock,
+            return_value=DRIVER_STANDINGS,
+        ),
+    ):
+        result = asyncio.run(f1_grand_prix_at(datetime(2026, 3, 1, 20, tzinfo=timezone.utc)))
+
+    assert "NEXT UP: BAHRAIN GRAND PRIX" in result
+
+
+def test_race_over_a_day_old_doesnt_report_results(race_completed, race_upcoming, circuit_bahrain):
+    """Once a day has passed since the last race, the next race takes over again."""
+    with (
+        patch(
+            "broiestbot.commands.f1.grandprix.fetch_season_races",
+            new_callable=AsyncMock,
+            return_value=[race_completed, race_upcoming],
+        ),
+        patch("broiestbot.commands.f1.grandprix.fetch_circuit", new_callable=AsyncMock, return_value=circuit_bahrain),
+        patch("broiestbot.commands.f1.grandprix.fetch_race_results", new_callable=AsyncMock) as mock_results,
+        patch("broiestbot.commands.f1.grandprix.fetch_starting_grid", new_callable=AsyncMock, return_value=[]),
+        patch(
+            "broiestbot.commands.f1.grandprix.fetch_driver_standings",
+            new_callable=AsyncMock,
+            return_value=DRIVER_STANDINGS,
+        ),
+    ):
+        result = asyncio.run(f1_grand_prix_at(datetime(2026, 3, 2, 6, tzinfo=timezone.utc)))
+
+    mock_results.assert_not_awaited()
+    assert "NEXT UP: BAHRAIN GRAND PRIX" in result
+
+
+# ---------------------------------------------------------------------------
 # Upcoming grand prix
 # ---------------------------------------------------------------------------
 

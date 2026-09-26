@@ -13,6 +13,7 @@ from config import (
     F1_HTTP_HEADERS,
     F1_MAX_PAGES,
     F1_RACE_LIVE_WINDOW_HOURS,
+    F1_RECENT_RACE_WINDOW_HOURS,
     F1_SEASONS_ENDPOINT,
 )
 
@@ -250,6 +251,30 @@ def find_live_race(races: List[dict], now: datetime) -> Optional[dict]:
     live_races = [race for race in races if is_race_live(race, now)]
     if live_races:
         return sorted(live_races, key=lambda race: parse_race_date(race.get("date")) or now)[-1]
+    return None
+
+
+def find_recent_race(races: List[dict], now: datetime) -> Optional[dict]:
+    """
+    Find the grand prix run most recently, provided its race started within the last day or so.
+
+    Races which are still live are skipped, as are those called off; a race is picked up here
+    as soon as it's flagged as finished, or once it falls out of the live window regardless.
+
+    :param List[dict] races: All races in a season.
+    :param datetime now: Current UTC time.
+
+    :returns: Optional[dict]
+    """
+    recent_races = []
+    for race in races:
+        if is_race_abandoned(race) or is_race_live(race, now):
+            continue
+        start_time = parse_race_date(race.get("date"))
+        if start_time and start_time <= now <= start_time + timedelta(hours=F1_RECENT_RACE_WINDOW_HOURS):
+            recent_races.append((start_time, race))
+    if recent_races:
+        return max(recent_races, key=lambda race: race[0])[1]
     return None
 
 
