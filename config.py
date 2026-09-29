@@ -314,6 +314,20 @@ IMAGE_URL_HOSTS = (
     "pbs.twimg.com",
     "cdn.discordapp.com",
     "media.discordapp.net",
+    "storage.googleapis.com",
+    "lmao.love",
+    "static.klipy.com",
+    "i.ytimg.com",
+    "i.gyazo.com",
+    "i.imgflip.com",
+    "preview.redd.it",
+    "external-preview.redd.it",
+    "i.pinimg.com",
+    "media.tumblr.com",
+    "fbcdn.net",
+    "cdninstagram.com",
+    "static-cdn.jtvnw.net",
+    "cdn.hackersandslackers.com",
 )
 
 # Marks an `@bro` prompt as being *about* an image, which is what lets the bot go looking for one
