@@ -1,9 +1,8 @@
 """Fetch lineups before kickoff or during the match."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from typing import List, Optional
 
-import pytz
 from aiohttp import ClientError
 from emoji import emojize
 from http_client import get_http_session
@@ -14,6 +13,8 @@ from config import (
     FOOTY_HTTP_HEADERS,
     FOOTY_XI_ENDPOINT,
     FOOTY_XI_LEAGUES,
+    FOOTY_XI_LIVE_STATUSES,
+    FOOTY_XI_UPCOMING_WINDOW,
 )
 
 from .util import (
@@ -42,7 +43,7 @@ async def footy_team_lineups(room: str, username: str) -> Optional[str]:
         tz_name = await get_preferred_timezone(room, username)
         for league_name, league_id in FOOTY_XI_LEAGUES.items():
             league_fixtures = await get_today_live_or_upcoming_fixtures(league_id, room, tz_name)
-            league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures, tz_name)
+            league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures)
             if bool(league_fixtures_with_lineups) and i <= 3:
                 i += 1
                 today_fixture_lineups += emojize(f"<b>{league_name}</b>\n", language="en")
@@ -138,7 +139,7 @@ async def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
             "season": get_season_year(league_id),
-            "status": "NS-1H-2H",
+            "status": "-".join(("NS", *FOOTY_XI_LIVE_STATUSES)),
             "timezone": tz_name,
         }
         session = await get_http_session()
@@ -188,25 +189,29 @@ async def build_fixture_summary(
 
 
 @LOGGER.catch
-def filter_fixtures_with_lineups(fixtures: List[dict], tz_name: str):
+def filter_fixtures_with_lineups(fixtures: Optional[List[dict]], now: Optional[datetime] = None) -> List[dict]:
     """
-    Filter fixtures lacking lineup data.
+    Keep fixtures which are live, or yet to start but kicking off within `FOOTY_XI_UPCOMING_WINDOW`.
 
-    :param List[dict] fixtures: List of fixtures for a given league.
-    :param str tz_name: Timezone of user who triggered the command.
+    Fixtures which have ended (or were postponed, cancelled, etc.) are dropped, as are
+    upcoming fixtures further out than the window.
 
-    :returns: List[Optional[dict]]
+    :param Optional[List[dict]] fixtures: List of fixtures for a given league.
+    :param Optional[datetime] now: Timezone-aware current time; defaults to the present.
+
+    :returns: List[dict]
     """
-    try:
-        fixtures_with_lineups = []
-        for fixture in fixtures:
-            start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z").now(
-                pytz.timezone(tz_name)
-            )
-            now_time = datetime.now(pytz.timezone(tz_name))
-            footy_xi_time = start_time - timedelta(hours=1)
-            if now_time >= footy_xi_time:
+    now = now or datetime.now(timezone.utc)
+    fixtures_with_lineups = []
+    for fixture in fixtures or []:
+        try:
+            status = fixture["fixture"]["status"]["short"]
+            if status in FOOTY_XI_LIVE_STATUSES:
                 fixtures_with_lineups.append(fixture)
-        return fixtures_with_lineups
-    except Exception as e:
-        LOGGER.error(f"Unexpected error when filtering fixtures with lineups: {e}")
+            elif status == "NS":
+                start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
+                if start_time - now <= FOOTY_XI_UPCOMING_WINDOW:
+                    fixtures_with_lineups.append(fixture)
+        except (KeyError, TypeError, ValueError) as e:
+            LOGGER.error(f"Unexpected error when filtering fixtures with lineups: {e}")
+    return fixtures_with_lineups

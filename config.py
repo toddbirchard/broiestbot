@@ -1,6 +1,7 @@
 """Bot configuration variables."""
 
 import re
+from datetime import timedelta
 from os import environ, getenv, path
 
 import pytz
@@ -683,6 +684,12 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":globe_showing_Americas: CONMEBOL LIBERTADORES": CONMEBOL_LIBERTADORES_ID,
     # ":globe_showing_Americas: CONMEBOL SUDAMERICANA": CONMEBOL_SUDAMERICANA_ID,
 }
+
+# `!footyxi` shows fixtures in progress, plus fixtures yet to start which kick off within this window
+FOOTY_XI_UPCOMING_WINDOW = timedelta(hours=1)
+
+# API-Football statuses for a fixture which is in progress (never one which has ended)
+FOOTY_XI_LIVE_STATUSES = ("1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT", "LIVE")
 
 # Footy leagues with "lineups" enabled
 FOOTY_XI_LEAGUES = {
