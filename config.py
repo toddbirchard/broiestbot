@@ -1,6 +1,7 @@
 """Bot configuration variables."""
 
 import re
+from datetime import timedelta
 from os import environ, getenv, path
 
 import pytz
@@ -36,6 +37,11 @@ CHATANGO_BOT_MENTION_REGEX = re.compile(
 # The quoted half is somebody else's words, so it's stripped before mention detection: without this,
 # quoting the bot reads as an `@broiestbot` mention & the bot answers a prompt nobody wrote.
 CHATANGO_QUOTE_REGEX = re.compile(r"@[^\s:`]+:\s*`.*?`", re.DOTALL)
+
+# `chatango-lib` blindly slices any message longer than 2800 characters, mid-tag and mid-line. Commands
+# whose replies can run long split them on their own boundaries first, keeping each part under this length.
+CHATANGO_MESSAGE_MAX_LENGTH = 2400
+
 CHATANGO_USERS = {
     "BROIESTBOT": {
         "USERNAME": getenv("CHATANGO_BOT_USERNAME"),
@@ -684,6 +690,15 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":globe_showing_Americas: CONMEBOL SUDAMERICANA": CONMEBOL_SUDAMERICANA_ID,
 }
 
+# `!footyxi` shows fixtures in progress, plus fixtures yet to start which kick off within this window
+FOOTY_XI_UPCOMING_WINDOW = timedelta(hours=1)
+
+# Most leagues `!footyxi` will show lineups for in one reply
+FOOTY_XI_MAX_LEAGUES = 4
+
+# API-Football statuses for a fixture which is in progress (never one which has ended)
+FOOTY_XI_LIVE_STATUSES = ("1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT", "LIVE")
+
 # Footy leagues with "lineups" enabled
 FOOTY_XI_LEAGUES = {
     # ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
@@ -858,6 +873,7 @@ SCOTLAND_INT_TEAM_ID = 1108
 FRANCE_INT_TEAM_ID = 2
 GERMANY_INT_TEAM_ID = 25
 SPAIN_INT_TEAM_ID = 9
+PORTUGAL_INT_TEAM_ID = 27
 
 # Footy clubs to fetch friendlies for
 FOOTY_FRIENDLY_CLUBS = [
@@ -878,11 +894,21 @@ FOOTY_FRIENDLY_CLUBS = [
     ATLETICO_MADRID_TEAM_ID,
 ]
 
+# National (senior men's) teams to fetch international friendlies for
+FOOTY_FRIENDLY_NATIONS = [
+    USA_INT_TEAM_ID,
+    ENGLAND_INT_TEAM_ID,
+    NORWAY_INT_TEAM_ID,
+    SPAIN_INT_TEAM_ID,
+    PORTUGAL_INT_TEAM_ID,
+]
+
 # Leagues whose fixtures are only worth surfacing when a club we care about is involved.
 # Fixtures of a league listed here are discarded unless one of its teams is playing;
 # every other league passes through unfiltered.
 FOOTY_LEAGUE_TEAM_FILTERS = {
     CLUB_FRIENDLIES_LEAGUE_ID: FOOTY_FRIENDLY_CLUBS,
+    INT_FRIENDLIES_LEAGUE_ID: FOOTY_FRIENDLY_NATIONS,
     PRIMEIRA_LIGA_ID: [BENFICA_TEAM_ID],
     ELITESERIEN_LEAGUE_ID: [AALESUND_TEAM_ID],
 }

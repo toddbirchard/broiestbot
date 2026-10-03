@@ -17,11 +17,14 @@ from config import (
     BENFICA_TEAM_ID,
     CLUB_FRIENDLIES_LEAGUE_ID,
     ELITESERIEN_LEAGUE_ID,
+    ENGLAND_INT_TEAM_ID,
     EPL_LEAGUE_ID,
+    FOOTY_FRIENDLY_NATIONS,
     FOOTY_LEAGUE_TEAM_FILTERS,
     INT_FRIENDLIES_LEAGUE_ID,
     LIVERPOOL_TEAM_ID,
     PRIMEIRA_LIGA_ID,
+    SPAIN_INT_TEAM_ID,
 )
 from tests.aiohttp_mocks import FakeResponse, patch_http_session
 
@@ -163,7 +166,29 @@ def test_int_friendlies_drop_youth_fixtures():
     """International friendlies between youth sides are discarded; senior ones are kept."""
     senior = build_named_fixture("England", "Spain")
     youth = build_named_fixture("England U19", "Spain U19")
+    for fixture in (senior, youth):
+        fixture["teams"]["home"]["id"] = ENGLAND_INT_TEAM_ID
+        fixture["teams"]["away"]["id"] = SPAIN_INT_TEAM_ID
     assert filter_league_fixtures([senior, youth], INT_FRIENDLIES_LEAGUE_ID) == [senior]
+
+
+@pytest.mark.parametrize("nation_id", FOOTY_FRIENDLY_NATIONS)
+@pytest.mark.parametrize("home", [True, False], ids=["home", "away"])
+def test_int_friendlies_keep_fixtures_of_friendly_nations(nation_id: int, home: bool):
+    """A friendly featuring one of `FOOTY_FRIENDLY_NATIONS`, home or away, is kept."""
+    fixture = (
+        build_fixture(nation_id, OTHER_TEAM_ID, INT_FRIENDLIES_LEAGUE_ID)
+        if home
+        else build_fixture(OTHER_TEAM_ID, nation_id, INT_FRIENDLIES_LEAGUE_ID)
+    )
+    assert filter_league_fixtures([fixture], INT_FRIENDLIES_LEAGUE_ID) == [fixture]
+
+
+def test_int_friendlies_drop_fixtures_without_friendly_nations():
+    """A friendly between two nations nobody follows (e.g. Russia v Namibia) is discarded."""
+    england_friendly = build_fixture(ENGLAND_INT_TEAM_ID, OTHER_TEAM_ID, INT_FRIENDLIES_LEAGUE_ID)
+    other_friendly = build_named_fixture("Russia", "Namibia")
+    assert filter_league_fixtures([england_friendly, other_friendly], INT_FRIENDLIES_LEAGUE_ID) == [england_friendly]
 
 
 def test_club_friendlies_drop_youth_fixtures_of_friendly_clubs():

@@ -1,19 +1,22 @@
 """Fetch lineups before kickoff or during the match."""
 
-from datetime import datetime, timedelta
-from typing import List, Optional
+from datetime import datetime, timezone
+from typing import List, Optional, Tuple
 
-import pytz
 from aiohttp import ClientError
 from emoji import emojize
 from http_client import get_http_session
 from logger import LOGGER
 
 from config import (
+    CHATANGO_MESSAGE_MAX_LENGTH,
     FOOTY_FIXTURES_ENDPOINT,
     FOOTY_HTTP_HEADERS,
     FOOTY_XI_ENDPOINT,
     FOOTY_XI_LEAGUES,
+    FOOTY_XI_LIVE_STATUSES,
+    FOOTY_XI_MAX_LEAGUES,
+    FOOTY_XI_UPCOMING_WINDOW,
 )
 
 from .util import (
@@ -25,42 +28,79 @@ from .util import (
     get_season_year,
 )
 
+LEAGUE_SEPARATOR = "\n----------------------\n\n"
+
 
 @LOGGER.catch
-async def footy_team_lineups(room: str, username: str) -> Optional[str]:
+async def footy_team_lineups(room: str, username: str) -> Optional[List[str]]:
     """
     Fetch starting lineups by team for immediate or live fixtures.
+
+    A matchday's lineups easily outgrow a single Chatango message, so the reply is a list of
+    messages split between fixtures (see `pack_lineup_messages`), each to be sent in turn.
 
     :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
 
-    :returns: str
+    :returns: Optional[List[str]]
     """
     try:
-        i = 0
-        today_fixture_lineups = "\n\n\n"
+        leagues = []
         tz_name = await get_preferred_timezone(room, username)
         for league_name, league_id in FOOTY_XI_LEAGUES.items():
+            if len(leagues) >= FOOTY_XI_MAX_LEAGUES:
+                break
             league_fixtures = await get_today_live_or_upcoming_fixtures(league_id, room, tz_name)
-            league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures, tz_name)
-            if bool(league_fixtures_with_lineups) and i <= 3:
-                i += 1
-                today_fixture_lineups += emojize(f"<b>{league_name}</b>\n", language="en")
-                for fixture_xi in league_fixtures_with_lineups:
-                    if bool(fixture_xi):
-                        fixture_id = fixture_xi["fixture"]["id"]
-                        fixture_summary = await build_fixture_summary(fixture_xi, room, username, tz_name)
-                        fixture_lineups = await fetch_lineups_per_fixture(fixture_id)
-                        if fixture_lineups == []:
-                            today_fixture_lineups += f"{fixture_summary} \
-                                <i>(Lineups not yet available)</i>\n\n"
-                        else:
-                            today_fixture_lineups += f"{fixture_summary} \n \
-                                {get_fixture_xis(fixture_lineups)}\n\n"
-                today_fixture_lineups += "\n\n----------------------\n\n"
-        return today_fixture_lineups.rstrip("\n\n----------------------\n\n")
+            league_fixtures_with_lineups = filter_fixtures_with_lineups(league_fixtures)
+            if not league_fixtures_with_lineups:
+                continue
+            fixture_blocks = []
+            for fixture_xi in league_fixtures_with_lineups:
+                fixture_summary = await build_fixture_summary(fixture_xi, room, username, tz_name)
+                fixture_lineups = await fetch_lineups_per_fixture(fixture_xi["fixture"]["id"])
+                fixture_xis = get_fixture_xis(fixture_lineups) if fixture_lineups else None
+                if fixture_xis:
+                    fixture_blocks.append(f"{fixture_summary}{fixture_xis}\n")
+                else:
+                    fixture_blocks.append(f"{fixture_summary}<i>(Lineups not yet available)</i>\n\n")
+            leagues.append((emojize(f"<b>{league_name}</b>\n", language="en"), fixture_blocks))
+        return pack_lineup_messages(leagues)
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy XIs: {e}")
+
+
+def pack_lineup_messages(
+    leagues: List[Tuple[str, List[str]]], max_length: int = CHATANGO_MESSAGE_MAX_LENGTH
+) -> List[str]:
+    """
+    Pack each league's fixture lineups into as few messages as fit under `max_length`.
+
+    `chatango-lib` slices an over-long message at a fixed character count, which cuts a
+    lineup (and its HTML tags) in half. Splitting only *between* fixtures keeps every
+    lineup whole. A league whose fixtures spill into the next message has its header
+    repeated there, so no message opens with an unlabelled fixture.
+
+    :param List[Tuple[str, List[str]]] leagues: League header paired with its rendered fixture blocks.
+    :param int max_length: Longest message to emit.
+
+    :returns: List[str]
+    """
+    messages = []
+    message = ""
+    for league_header, fixture_blocks in leagues:
+        for i, fixture_block in enumerate(fixture_blocks):
+            if i == 0:
+                prefix = f"{LEAGUE_SEPARATOR if message else ''}{league_header}"
+            else:
+                prefix = "" if message else league_header
+            if message and len(message) + len(prefix) + len(fixture_block) > max_length:
+                messages.append(message)
+                message = ""
+                prefix = league_header
+            message += prefix + fixture_block
+    if message:
+        messages.append(message)
+    return [message.rstrip("\n") for message in messages]
 
 
 @LOGGER.catch
@@ -102,7 +142,7 @@ def get_fixture_xis(teams: dict) -> Optional[str]:
                 continue
             team_name = team["team"]["name"]
             formation = team["formation"]
-            coach = team["coach"]["name"]
+            coach = f" ({team['coach']['name']})" if team["coach"].get("name") else ""
             emoji = ":stadium:"
             players = "\n".join(
                 [
@@ -112,7 +152,7 @@ def get_fixture_xis(teams: dict) -> Optional[str]:
             )
             if i != 0:
                 emoji = ":airplane:"
-            lineups_response += emojize(f"<b>- {emoji} {team_name} {formation} ({coach})</b>\n", language="en")
+            lineups_response += emojize(f"<b>- {emoji} {team_name} {formation}{coach}</b>\n", language="en")
             lineups_response += f"{players}\n"
         return lineups_response
     except KeyError as e:
@@ -138,7 +178,7 @@ async def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
             "season": get_season_year(league_id),
-            "status": "NS-1H-2H",
+            "status": "-".join(("NS", *FOOTY_XI_LIVE_STATUSES)),
             "timezone": tz_name,
         }
         session = await get_http_session()
@@ -181,32 +221,36 @@ async def build_fixture_summary(
         if status == "NS":
             return f"<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({display_date.replace('<b>Today</b>, ', '')})</i>\n"
         if status in ("1H", "2H"):
-            return f'<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({elapsed}</i>")\n'
+            return f'<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({elapsed}")</i>\n'
         return f"<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({status_detail})</i>\n"
     except Exception as e:
         LOGGER.error(f"Unexpected error when parsing footy fixture summaries for footyXI: {e}")
 
 
 @LOGGER.catch
-def filter_fixtures_with_lineups(fixtures: List[dict], tz_name: str):
+def filter_fixtures_with_lineups(fixtures: Optional[List[dict]], now: Optional[datetime] = None) -> List[dict]:
     """
-    Filter fixtures lacking lineup data.
+    Keep fixtures which are live, or yet to start but kicking off within `FOOTY_XI_UPCOMING_WINDOW`.
 
-    :param List[dict] fixtures: List of fixtures for a given league.
-    :param str tz_name: Timezone of user who triggered the command.
+    Fixtures which have ended (or were postponed, cancelled, etc.) are dropped, as are
+    upcoming fixtures further out than the window.
 
-    :returns: List[Optional[dict]]
+    :param Optional[List[dict]] fixtures: List of fixtures for a given league.
+    :param Optional[datetime] now: Timezone-aware current time; defaults to the present.
+
+    :returns: List[dict]
     """
-    try:
-        fixtures_with_lineups = []
-        for fixture in fixtures:
-            start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z").now(
-                pytz.timezone(tz_name)
-            )
-            now_time = datetime.now(pytz.timezone(tz_name))
-            footy_xi_time = start_time - timedelta(hours=1)
-            if now_time >= footy_xi_time:
+    now = now or datetime.now(timezone.utc)
+    fixtures_with_lineups = []
+    for fixture in fixtures or []:
+        try:
+            status = fixture["fixture"]["status"]["short"]
+            if status in FOOTY_XI_LIVE_STATUSES:
                 fixtures_with_lineups.append(fixture)
-        return fixtures_with_lineups
-    except Exception as e:
-        LOGGER.error(f"Unexpected error when filtering fixtures with lineups: {e}")
+            elif status == "NS":
+                start_time = datetime.strptime(fixture["fixture"]["date"], "%Y-%m-%dT%H:%M:%S%z")
+                if start_time - now <= FOOTY_XI_UPCOMING_WINDOW:
+                    fixtures_with_lineups.append(fixture)
+        except (KeyError, TypeError, ValueError) as e:
+            LOGGER.error(f"Unexpected error when filtering fixtures with lineups: {e}")
+    return fixtures_with_lineups

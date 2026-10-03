@@ -2,7 +2,7 @@
 
 import asyncio
 import re
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import chatango
 from chatango import Room, RoomMessage, User
@@ -201,7 +201,7 @@ class Bot(chatango.Client):
         room_name: Optional[str] = None,
         user_name: Optional[str] = None,
         bot_username: Optional[str] = None,
-    ) -> Optional[str]:
+    ) -> Optional[Union[str, List[str]]]:
         """
         Construct a message response based on command type and arguments.
 
@@ -217,7 +217,7 @@ class Bot(chatango.Client):
         :param Optional[str] user_name: User who triggered command.
         :param Optional[str] bot_username: Bot's username in the room.
 
-        :returns: Optional[str]
+        :returns: Optional[Union[str, List[str]]] — a list when the reply is split across several messages.
         """
         if cmd_type == "basic":
             return basic_message(content)
@@ -566,8 +566,10 @@ class Bot(chatango.Client):
                 user_name=user_name,
                 bot_username=self.username.lower(),
             )
-            if response:
-                await room.send_message(response, use_html=True)
+            # A handler whose reply can outgrow one Chatango message returns it pre-split
+            for part in [response] if isinstance(response, str) else response or []:
+                if part:
+                    await room.send_message(part, use_html=True)
         else:
             await self._gif_fallback(chat_message, room)
 
