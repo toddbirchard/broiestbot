@@ -4,7 +4,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from broiestbot.commands.footy.lineups import filter_fixtures_with_lineups
+from broiestbot.commands.footy.lineups import (
+    LEAGUE_SEPARATOR,
+    filter_fixtures_with_lineups,
+    pack_lineup_messages,
+)
 
 NOW = datetime(2026, 10, 3, 15, 0, tzinfo=timezone.utc)
 
@@ -60,3 +64,39 @@ def test_missing_fixtures_yield_empty_list():
 def test_malformed_fixture_is_skipped():
     good = _fixture("1H", NOW)
     assert filter_fixtures_with_lineups([{"fixture": {}}, good], NOW) == [good]
+
+
+def _block(name: str, length: int = 100) -> str:
+    """A rendered fixture block of roughly `length` characters."""
+    return f"<b>{name}</b>\n" + "x" * (length - len(name) - 9) + "\n"
+
+
+def test_lineups_fitting_one_message_stay_together():
+    messages = pack_lineup_messages([("<b>EPL</b>\n", [_block("A")]), ("<b>UCL</b>\n", [_block("B")])], 1000)
+    assert messages == [f"<b>EPL</b>\n{_block('A')}{LEAGUE_SEPARATOR}<b>UCL</b>\n{_block('B')}".rstrip("\n")]
+
+
+def test_lineups_are_split_between_fixtures_never_within_one():
+    blocks = [_block(name, 400) for name in "ABCDE"]
+    messages = pack_lineup_messages([("<b>NATIONS</b>\n", blocks)], 1000)
+    assert len(messages) > 1
+    assert all(len(message) <= 1000 for message in messages)
+    # Every fixture block survives whole, in order
+    assert "".join(messages).count("x" * 380) == 5
+    for name in "ABCDE":
+        assert sum(f"<b>{name}</b>" in message for message in messages) == 1
+
+
+def test_league_header_repeated_on_continuation_message():
+    messages = pack_lineup_messages([("<b>NATIONS</b>\n", [_block("A", 600), _block("B", 600)])], 1000)
+    assert len(messages) == 2
+    assert all(message.startswith("<b>NATIONS</b>") for message in messages)
+
+
+def test_new_message_for_next_league_has_no_leading_separator():
+    messages = pack_lineup_messages([("<b>EPL</b>\n", [_block("A", 900)]), ("<b>UCL</b>\n", [_block("B", 900)])], 1000)
+    assert messages[1].startswith("<b>UCL</b>")
+
+
+def test_no_leagues_yield_no_messages():
+    assert pack_lineup_messages([]) == []
