@@ -41,7 +41,7 @@ from broiestbot.commands import (  # get_crypto_chart,
     generate_youtube_video_preview,
     get_all_live_twitch_streams,
     get_crypto_price,
-    get_current_show,
+    # get_current_show,
     get_current_weather,
     get_english_definition,
     get_english_translation,
@@ -73,7 +73,7 @@ from broiestbot.commands import (  # get_crypto_chart,
     today_sumo_matches,
     today_upcoming_fixtures,
     tovala_counter,
-    tuner,
+    # tuner,
     upcoming_nba_games,
     upcoming_sumo_matches,
     wiki_summary,
@@ -325,12 +325,12 @@ class Bot(chatango.Client):
             return await get_top_crypto()
         elif cmd_type == "define" and args and user_name:
             return await asyncio.to_thread(get_english_definition, user_name, args)
-        elif cmd_type == "tune" and args and user_name and bot_username:
-            return await tuner(args, user_name, bot_username)
+        # elif cmd_type == "tune" and args and user_name and bot_username:
+        # return await tuner(args, user_name, bot_username)
         elif cmd_type == "wayne" and user_name:
             return time_until_wayne(user_name)
-        elif cmd_type == "np" and bot_username:
-            return await get_current_show(True, bot_username)
+        # elif cmd_type == "np" and bot_username:
+        # return await get_current_show(True, bot_username)
         elif cmd_type == "reserved":
             return None
         elif cmd_type == "todaysumo":
