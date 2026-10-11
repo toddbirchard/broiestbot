@@ -404,6 +404,11 @@ class Bot(chatango.Client):
         await ban_daddy_anons(room, user, message)
         await persist_user_data(room_name, user, message, bot_username)
         await persist_chat_logs(user_name, room_name, chat_message, bot_username)
+        # The bot's own messages are logged like anyone else's, but never answered. An LLM reply
+        # which happens to quote `@bro` (or an error reply tagging its own author) would otherwise
+        # prompt the bot to answer itself, which in turn tags itself again, forever.
+        if user_name.lower() == bot_username:
+            return
         # `?search` and `!command` messages are fully handled here. Returning keeps them out of
         # the link-preview/phrase chain below, which would otherwise cost every command an extra
         # phrase lookup against a `phrases` table it can never match.
@@ -419,12 +424,7 @@ class Bot(chatango.Client):
         if chat_message.startswith("!"):
             await self._process_command(chat_message, room, user_name, message)
             return
-        if (
-            YOUTUBE_VIDEO_ID_REGEX.search(chat_message)
-            and user_name != bot_username
-            and "bot" not in user_name
-            and "lmao" not in user_name
-        ):
+        if YOUTUBE_VIDEO_ID_REGEX.search(chat_message) and "bot" not in user_name and "lmao" not in user_name:
             preview = await asyncio.to_thread(generate_youtube_video_preview, chat_message)
             if preview:
                 await room.send_message(preview, use_html=True)

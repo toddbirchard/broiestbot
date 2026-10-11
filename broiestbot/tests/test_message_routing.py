@@ -111,3 +111,33 @@ def test_youtube_link_still_generates_preview(bot, room, message):
     mocks = dispatch(bot, room, message, "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     mocks["yt_preview"].assert_called_once()
     mocks["process_phrase"].assert_not_awaited()
+
+
+def test_bot_never_answers_its_own_mention(bot, room, message):
+    """A reply quoting `@bro` must not prompt the bot to answer itself — that loop never ends."""
+    message.user.name = CHATANGO_BOT_USERNAME
+    mocks = dispatch(bot, room, message, '@anon0937 lmao "@bro mock nugs" — write your own material')
+    mocks["llm_prompt"].assert_not_awaited()
+    mocks["process_phrase"].assert_not_awaited()
+
+
+def test_bot_s_own_messages_are_still_logged(bot, room, message):
+    """Ignoring its own messages stops the bot answering them, not recording them."""
+    message.user.name = CHATANGO_BOT_USERNAME
+    message.body = "@broiestbot i am trash, sry m8"
+    with (
+        patch("broiestbot.bot.check_blacklisted_users", new=AsyncMock()),
+        patch("broiestbot.bot.ban_daddy_anons", new=AsyncMock()),
+        patch("broiestbot.bot.persist_user_data", new=AsyncMock()),
+        patch("broiestbot.bot.persist_chat_logs", new=AsyncMock()) as persist_chat_logs,
+        patch.object(Bot, "_respond_llm_prompt", new=AsyncMock()) as llm_prompt,
+    ):
+        asyncio.run(bot.on_message(room, message))
+    persist_chat_logs.assert_awaited_once()
+    llm_prompt.assert_not_awaited()
+
+
+def test_users_still_summon_the_llm(bot, room, message):
+    """Anybody who isn't a bot still gets an answer."""
+    mocks = dispatch(bot, room, message, "@bro who won the derby")
+    mocks["llm_prompt"].assert_awaited_once()

@@ -1,6 +1,6 @@
 """Tests for the provider-agnostic half of the LLM client, shared by both providers."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,6 +11,7 @@ from clients.llm import (
     LLMClient,
     OpenAIClient,
 )
+from config import CHATANGO_BOT_USERNAME
 
 # Provider selection — one flag, two clients
 # -------------------------------------------------
@@ -45,8 +46,11 @@ def test_every_provider_satisfies_the_contract(client_class):
     assert isinstance(client, BaseLLMClient)
     assert issubclass(client.RATE_LIMIT_ERROR, Exception)
     assert issubclass(client.API_ERROR, Exception)
-    # The rate limit reply must not be swallowed by the general API error handler above it.
+    # The rate limit reply & the silent 400 must not be swallowed by the general API error handler.
     assert issubclass(client.RATE_LIMIT_ERROR, client.API_ERROR)
+    assert issubclass(client.BAD_REQUEST_ERROR, client.API_ERROR)
+    # A rate limit is not a malformed request, or it would be swallowed by the silent handler instead.
+    assert not issubclass(client.RATE_LIMIT_ERROR, client.BAD_REQUEST_ERROR)
 
 
 # The persona & its link-reading rules
@@ -313,3 +317,40 @@ def test_already_multimodal_history_entries_are_skipped(client_class):
         {"role": "user", "content": "<sean>: @bro what is that pic"},
     ]
     assert client._vision_images(messages, "@bro what is that pic") == []
+
+
+# History formatting
+# -------------------------------------------------
+
+
+def _chat(user_name: str, body: str) -> MagicMock:
+    msg = MagicMock()
+    msg.user.name = user_name
+    msg.body = body
+    return msg
+
+
+def test_history_maps_the_bot_to_assistant_turns():
+    """The bot's own lines are its turns; everyone else's are tagged with who said them."""
+    history = [_chat("todd", "@bro who won"), _chat(CHATANGO_BOT_USERNAME, "city lol"), _chat("nugs", "@bro wrong")]
+    assert BaseLLMClient.format_chat_history(history) == [
+        {"role": "user", "content": "<todd>: @bro who won"},
+        {"role": "assistant", "content": "city lol"},
+        {"role": "user", "content": "<nugs>: @bro wrong"},
+    ]
+
+
+def test_history_never_ends_on_the_bot_s_own_turn():
+    """A trailing assistant turn is prefill, which current models reject with a 400."""
+    history = [
+        _chat("todd", "@bro gif me a cat"),
+        _chat(CHATANGO_BOT_USERNAME, "https://media.giphy.com/cat.gif"),
+        _chat(CHATANGO_BOT_USERNAME, "there u go"),
+    ]
+    assert BaseLLMClient.format_chat_history(history) == [{"role": "user", "content": "<todd>: @bro gif me a cat"}]
+
+
+def test_history_of_only_the_bot_has_nothing_to_answer():
+    """With nobody else's turn left, the formatted history is empty rather than all prefill."""
+    history = [_chat(CHATANGO_BOT_USERNAME, '"@bro mock nugs" lmao'), _chat(CHATANGO_BOT_USERNAME, "@broiestbot sry")]
+    assert BaseLLMClient.format_chat_history(history) == []

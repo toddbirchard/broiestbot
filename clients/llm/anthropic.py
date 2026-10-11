@@ -31,6 +31,7 @@ class AnthropicClient(BaseLLMClient):
 
     LINK_TOOL_NAME: ClassVar[str] = "web_fetch"
     RATE_LIMIT_ERROR: ClassVar[Type[Exception]] = RateLimitError
+    BAD_REQUEST_ERROR: ClassVar[Type[Exception]] = BadRequestError
     API_ERROR: ClassVar[Type[Exception]] = APIError
 
     def __init__(self):

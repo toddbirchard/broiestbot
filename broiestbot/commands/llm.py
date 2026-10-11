@@ -42,6 +42,9 @@ async def generate_llm_response(user_name: str, room_name: str, history, chat_me
             return f"@{user_name} {mode} mode: deactivated"
     try:
         messages = llm_client.format_chat_history(history, format_type="messages")
+        if not messages:
+            LOGGER.warning(f"No user turn left in {room_name}'s history to answer for @{user_name}")
+            return None
         fetch_hosts = llm_client.fetchable_hosts(chat_message)
         if fetch_hosts:
             LOGGER.info(f"Allowing LLM to read links from {fetch_hosts} for @{user_name}")
@@ -54,9 +57,11 @@ async def generate_llm_response(user_name: str, room_name: str, history, chat_me
     except llm_client.RATE_LIMIT_ERROR as e:
         LOGGER.warning(f"LLM rate limit exceeded: {e}")
         return f"sry @{user_name}, brough is too cheap to pay for bert, lmao."
+    except llm_client.BAD_REQUEST_ERROR as e:
+        LOGGER.error(f"LLM rejected request as malformed: {e}")
     except llm_client.API_ERROR as e:
         LOGGER.error(f"LLM API error: {e}")
-        return f"@{user_name} i am trash, sry m8"
+        return "i am trash, sry m8"
     except Exception as e:
         LOGGER.error(f"Error generating LLM response: {e}")
-        return f"omg i died @{user_name}"
+        return "😵🤖 omg i died 🤖😵"

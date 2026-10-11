@@ -32,9 +32,11 @@ class BaseLLMClient:
     #: Name of this provider's link-reading tool, as the persona prompt refers to it.
     LINK_TOOL_NAME: ClassVar[str] = "web_fetch"
 
-    #: SDK exception classes, surfaced so `commands/llm.py` can answer a rate limit differently
-    #: from a general API error without importing (or knowing) which SDK is in play.
+    #: SDK exception classes, surfaced so `commands/llm.py` can answer a rate limit (or stay silent
+    #: on a malformed request) differently from a general API error without importing (or knowing)
+    #: which SDK is in play. Both must subclass `API_ERROR` and be caught ahead of it.
     RATE_LIMIT_ERROR: ClassVar[Type[Exception]]
+    BAD_REQUEST_ERROR: ClassVar[Type[Exception]]
     API_ERROR: ClassVar[Type[Exception]]
 
     # Vision. Images are pulled from the room's own chat, so the budget is deliberately small —
@@ -347,7 +349,15 @@ class BaseLLMClient:
                         ),
                     }
                 )
-            return list(reversed(messages))
+            messages.reverse()
+            # A conversation ending on the bot's own turn reads as assistant prefill, which current
+            # models reject outright with a 400. The newest message is normally the prompt itself, but
+            # the bot may have posted since (a `!gif`, another answer), so trailing bot turns are
+            # dropped rather than assumed absent. A history with nobody else's turn left comes back
+            # empty: there is nothing to answer.
+            while messages and messages[-1]["role"] == "assistant":
+                messages.pop()
+            return messages
         raise ValueError(f"Unknown format_type: {format_type}")
 
     @staticmethod

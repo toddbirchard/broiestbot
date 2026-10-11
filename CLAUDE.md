@@ -42,6 +42,10 @@ The bot is not a web server — uvicorn is used purely as a process manager. `as
    These branches are mutually exclusive: the `?<query>` and `!<cmd>` branches `return` once
    handled, so a command never also pays for the link-preview checks or a `phrases` lookup it
    could never match. `broiestbot/tests/test_message_routing.py` locks that in.
+
+   The bot's own messages are persisted and then dropped before any routing. Without this, an
+   LLM reply quoting `@bro`, or an error reply tagging its own author, makes the bot answer
+   itself in an endless loop. Other bots *can* still trigger `@bro`, deliberately.
 3. `create_message` is a large **async** `if/elif` dispatch on `cmd_type` (the `type` column of the `commands` table), calling the appropriate function from `broiestbot/commands/`.
 
 ### Sync/Async Boundary
@@ -104,7 +108,9 @@ Tests live beside the code they cover (`broiestbot/commands/<domain>/tests/`), w
 
 Model ids live in `config.py` (`ANTHROPIC_LLM_MODEL`, `CHATGPT_LLM_MODEL`), not in the client classes.
 
-Because the two SDKs define same-named but unrelated exception classes, each subclass exposes its own as `RATE_LIMIT_ERROR` / `API_ERROR`, and `commands/llm.py` catches those off the live client instead of importing either SDK. `RATE_LIMIT_ERROR` must stay a subclass of `API_ERROR`'s class *and* be caught first, or the rate-limit reply is swallowed by the general handler — `test_llm_base.py` asserts both.
+Because the two SDKs define same-named but unrelated exception classes, each subclass exposes its own as `RATE_LIMIT_ERROR` / `API_ERROR`, and `commands/llm.py` catches those off the live client instead of importing either SDK. `RATE_LIMIT_ERROR` must stay a subclass of `API_ERROR`'s class *and* be caught first, or the rate-limit reply is swallowed by the general handler — `test_llm_base.py` asserts both. `BAD_REQUEST_ERROR` (the SDK's 400) follows the same rule; a 400 is answered with silence, not a chat reply, because the same request fails the same way every time.
+
+`format_chat_history` never ends on an `assistant` turn: trailing bot messages are dropped, because current models reject assistant prefill with a 400. When no user turn remains, the history is empty and `generate_llm_response` sends nothing.
 
 Tests split the same way: `clients/tests/test_llm_base.py` covers the shared surface and the factory, `test_llm_anthropic.py` and `test_llm_openai.py` the provider specifics.
 
