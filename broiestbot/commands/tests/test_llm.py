@@ -43,6 +43,7 @@ def test_activate_trigger_switches_mode_without_calling_the_llm(mock_client):
     response = _run(generate_llm_response("todd", "room-a", [], "@bro activate dubs mode"))
     mock_client.activate_mode.assert_called_once_with("room-a", "dubs")
     mock_client.deactivate_mode.assert_not_called()
+    mock_client.refresh_mode.assert_not_called()
     mock_client.generate_response.assert_not_called()
     assert "todd" in response
     assert "activated" in response
@@ -108,6 +109,7 @@ def test_ordinary_prompt_still_reaches_the_llm(mock_client):
     response = _run(generate_llm_response("todd", "room-a", [], "@bro who won the derby"))
     mock_client.activate_mode.assert_not_called()
     mock_client.deactivate_mode.assert_not_called()
+    mock_client.refresh_mode.assert_called_once_with("room-a")
     mock_client.generate_response.assert_called_once_with(
         PROMPT_HISTORY, fetch_hosts=[], chat_message="@bro who won the derby", room_name="room-a"
     )

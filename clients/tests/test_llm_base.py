@@ -11,7 +11,7 @@ from clients.llm import (
     LLMClient,
     OpenAIClient,
 )
-from config import CHATANGO_BOT_USERNAME
+from config import CHATANGO_BOT_USERNAME, LLM_MODE_TTL
 
 # Provider selection — one flag, two clients
 # -------------------------------------------------
@@ -191,6 +191,100 @@ def test_active_mode_persona_still_gets_link_rules(client_class):
     client.activate_mode("room-a", "dubs")
     with_link = client.system_prompt(["example.com"], room_name="room-a")
     assert with_link == client.dubs_prompt + client.link_prompt
+
+
+# Alt modes — TTL since the room's latest mention
+# -------------------------------------------------
+
+
+class FakeClock:
+    """Stands in for `time.monotonic`, advanced by hand instead of by waiting."""
+
+    def __init__(self):
+        self.now = 1000.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+@pytest.fixture
+def clock():
+    fake = FakeClock()
+    with patch("clients.llm.base.monotonic", fake):
+        yield fake
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_mode_survives_until_its_ttl(client_class, clock):
+    """A mode is still active one tick before its TTL lapses."""
+    client = client_class()
+    client.activate_mode("room-a", "dubs")
+    clock.now += LLM_MODE_TTL - 1
+    assert client.active_mode("room-a") == "dubs"
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_mode_silently_reverts_once_its_ttl_lapses(client_class, clock):
+    """Left alone for `LLM_MODE_TTL`, a room falls back to `base_prompt` on its own."""
+    client = client_class()
+    client.activate_mode("room-a", "dubs")
+    clock.now += LLM_MODE_TTL
+    assert client.active_mode("room-a") is None
+    assert client.system_prompt(room_name="room-a") == client.base_prompt
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_mention_resets_the_ttl(client_class, clock):
+    """Each mention restarts the clock, so an active conversation keeps its mode."""
+    client = client_class()
+    client.activate_mode("room-a", "dubs")
+    clock.now += LLM_MODE_TTL - 1
+    assert client.refresh_mode("room-a") == "dubs"
+    clock.now += LLM_MODE_TTL - 1  # well past the original deadline
+    assert client.active_mode("room-a") == "dubs"
+    clock.now += 1
+    assert client.active_mode("room-a") is None
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_mention_after_the_ttl_does_not_revive_the_mode(client_class, clock):
+    """A mention arriving after the deadline is answered by `base_prompt`, not the lapsed mode."""
+    client = client_class()
+    client.activate_mode("room-a", "dubs")
+    clock.now += LLM_MODE_TTL
+    assert client.refresh_mode("room-a") is None
+    assert client.system_prompt(room_name="room-a") == client.base_prompt
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_refreshing_a_room_without_a_mode_is_a_noop(client_class, clock):
+    """A mention in a room on `base_prompt` leaves it there."""
+    client = client_class()
+    assert client.refresh_mode("room-a") is None
+    assert client.active_mode("room-a") is None
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_mode_ttls_are_tracked_per_room(client_class, clock):
+    """A mention in one room keeps only that room's mode alive."""
+    client = client_class()
+    client.activate_mode("room-a", "dubs")
+    client.activate_mode("room-b", "cryptkeeper")
+    clock.now += LLM_MODE_TTL - 1
+    client.refresh_mode("room-a")
+    clock.now += 1
+    assert client.active_mode("room-a") == "dubs"
+    assert client.active_mode("room-b") is None
+
+
+@pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
+def test_deactivating_a_lapsed_mode_is_a_noop(client_class, clock):
+    """Deactivating a mode which already lapsed raises nothing and leaves the room on `base_prompt`."""
+    client = client_class()
+    client.activate_mode("room-a", "dubs")
+    clock.now += LLM_MODE_TTL
+    client.deactivate_mode("room-a", "dubs")
+    assert client.active_mode("room-a") is None
 
 
 # Vision — image detection & selection, shared by both providers

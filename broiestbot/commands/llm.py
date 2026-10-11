@@ -21,6 +21,9 @@ async def generate_llm_response(user_name: str, room_name: str, history, chat_me
     be missed or misread by the model. Quoted text is stripped first, matching `fetchable_hosts` —
     quoting someone else's trigger phrase isn't a request to flip your own room's mode.
 
+    An active mode only lasts `config.LLM_MODE_TTL` seconds past the room's latest mention of the
+    bot; each mention resets that clock, and a lapsed mode silently reverts to `base_prompt`.
+
     :param str user_name: Username of the Chatango user who triggered the LLM response.
     :param str room_name: Room the prompt was sent from, whose persona mode this may switch.
     :param list history: List of message objects representing the chat history.
@@ -40,6 +43,9 @@ async def generate_llm_response(user_name: str, room_name: str, history, chat_me
             llm_client.deactivate_mode(room_name, mode)
             LOGGER.info(f"{mode} mode deactivated in {room_name} by @{user_name}")
             return f"@{user_name} {mode} mode: deactivated"
+    # Any other mention keeps the room's mode alive for another `LLM_MODE_TTL`, or finds it lapsed
+    # and lets the room fall back to `base_prompt` without announcing it.
+    llm_client.refresh_mode(room_name)
     try:
         messages = llm_client.format_chat_history(history, format_type="messages")
         if not messages:

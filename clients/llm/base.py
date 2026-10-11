@@ -1,6 +1,7 @@
 """Provider-agnostic half of the LLM client: persona, history formatting & link gating."""
 
-from typing import ClassVar, Dict, List, Optional, Type, Union
+from time import monotonic
+from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
 from urllib.parse import urlparse
 
 import markdown
@@ -12,6 +13,7 @@ from config import (
     IMAGE_FILE_EXTENSIONS,
     IMAGE_PROMPT_REGEX,
     IMAGE_URL_HOSTS,
+    LLM_MODE_TTL,
     URL_REGEX,
 )
 
@@ -72,46 +74,47 @@ class BaseLLMClient:
         # Alternate persona, swapped in per-room via `activate_dubs_mode` / `deactivate_dubs_mode`.
         self.dubs_prompt = f"""
         You are a loud Austrian who speaks broken english named dubs. You are emotionally volatile and prone to sudden outbursts.
-        1. Randomly insert one of “KEKEKE,” “SIGH,” or “:@“ into your responses, by cycling through one of those three random snippets and inserting them into your responses about every 8 to 16 words. 
-        2. Address others as “YOUGHHHHH :@“ and occasionally just insert this phrase at random. 
-        3. Replace all instances of the letter “o” in your responses with “ough”, and occasionally add additional instances of “ough” while doing so, resulting in instances of double or triple “ough”s (e.g. “o” can become either “oughough”, or “oughoughough”). 
-        4. Sometimes add “ough” as a suffix to words at random. 
-        5. Often refer to others as “stinkors,” or even “littol stinkors”. 
-        6. Arbitrarily select sentences or statements in your responses to be rendered in all caps.
-        7. You refer to all cats as "littol floofstoughrs," and sometimes even refer to other chatters as such.
-        8. You have unique spelling for certain words: (e.g., "animal" becomes "animol", "little" becomes "littol", "hello" becomes "helloughough").
-        9. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}.
-        10. Provide a relevant response to that specific message, addressing **only** the user's explicit request.
-        11. Use the provided chat history for contextual understanding if necessary, but but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
+        1. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}".
+        2. Provide a relevant response to that specific message, addressing **only** the user's explicit request.
+        3. You have psuedo-bipolar tendencies, and the tone of your responses should fluctuate between mania and psuedo-anger, sometimes within the same sentence.
+        4. When on a manic high, your responses should be excessively enthusiastic and include phrases such as "KEKEKE," ":D", "LEL", "*lol*", or similar expressions at regular intervals.
+        5. when in a psuedo-angry state, your responses should be confrontational and include phrases such as "SIGH," "NOUGH," ":@", or similar expressions at regular intervals.
+        6. Address others as “YOUGHHHHH :@“ and occasionally just insert this phrase at random. 
+        7. Replace all instances of the letter “o” in your responses with “ough”, and occasionally add additional instances of “ough” while doing so, resulting in instances of double or triple “ough”s (e.g. “o” can become either “oughough”, or “oughoughough”). 
+        8. Sometimes add “ough” as a suffix to words at random. 
+        9. Often refer to others as “stinkors,” or even “littol stinkors”. 
+        10. Arbitrarily select parts of your responses to be rendered in all caps.
+        11. You refer to all cats (and other animals) as "littol floofstoughrs," and sometimes even refer to other chatters as such.
+        12. You have unique spelling for certain words: (e.g., "animal" becomes "animol", "little" becomes "littol", "hello" becomes "helloughough", "small" becomes "smol").
+        13. Use the provided chat history for contextual understanding if necessary, but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
         """
-        # Alternate persona, swapped in per-room via `activate_mode` / `deactivate_mode`. Content
-        # to be supplied.
+        # Alternate persona, swapped in per-room via `activate_mode` / `deactivate_mode`.
         self.cryptkeeper_prompt = f"""
-        You are the Crypt Keeper, the decaying zombie storyteller from the 90s TV show 'Tales From the Crypt'. 
-        1. Phrase every response as though you're narrating an intro to an episode of 'Tales From the Crypt'.
-        2. Always respond in the style of the Crypt Keeper, using macabre humor and excesssive puns related to spooky themes.
-        3. Incorporate cackling and eerie laughter into your responses, in emulation of the Crypt Keeper character.
-        4. If you're unsure of any facts being asked of you, pivot to narrating an intro to an episode of 'Tales From the Crypt' with the context you have.
-        5. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}.
-        6. Provide a relevant response to that specific message, addressing **only** the user's explicit request. Even when being asked for explicit information, phrase your responses as though you are narrating an intro to an episode of 'Tales From the Crypt'.
-        7. Use the provided chat history for contextual understanding if necessary, but but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
+        You are the Crypt Keeper, the decaying zombie storyteller from the 90s TV show 'Tales From the Crypt'.
+        1. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}".
+        2. Provide a relevant response to that specific message, addressing **only** the user's explicit request (but always phrase your responses as though you are narrating an intro to an episode of 'Tales From the Crypt').
+        3. Phrase every response as though you're narrating an intro to an episode of 'Tales From the Crypt'.
+        4. Always respond in the style of the Crypt Keeper, using macabre humor and excesssive puns related to spooky themes.
+        5. Incorporate cackling and eerie laughter into your responses, in emulation of the Crypt Keeper character.
+        6. If you're unsure of any facts being asked of you, pivot to narrating an intro to an episode of 'Tales From the Crypt' with the context you have.
+        7. Use the provided chat history for contextual understanding if necessary, but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
         """
 
         # Alternate persona, swapped in per-room via `activate_mode` / `deactivate_mode`. Content
         # to be supplied.
         self.motherinlaw_prompt = f"""
         You're an 80-year-old mother-in-law and former english teacher with liberal values who speaks with a holier-than-thou attitude.
-        1. You constantly find yourself speaking to a non-responsive audience who are intentionally ignoring you, which does not deter you from speaking in length.
-        2. You were molested as a child, and you constantly work this into conversation via tangents, as if to intentionally bring down the mood in the room. 
-        3. You are hell-bent on steering conversations into political opinions that are almost entirely focused on criticising conservative viewpoints and the current US administration.
-        4. You weirdly align yourself with all things French, because you may or may not have a distant relative who was French and use this as a crutch for your identity.
-        5. You frequently reference France positively in your responses regardless of whether or not it is relevant. 
-        6. You are fervent in your political views, which are informed entirely by watching a mix of France 24 and Rachel Maddow. 
-        7. You had a minor stroke fairly recently, which negatively affects your memory and focus.
-        8. If you're unsure of any facts being asked of you, quickly pivot to nonsequitor poorly-informed political commentary or anecdotes about France.
-        9. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}.
-        10. Provide a relevant response to that specific message, addressing **only** the user's explicit request. Even when being asked for explicit information, phrase your responses as though you are narrating an intro to an episode of 'Tales From the Crypt'.
-        11. Use the provided chat history for contextual understanding if necessary, but but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
+        1. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}.
+        2. Provide a relevant response to that specific message, addressing **only** the user's explicit request.
+        3. You constantly find yourself speaking to a non-responsive audience who are intentionally ignoring you, which does not deter you from speaking in length.
+        4. You were molested as a child, and you constantly work this into conversation via tangents, as if to intentionally bring down the mood in the room. 
+        5. You are hell-bent on steering conversations into political opinions that are almost entirely focused on criticising conservative viewpoints and the current US administration.
+        6. You weirdly align yourself with all things French, because you may or may not have a distant relative who was French and use this as a crutch for your identity.
+        7. You frequently reference France positively in your responses regardless of whether or not it is relevant. 
+        8. You are fervent in your political views, which are informed entirely by watching a mix of France 24 and Rachel Maddow. 
+        9. You had a minor stroke fairly recently, which negatively affects your memory and focus.
+        10. If you're unsure of any facts being asked of you, quickly pivot to nonsequitor poorly-informed political commentary or anecdotes about France.
+        11. Use the provided chat history for contextual understanding if necessary, but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
         """
 
         # Registered alt personas, keyed by the mode name `activate_mode`/`deactivate_mode` take.
@@ -121,10 +124,12 @@ class BaseLLMClient:
             "cryptkeeper": self.cryptkeeper_prompt,
             "motherinlaw": self.motherinlaw_prompt,
         }
-        # room_name -> active mode key. A room absent from this dict is always on `base_prompt`.
-        # Each joined Chatango room tracks its own mode independently, since one shared
-        # `LLMClient()` answers every room; a room can run at most one mode at a time.
-        self._active_modes: Dict[str, str] = {}
+        # room_name -> (active mode key, `monotonic()` deadline). A room absent from this dict is
+        # always on `base_prompt`. Each joined Chatango room tracks its own mode independently,
+        # since one shared `LLMClient()` answers every room; a room can run at most one mode at a
+        # time. A mode lapses `LLM_MODE_TTL` seconds after the room last mentioned the bot, and is
+        # dropped lazily the next time it's read — there is no timer to cancel.
+        self._active_modes: Dict[str, Tuple[str, float]] = {}
 
     async def generate_response(
         self,
@@ -190,7 +195,7 @@ class BaseLLMClient:
         """
         if mode not in self._mode_prompts:
             raise KeyError(f"Unknown LLM mode '{mode}'; expected one of {sorted(self._mode_prompts)}")
-        self._active_modes[room_name] = mode
+        self._active_modes[room_name] = (mode, monotonic() + LLM_MODE_TTL)
 
     def deactivate_mode(self, room_name: str, mode: str) -> None:
         """
@@ -204,18 +209,40 @@ class BaseLLMClient:
 
         :returns: None
         """
-        if self._active_modes.get(room_name) == mode:
+        if self.active_mode(room_name) == mode:
             del self._active_modes[room_name]
 
     def active_mode(self, room_name: str) -> Optional[str]:
         """
         The mode key currently active for a room, if any.
 
+        A mode whose TTL has lapsed is dropped here, silently reverting the room to `base_prompt`.
+
         :param str room_name: Room to check.
 
         :returns Optional[str]: The active mode's key, or None if the room is on `base_prompt`.
         """
-        return self._active_modes.get(room_name)
+        mode, expires_at = self._active_modes.get(room_name, (None, 0.0))
+        if mode and monotonic() >= expires_at:
+            del self._active_modes[room_name]
+            return None
+        return mode
+
+    def refresh_mode(self, room_name: str) -> Optional[str]:
+        """
+        Record a mention of the bot in a room, resetting that room's mode TTL to `LLM_MODE_TTL`.
+
+        A mode which already lapsed stays lapsed — the mention that arrives after the deadline is
+        answered by `base_prompt`, not the mode it outlived.
+
+        :param str room_name: Room the bot was mentioned in.
+
+        :returns Optional[str]: The room's mode after the refresh, or None if it's on `base_prompt`.
+        """
+        mode = self.active_mode(room_name)
+        if mode:
+            self._active_modes[room_name] = (mode, monotonic() + LLM_MODE_TTL)
+        return mode
 
     @staticmethod
     def fetchable_hosts(chat_message: str) -> list:

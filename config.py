@@ -378,6 +378,11 @@ LLM_MODE_TRIGGERS = {
     "motherinlaw": _llm_mode_triggers("motherinlaw"),
 }
 
+# Seconds an activated `@bro` mode survives without being used. Every mention of the bot in that
+# room resets the clock; once it lapses the room silently reverts to `base_prompt`. See
+# `clients/llm/base.py:BaseLLMClient.refresh_mode`.
+LLM_MODE_TTL = 180
+
 # Emoji shown alongside a mode's "activated" confirmation — see `commands/llm.py`. Every key in
 # `LLM_MODE_TRIGGERS` must have one here.
 LLM_MODE_EMOJIS = {
