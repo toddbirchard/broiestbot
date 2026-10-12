@@ -1,13 +1,31 @@
-"""Extract URL from user chat message."""
+"""Generate link previews for URLs posted in chat."""
 
-import re
-from typing import Optional, Tuple
+import asyncio
+import ipaddress
+import socket
+from html import escape
+from typing import Dict, Optional, Tuple
+from urllib.parse import ParseResult, urljoin, urlparse
 
 from aiohttp import ClientError
+from bs4 import BeautifulSoup
+from emoji import emojize
 from http_client import get_http_session, request_timeout
 from logger import LOGGER
-from metadata_parser import InvalidDocument, MetadataParser
-from requests.exceptions import HTTPError, RequestException
+
+from config import (
+    CHATANGO_QUOTE_REGEX,
+    IMAGE_FILE_EXTENSIONS,
+    IMAGE_URL_HOSTS,
+    LINK_PREVIEW_DESCRIPTION_LENGTH,
+    LINK_PREVIEW_EXCLUDED_HOSTS,
+    LINK_PREVIEW_MAX_BYTES,
+    LINK_PREVIEW_MAX_REDIRECTS,
+    LINK_PREVIEW_REQUEST_TIMEOUT,
+    LINK_PREVIEW_TITLE_LENGTH,
+    LINK_PREVIEW_USER_AGENT,
+    URL_REGEX,
+)
 
 headers = {
     "Access-Control-Allow-Origin": "*",
@@ -18,98 +36,231 @@ headers = {
 }
 
 
-def extract_url(chat_message: str) -> Optional[str]:
-    """
-    Determine if a user chat is a raw URL; used to generate link previews.
+REDIRECT_STATUSES = (301, 302, 303, 307, 308)
+HTML_CONTENT_TYPES = ("text/html", "application/xhtml+xml")
 
-    :param str chat_message: Chatango message sent by a user potentially containing a URL.
+
+async def generate_link_preview(chat_message: str) -> Optional[str]:
+    """
+    Build a preview card for the first link in a message no dedicated preview handler owns.
+
+    The card is built from the page's own metadata — OpenGraph first, then Twitter card tags, then
+    the plain `<title>` and `<meta name="description">`. A preview nobody asked for isn't worth an
+    error, so every failure (unreachable host, non-HTML link, page with no usable metadata) is
+    silent.
+
+    :param str chat_message: Raw chat message which may carry a link.
 
     :returns: Optional[str]
     """
-    pattern = r"^http?(s)://(.+)"
-    url_match = re.match(pattern, chat_message)
-    if url_match is not None:
-        url = url_match.group(0)
-        if url:
-            return scrape_metadata_from_url(url)
+    url = previewable_url(chat_message)
+    if url is None:
+        return None
+    try:
+        page = await fetch_page_head(url)
+        if page is None:
+            return None
+        html, final_url, encoding = page
+        return format_link_preview(parse_link_metadata(html, final_url, encoding), final_url)
+    except ClientError as e:
+        LOGGER.info(f"ClientError while generating link preview for `{url}`: {e}")
+    except asyncio.TimeoutError:
+        LOGGER.info(f"Timed out generating link preview for `{url}`.")
+    except Exception as e:
+        LOGGER.exception(f"Unexpected error while generating link preview for `{url}`: {e}")
+    return None
 
 
-def scrape_metadata_from_url(url: str) -> Optional[str]:
+def previewable_url(chat_message: str) -> Optional[str]:
     """
-    Fetch metadata for a given URL.
+    Pick the link in a message worth previewing, if any.
 
-    :param str url: Link to third-party content, for which to create a link preview.
+    Only the sender's own words count — a quoted link was previewed when it was first posted.
+    Image links are skipped, since Chatango already renders those inline, as are hosts a dedicated
+    handler owns or which only ever serve a login wall. Only the first eligible link is previewed,
+    so a message pasting a list of links costs the room one card rather than a wall of them.
+
+    :param str chat_message: Raw chat message which may carry a link.
 
     :returns: Optional[str]
+    """
+    for url in URL_REGEX.findall(CHATANGO_QUOTE_REGEX.sub(" ", chat_message)):
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").lower()
+        if not host or _host_matches(host, LINK_PREVIEW_EXCLUDED_HOSTS) or _is_image_url(parsed, host):
+            continue
+        return url
+    return None
+
+
+async def fetch_page_head(url: str) -> Optional[Tuple[bytes, str, Optional[str]]]:
+    """
+    Fetch the start of an HTML page, following redirects by hand.
+
+    Any link typed into chat is fetched from the bot's own server, so every hop is checked to
+    point at the public internet before it's requested — otherwise a link (or a redirect) to
+    `localhost` or a private address would have the bot probing its own network. Redirects are
+    followed manually for that reason, rather than by `aiohttp`.
+
+    Only the start of the body is read: the metadata lives in `<head>`, so reading stops once that
+    closes, or at `LINK_PREVIEW_MAX_BYTES` regardless.
+
+    :param str url: Link to fetch.
+
+    :returns: Optional[Tuple[bytes, str, Optional[str]]]: Body read so far, the URL it was finally
+        served from (for resolving relative image paths), and the charset the server declared.
+    """
+    session = await get_http_session()
+    headers = {"User-Agent": LINK_PREVIEW_USER_AGENT, "Accept": "text/html,application/xhtml+xml"}
+    for _ in range(LINK_PREVIEW_MAX_REDIRECTS + 1):
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            return None
+        if not await _is_public_host(parsed.hostname):
+            LOGGER.warning(f"Refusing to preview `{url}`: host is not on the public internet.")
+            return None
+        async with session.get(
+            url,
+            headers=headers,
+            allow_redirects=False,
+            timeout=request_timeout(LINK_PREVIEW_REQUEST_TIMEOUT),
+        ) as resp:
+            if resp.status in REDIRECT_STATUSES:
+                location = resp.headers.get("Location")
+                if not location:
+                    return None
+                url = urljoin(url, location)
+                continue
+            if resp.status != 200 or resp.content_type not in HTML_CONTENT_TYPES:
+                return None
+            body = bytearray()
+            async for chunk in resp.content.iter_chunked(64 * 1024):
+                body.extend(chunk)
+                if len(body) >= LINK_PREVIEW_MAX_BYTES or b"</head" in chunk.lower():
+                    break
+            return bytes(body[:LINK_PREVIEW_MAX_BYTES]), url, resp.charset
+    LOGGER.info(f"Gave up on link preview after {LINK_PREVIEW_MAX_REDIRECTS} redirects: `{url}`")
+    return None
+
+
+def parse_link_metadata(html: bytes, url: str, encoding: Optional[str] = None) -> Dict[str, Optional[str]]:
+    """
+    Read a page's preview metadata, preferring OpenGraph, then Twitter cards, then plain HTML.
+
+    :param bytes html: Start of the page's HTML.
+    :param str url: URL the page was served from; relative image paths are resolved against it.
+    :param Optional[str] encoding: Charset declared by the server, if any. Without one, the page's
+        own `<meta charset>` is used.
+
+    :returns: Dict[str, Optional[str]]: `title`, `description`, `image` & `site_name`.
+    """
+    soup = BeautifulSoup(html, "html.parser", from_encoding=encoding)
+    tags: Dict[str, str] = {}
+    for tag in soup.find_all("meta"):
+        # OpenGraph is specified on `property`, but plenty of sites put it on `name` instead.
+        key = (tag.get("property") or tag.get("name") or "").strip().lower()
+        content = _clean_text(tag.get("content"))
+        if key and content:
+            tags.setdefault(key, content)
+
+    def first(*keys: str) -> Optional[str]:
+        return next((tags[key] for key in keys if key in tags), None)
+
+    page_title = _clean_text(soup.title.get_text()) if soup.title else None
+    image = first("og:image:secure_url", "og:image", "og:image:url", "twitter:image", "twitter:image:src")
+    if image:
+        image = urljoin(url, image)
+        # It's posted into chat as-is, so it must be a well-formed http(s) link with nothing in it
+        # which could break out into markup.
+        if urlparse(image).scheme not in ("http", "https") or any(char in image for char in " <>\"'`"):
+            image = None
+    return {
+        "title": first("og:title", "twitter:title") or page_title,
+        "description": first("og:description", "twitter:description", "description"),
+        "image": image,
+        "site_name": first("og:site_name", "application-name"),
+    }
+
+
+def format_link_preview(metadata: Dict[str, Optional[str]], url: str) -> Optional[str]:
+    """
+    Render page metadata as a chat preview card.
+
+    A page needs a title plus a description or an image to be previewed — a bare `<title>` is
+    usually a login wall or an error page, and isn't worth a line of chat.
+
+    :param Dict[str, Optional[str]] metadata: Output of `parse_link_metadata`.
+    :param str url: URL the page was served from, used to name the site when it doesn't.
+
+    :returns: Optional[str]
+    """
+    title = metadata.get("title")
+    description = metadata.get("description")
+    image = metadata.get("image")
+    if not title or not (description or image):
+        return None
+    site_name = metadata.get("site_name") or (urlparse(url).hostname or "").removeprefix("www.")
+    # Page text is untrusted and the card is sent as HTML, so everything taken from it is escaped.
+    preview = f"\n\n<b>{escape(_truncate(title, LINK_PREVIEW_TITLE_LENGTH))}</b>\n"
+    if site_name:
+        site_label = escape(_truncate(site_name, LINK_PREVIEW_TITLE_LENGTH))
+        preview += f"{emojize(':link:', language='en')} <i>{site_label}</i>\n"
+    if description:
+        preview += f"\n{escape(_truncate(description, LINK_PREVIEW_DESCRIPTION_LENGTH))}\n"
+    if image:
+        preview += f"\n{image}\n"
+    return preview
+
+
+async def _is_public_host(host: str) -> bool:
+    """
+    Check a host resolves only to public internet addresses.
+
+    Fails closed: a host which doesn't resolve, or resolves to *any* loopback, private, link-local
+    or otherwise reserved address, is refused.
+
+    :param str host: Hostname or IP literal.
+
+    :returns: bool
     """
     try:
-        # Parse page metadata as dict
-        page = MetadataParser(
-            url=url,
-            url_headers=headers,
-            search_head_only=True,
-            only_parse_http_ok=True,
-            raise_on_invalid=True,
-        )
-        page_meta = page.parsed_result.metadata
-        if page_meta:
-            return create_link_preview(page, page_meta, url)
-    except HTTPError as e:
-        LOGGER.exception(f"Failed to fetch metadata for URL `{url}`: {e}")
-    except RequestException as e:
-        LOGGER.exception(f"RequestException error while scraping metadata for URL `{url}`: {e}")
-    except InvalidDocument as e:
-        LOGGER.exception(f"InvalidDocument encountered while fetching metadata for URL `{url}`: {e}")
-    except Exception as e:
-        LOGGER.exception(f"Unexpected error while scraping metadata for URL `{url}`: {e}")
+        addresses = [ipaddress.ip_address(host.strip("[]"))]
+    except ValueError:
+        try:
+            infos = await asyncio.get_running_loop().getaddrinfo(host, None, type=socket.SOCK_STREAM)
+        except OSError:
+            return False
+        addresses = [ipaddress.ip_address(info[4][0]) for info in infos]
+    if not addresses:
+        return False
+    for address in addresses:
+        if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
+            address = address.ipv4_mapped
+        if not address.is_global or address.is_multicast:
+            return False
+    return True
 
 
-def create_link_preview(page: MetadataParser, page_meta: dict, url: str) -> Optional[str]:
-    """
-    Create a preview bookmark card from a URL.
-
-    :param MetadataParser page: Page object create from URL to be parsed.
-    :param dict page_meta: Page metadata parsed from the head of the target URL.
-    :param str url: URL of the linked third-party post/article.
-
-    :returns: Optional[str]
-    """
-    try:
-        title, description, page_type = parse_scraped_metadata(page_meta)
-        image = page.get_metadata_link("image", allow_encoded_uri=True, require_public_global=True)
-        if title is not None and description is not None:
-            preview = f"\n\n<b>{title}</b>\n{description}\n{url}"
-            if page_type:
-                preview += f"\n{page_type.title()}"
-            if image:
-                preview += f"\n{image}"
-            return preview
-    except Exception as e:
-        LOGGER.exception(f"Unexpected error while generating link preview card: {e}")
+def _host_matches(host: str, domains: Tuple[str, ...]) -> bool:
+    """Whether `host` is one of `domains`, or a subdomain of one."""
+    return any(host == domain or host.endswith(f".{domain}") for domain in domains)
 
 
-def parse_scraped_metadata(page_meta: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    """
-    Parse HTML metadata with added redundancy.
+def _is_image_url(parsed: ParseResult, host: str) -> bool:
+    """Whether a link points straight at an image, which Chatango renders inline on its own."""
+    return parsed.path.lower().endswith(IMAGE_FILE_EXTENSIONS) or _host_matches(host, IMAGE_URL_HOSTS)
 
-    :param dict page_meta: Metadata stored as dictionary of `og`, `twitter`, `meta`, and `page`.
 
-    :returns: Tuple[Optional[str], Optional[str], Optional[str]]
-    """
-    title = None
-    description = None
-    page_type = None
-    if page_meta.get("meta") is not None:
-        title = page_meta["meta"].get("og:title")
-        description = page_meta["meta"].get("og:description")
-        page_type = page_meta["meta"].get("og:type")
-    if page_meta.get("og") is not None:
-        title = page_meta["og"].get("title") if title is None else None
-        description = page_meta["og"].get("description") if description is None else None
-    if page_meta.get("twitter") is not None:
-        title = page_meta["twitter"].get("title") if title is None else None
-        description = page_meta["twitter"].get("description") if description is None else None
-    return title, description, page_type
+def _clean_text(text: Optional[str]) -> Optional[str]:
+    """Collapse runs of whitespace (newlines included) to single spaces; empty becomes None."""
+    if not text:
+        return None
+    return " ".join(text.split()) or None
+
+
+def _truncate(text: str, length: int) -> str:
+    """Cut `text` to at most `length` characters, marking the cut with an ellipsis."""
+    return text if len(text) <= length else f"{text[: length - 1].rstrip()}…"
 
 
 async def generate_twitter_preview(tweet_url: str) -> Optional[str]:

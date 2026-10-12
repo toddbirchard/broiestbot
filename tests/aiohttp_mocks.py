@@ -8,10 +8,24 @@ installed against the *command module* rather than `http_client`, ie:
 """
 
 import json as jsonlib
-from typing import Any, List, Optional, Sequence, Union
+from typing import Any, AsyncIterator, Dict, List, Optional, Sequence, Union
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientResponseError
+
+
+class FakeStream:
+    """Stand-in for `aiohttp.ClientResponse.content`, which streams the body in chunks."""
+
+    def __init__(self, body: bytes):
+        self._body = body
+
+    async def read(self, n: int = -1) -> bytes:
+        return self._body if n < 0 else self._body[:n]
+
+    async def iter_chunked(self, n: int) -> AsyncIterator[bytes]:
+        for start in range(0, len(self._body), n):
+            yield self._body[start : start + n]
 
 
 class FakeResponse:
@@ -23,11 +37,18 @@ class FakeResponse:
         json_data: Any = None,
         text: Optional[str] = None,
         reason: str = "OK",
+        headers: Optional[Dict[str, str]] = None,
     ):
         self.status = status
         self.reason = reason
+        self.headers = headers or {}
         self._json = json_data
         self._text = text if text is not None else (jsonlib.dumps(json_data) if json_data is not None else "")
+        content_type = self.headers.get("Content-Type", "application/json")
+        self.content_type = content_type.split(";")[0].strip().lower()
+        charset = content_type.partition("charset=")[2].strip()
+        self.charset = charset or None
+        self.content = FakeStream(self._text.encode())
 
     async def json(self, *_args, **_kwargs) -> Any:
         if self._json is None:

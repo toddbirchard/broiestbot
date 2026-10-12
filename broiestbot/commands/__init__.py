@@ -71,7 +71,7 @@ from .polls import (
     get_live_poll_results,
     tovala_counter,
 )
-from .previews import extract_url, generate_twitter_preview
+from .previews import generate_link_preview, generate_twitter_preview
 from .sumo import today_sumo_matches, upcoming_sumo_matches
 from .tuner import get_current_show, tuner
 
