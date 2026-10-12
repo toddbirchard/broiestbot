@@ -348,6 +348,7 @@ IMAGE_URL_HOSTS = (
 LINK_PREVIEW_EXCLUDED_HOSTS = (
     "youtube.com",
     "youtu.be",
+    "youtube-nocookie.com",
     "x.com",
     "twitter.com",
     "wikipedia.org",

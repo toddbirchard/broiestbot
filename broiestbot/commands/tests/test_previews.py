@@ -62,6 +62,17 @@ def public_hosts():
         ("https://www.youtube.com/@channel", None),
         ("https://en.m.wikipedia.org/wiki/Eagles", None),
         ("https://x.com/someone", None),
+        # Every YouTube & Wikipedia URL shape, including the ones the dedicated handlers decline
+        # (channels, playlists, malformed IDs) — those fall through to here and must stay unpreviewed.
+        ("https://youtube.com/playlist?list=PL123", None),
+        ("https://m.youtube.com/watch?v=dQw4w9WgXcQ", None),
+        ("https://music.youtube.com/watch?v=dQw4w9WgXcQ", None),
+        ("https://youtu.be/short", None),
+        ("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ", None),
+        ("https://wikipedia.org", None),
+        ("https://de.wikipedia.org/wiki/Fu%C3%9Fball", None),
+        # An excluded link doesn't block a different one later in the message.
+        ("https://www.youtube.com/@channel https://news.example.com", "https://news.example.com"),
         # The first eligible link wins; ineligible ones before it are skipped.
         ("https://i.imgur.com/a.png https://one.example.com https://two.example.com", "https://one.example.com"),
         # A quoted link isn't the sender's own.
