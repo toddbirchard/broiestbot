@@ -304,3 +304,170 @@ def test_unresolvable_hostname_is_refused():
             return await _is_public_host("nope.invalid")
 
     assert asyncio.run(check()) is False
+
+
+# Instagram
+# -------------------------------------------------
+# Instagram is excluded outright (`LINK_PREVIEW_EXCLUDED_HOSTS`): from a server it serves a login
+# wall rather than post metadata, so no link to it is ever fetched — posts, reels or profiles.
+
+
+@pytest.mark.parametrize(
+    "chat_message",
+    [
+        "https://www.instagram.com/p/C9xYz12AbCd/",
+        "https://instagram.com/p/C9xYz12AbCd/?igsh=MWQ1ZGUxMzBkMA==",
+        "https://www.instagram.com/birdsfan/p/C9xYz12AbCd/",
+        # Instagram's short-form video ("shorts") are Reels, served under `/reel/` and `/reels/`.
+        "https://www.instagram.com/reel/C9xYz12AbCd/",
+        "https://www.instagram.com/reels/C9xYz12AbCd/",
+        "check this reel lol https://www.instagram.com/reel/C9xYz12AbCd/?utm_source=ig_web_copy_link",
+        "https://m.instagram.com/p/C9xYz12AbCd/",
+        "https://instagr.am/p/C9xYz12AbCd/",
+    ],
+)
+def test_instagram_links_are_never_previewed_or_fetched(chat_message: str):
+    with public_hosts(), patch_http_session(MODULE, html_response()) as session_mock:
+        assert asyncio.run(generate_link_preview(chat_message)) is None
+    assert session_mock.return_value.calls == []
+
+
+def test_short_link_to_instagram_is_not_followed():
+    """A shortener can't launder an excluded host: the redirect into Instagram is refused."""
+    redirect = FakeResponse(status=301, headers={"Location": "https://www.instagram.com/reel/C9xYz12AbCd/"})
+    with public_hosts(), patch_http_session(MODULE, redirect, html_response()) as session_mock:
+        assert asyncio.run(generate_link_preview("https://bit.ly/3abcDEF")) is None
+    assert [call[1] for call in session_mock.return_value.calls] == ["https://bit.ly/3abcDEF"]
+
+
+# Reddit
+# -------------------------------------------------
+# Reddit is previewed generically. The fixtures mirror the metadata Reddit serves on post pages:
+# OpenGraph title/description/image, a `summary_large_image` Twitter card, and HTML-entity-encoded
+# `&amp;` in its image query strings.
+
+REDDIT_POST_URL = "https://www.reddit.com/r/eagles/comments/1g2abcd/hurts_to_brown_for_6/"
+REDDIT_IMAGE = "https://external-preview.redd.it/hurts-brown.jpg?width=1080&format=pjpg&auto=webp&s=0a1b2c"
+REDDIT_POST_PAGE = """<!DOCTYPE html><html lang="en-US"><head>
+<meta charset="utf-8">
+<title>Hurts to Brown for 6 : r/eagles</title>
+<meta name="description" content="Meta description which OpenGraph outranks">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Reddit">
+<meta property="og:title" content="r/eagles on Reddit: Hurts to Brown for 6 &amp; we&#39;re up 21-3">
+<meta property="og:description" content="Posted by u/birdsfan - 1,234 votes and 210 comments">
+<meta property="og:image"
+  content="https://external-preview.redd.it/hurts-brown.jpg?width=1080&amp;format=pjpg&amp;auto=webp&amp;s=0a1b2c">
+<meta property="og:image:width" content="1080">
+<meta property="og:image:height" content="607">
+<meta property="og:url" content="https://www.reddit.com/r/eagles/comments/1g2abcd/hurts_to_brown_for_6/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Twitter title which OpenGraph outranks">
+<meta name="twitter:image" content="https://share.redd.it/preview/post/1g2abcd">
+</head><body><shreddit-app></shreddit-app></body></html>"""
+
+REDDIT_TEXT_POST_PAGE = """<!DOCTYPE html><html><head>
+<title>Game thread etiquette : r/eagles</title>
+<meta property="og:site_name" content="Reddit">
+<meta property="og:title" content="r/eagles on Reddit: Game thread etiquette">
+<meta property="og:description" content="Please keep the game thread to the game. Memes go in the post-game thread.">
+</head><body></body></html>"""
+
+REDDIT_SUBREDDIT_PAGE = """<!DOCTYPE html><html><head>
+<title>r/eagles</title>
+<meta property="og:site_name" content="Reddit">
+<meta property="og:title" content="r/eagles">
+<meta property="og:description" content="The home of Philadelphia Eagles fans on Reddit.">
+<meta property="og:image" content="https://styles.redditmedia.com/t5_2qhqk/styles/communityIcon_abc.png">
+</head><body></body></html>"""
+
+
+def reddit_preview(page: str, *responses: FakeResponse, url: str = REDDIT_POST_URL) -> tuple:
+    """Run a Reddit link through the full preview path; return the card and the URLs requested."""
+    with public_hosts(), patch_http_session(MODULE, *responses, html_response(page)) as session_mock:
+        preview = asyncio.run(generate_link_preview(url))
+    return preview, [call[1] for call in session_mock.return_value.calls]
+
+
+def test_reddit_post_preview_elements():
+    """A Reddit post renders title, site name, description and image — taken from OpenGraph."""
+    preview, requested = reddit_preview(REDDIT_POST_PAGE)
+    assert requested == [REDDIT_POST_URL]
+    assert preview == (
+        "\n\n<b>r/eagles on Reddit: Hurts to Brown for 6 &amp; we&#x27;re up 21-3</b>\n"
+        "🔗 <i>Reddit</i>\n"
+        "\nPosted by u/birdsfan - 1,234 votes and 210 comments\n"
+        f"\n{REDDIT_IMAGE}\n"
+    )
+    # OpenGraph outranks the Twitter card, the meta description and the page `<title>`.
+    assert "Twitter title" not in preview
+    assert "Meta description" not in preview
+    assert "share.redd.it" not in preview
+
+
+def test_reddit_post_metadata():
+    """The raw elements read from a Reddit post, before rendering."""
+    assert parse_link_metadata(REDDIT_POST_PAGE.encode(), REDDIT_POST_URL) == {
+        "title": "r/eagles on Reddit: Hurts to Brown for 6 & we're up 21-3",
+        "description": "Posted by u/birdsfan - 1,234 votes and 210 comments",
+        # Entity-encoded `&amp;` comes back as a plain `&`, so the link works when posted.
+        "image": REDDIT_IMAGE,
+        "site_name": "Reddit",
+    }
+
+
+def test_reddit_text_post_has_no_image_line():
+    """A self post without an image still previews; the card simply has no image."""
+    preview, _ = reddit_preview(REDDIT_TEXT_POST_PAGE)
+    assert preview == (
+        "\n\n<b>r/eagles on Reddit: Game thread etiquette</b>\n"
+        "🔗 <i>Reddit</i>\n"
+        "\nPlease keep the game thread to the game. Memes go in the post-game thread.\n"
+    )
+
+
+def test_reddit_subreddit_link_previewed():
+    preview, _ = reddit_preview(REDDIT_SUBREDDIT_PAGE, url="https://www.reddit.com/r/eagles/")
+    assert "<b>r/eagles</b>" in preview
+    assert "The home of Philadelphia Eagles fans on Reddit." in preview
+    assert "https://styles.redditmedia.com/t5_2qhqk/styles/communityIcon_abc.png" in preview
+
+
+@pytest.mark.parametrize(
+    "short_url",
+    [
+        # Post short link.
+        "https://redd.it/1g2abcd",
+        # Mobile app share link.
+        "https://www.reddit.com/r/eagles/s/AbCdEf1234",
+        # Hosted video, which redirects to the post it belongs to.
+        "https://v.redd.it/abc123xyz",
+    ],
+)
+def test_reddit_short_links_follow_redirect_to_post(short_url: str):
+    redirect = FakeResponse(status=301, headers={"Location": REDDIT_POST_URL})
+    preview, requested = reddit_preview(REDDIT_POST_PAGE, redirect, url=short_url)
+    assert requested == [short_url, REDDIT_POST_URL]
+    assert "<b>r/eagles on Reddit: Hurts to Brown for 6" in preview
+
+
+@pytest.mark.parametrize(
+    "chat_message",
+    [
+        "https://i.redd.it/abc123.jpeg",
+        "https://preview.redd.it/abc123.png?width=640&format=png&auto=webp&s=abc",
+        "https://external-preview.redd.it/abc123?auto=webp&s=abc",
+    ],
+)
+def test_reddit_image_links_left_to_chatango(chat_message: str):
+    """Reddit's image hosts are rendered inline by Chatango, so they're not fetched."""
+    with public_hosts(), patch_http_session(MODULE, html_response()) as session_mock:
+        assert asyncio.run(generate_link_preview(chat_message)) is None
+    assert session_mock.return_value.calls == []
+
+
+def test_reddit_blocking_the_bot_is_silent():
+    """Reddit answers many server IPs with a 403 "blocked" page; that's no preview, not an error."""
+    blocked = FakeResponse(status=403, text="<html><title>Blocked</title></html>", headers=HTML_HEADERS)
+    with public_hosts(), patch_http_session(MODULE, blocked):
+        assert asyncio.run(generate_link_preview(REDDIT_POST_URL)) is None

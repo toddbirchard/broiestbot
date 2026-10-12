@@ -100,7 +100,8 @@ async def fetch_page_head(url: str) -> Optional[Tuple[bytes, str, Optional[str]]
     Any link typed into chat is fetched from the bot's own server, so every hop is checked to
     point at the public internet before it's requested — otherwise a link (or a redirect) to
     `localhost` or a private address would have the bot probing its own network. Redirects are
-    followed manually for that reason, rather than by `aiohttp`.
+    followed manually for that reason, rather than by `aiohttp`. Each hop is also checked against
+    `LINK_PREVIEW_EXCLUDED_HOSTS`, so a short link can't reach a host excluded by name.
 
     Only the start of the body is read: the metadata lives in `<head>`, so reading stops once that
     closes, or at `LINK_PREVIEW_MAX_BYTES` regardless.
@@ -115,6 +116,10 @@ async def fetch_page_head(url: str) -> Optional[Tuple[bytes, str, Optional[str]]
     for _ in range(LINK_PREVIEW_MAX_REDIRECTS + 1):
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            return None
+        # Re-checked on every hop, so a shortener (or `instagr.am`) can't launder an excluded host.
+        if _host_matches(parsed.hostname.lower(), LINK_PREVIEW_EXCLUDED_HOSTS):
+            LOGGER.info(f"Not previewing `{url}`: redirected to an excluded host.")
             return None
         if not await _is_public_host(parsed.hostname):
             LOGGER.warning(f"Refusing to preview `{url}`: host is not on the public internet.")

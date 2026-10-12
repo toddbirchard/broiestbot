@@ -355,6 +355,7 @@ LINK_PREVIEW_EXCLUDED_HOSTS = (
     "broiestbro.com",
     "chatango.com",
     "instagram.com",
+    "instagr.am",
     "facebook.com",
 )
 

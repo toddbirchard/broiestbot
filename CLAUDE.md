@@ -204,7 +204,8 @@ first; phrases match a whole message exactly, so the two never compete.
 
 - **Which link.** The first one in the sender's own words (quotes stripped), skipping image links
   (Chatango renders those inline) and `LINK_PREVIEW_EXCLUDED_HOSTS` — hosts a dedicated handler owns,
-  so a link it declined isn't retried here, plus known login walls. Links posted by other bots are
+  so a link it declined isn't retried here, plus known login walls (Instagram). The list is
+  re-checked on every redirect hop, so a short link can't reach an excluded host. Links posted by other bots are
   ignored, like the YouTube preview, so two previewing bots can't feed each other.
 - **No SSRF.** The URL is whatever somebody typed, fetched from the bot's own server. Every hop is
   checked by `_is_public_host` (every resolved address must be `is_global`), and redirects are
