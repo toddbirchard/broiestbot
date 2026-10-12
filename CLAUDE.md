@@ -38,6 +38,7 @@ The bot is not a web server — uvicorn is used purely as a process manager. `as
    - YouTube/X/Wikipedia URLs → auto-generate link previews
    - `@bro` → LLM response via the provider `LLM_TYPE` selects (Claude or ChatGPT)
    - Everything else → `_process_phrase` → DB phrase match
+     — and, if it carries any other link, a generic metadata preview (see "Generic Link Previews")
 
    These branches are mutually exclusive: the `?<query>` and `!<cmd>` branches `return` once
    handled, so a command never also pays for the link-preview checks or a `phrases` lookup it
@@ -192,6 +193,42 @@ Three guardrails hang off that choke point:
 
 A failed `?<query>` search answers with `YOUTUBE_FAILURE_RESPONSE` rather than staying silent — the
 user explicitly asked. An automatic link preview stays silent, since nobody asked for it.
+
+### Generic Link Previews
+
+Any link which reaches the final `else` of `on_message` — i.e. not claimed by the YouTube / X /
+Wikipedia branches, a ban rule or an `@bro` prompt — is previewed by
+`commands/previews.py:generate_link_preview` from the page's own metadata: OpenGraph first, then
+Twitter card tags, then plain `<title>` / `<meta name="description">`. The phrase lookup still runs
+first; phrases match a whole message exactly, so the two never compete.
+
+- **Which link.** The first one in the sender's own words (quotes stripped), skipping image links
+  (Chatango renders those inline) and `LINK_PREVIEW_EXCLUDED_HOSTS` — hosts a dedicated handler owns,
+  so a link it declined isn't retried here, plus known login walls (Instagram). The list is
+  re-checked on every redirect hop, so a short link can't reach an excluded host. Links posted by other bots are
+  ignored, like the YouTube preview, so two previewing bots can't feed each other.
+- **No SSRF.** The URL is whatever somebody typed, fetched from the bot's own server. Every hop is
+  checked by `_is_public_host` (every resolved address must be `is_global`), and redirects are
+  followed by hand (`allow_redirects=False`, up to `LINK_PREVIEW_MAX_REDIRECTS`) so a public link
+  can't bounce the bot onto `localhost` or a cloud metadata endpoint. The check and the connection
+  resolve separately, so DNS rebinding is not covered.
+- **Cheap or nothing.** Only `text/html` 200s are read, and only until `</head>` or
+  `LINK_PREVIEW_MAX_BYTES`, under `LINK_PREVIEW_REQUEST_TIMEOUT`. Every failure is silent — nobody asked.
+- **Worth a line of chat.** A card needs a title plus a description or image; a bare `<title>` is
+  usually a login or error page. All page text is HTML-escaped and truncated, and an image URL with
+  anything that could break out of markup is dropped.
+- **Image fallbacks, `<head>` only.** Without a card image, the image is taken from
+  `<link rel="image_src">`, then JSON-LD `image` / `thumbnailUrl` (top-level and `@graph` nodes,
+  skipping `LINK_PREVIEW_JSON_LD_SKIPPED_TYPES` — logos and avatars), then `itemprop="image"`. The
+  first candidate safe to post wins, so a malformed tag falls through to the next. Body `<img>` tags
+  are never guessed from: without layout, a hero image can't be told from a logo or an ad.
+- **Reddit is fetched from old Reddit.** New Reddit serves unfurlers a stub — a branded placeholder
+  `og:image` (`share.redd.it/preview/post/…`) and "Explore this post…" — identical for every post.
+  `metadata_url` rewrites `REDDIT_REWRITTEN_HOSTS` to `old.reddit.com` on **every redirect hop**, so
+  `redd.it` short links land there too. App share links (`/r/<sub>/s/<id>`) are the exception: only
+  new Reddit resolves them (old Reddit bounces them to its submit page), so that hop goes to new
+  Reddit and the permalink it redirects to is rewritten. Old Reddit only serves this to the
+  unfurler user agent — a desktop browser UA gets a page with no OpenGraph at all.
 
 ### Sumo
 

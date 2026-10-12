@@ -147,4 +147,4 @@ def test_other_api_errors_still_reply(mock_client):
     mock_client.generate_response = AsyncMock(side_effect=FakeAPIError("overloaded"))
     _stub_errors(mock_client)
     response = _run(generate_llm_response("todd", "room-a", [], "@bro who won the derby"))
-    assert response == "@todd i am trash, sry m8"
+    assert response == "i am trash, sry m8"

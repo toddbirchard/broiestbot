@@ -37,6 +37,7 @@ from broiestbot.commands import (  # get_crypto_chart,
     footy_upcoming_fixtures,
     gcs_count_images_in_bucket,
     generate_llm_response,
+    generate_link_preview,
     generate_twitter_preview,
     generate_youtube_video_preview,
     get_all_live_twitch_streams,
@@ -452,6 +453,13 @@ class Bot(chatango.Client):
             await ban_word(room, message, user_name, silent=True)
         else:
             await self._process_phrase(chat_message, room, user_name, message, bot_username)
+            # Any other link gets a preview built from the page's own metadata. Phrases match a
+            # whole message exactly, so the two never compete; the phrase reply goes first as it
+            # costs one query, where a preview can wait several seconds on a slow site.
+            if "bot" not in user_name and "lmao" not in user_name:
+                preview = await generate_link_preview(chat_message)
+                if preview:
+                    await room.send_message(preview, use_html=True)
 
     @staticmethod
     def _mentions_bot(chat_message: str) -> bool:
