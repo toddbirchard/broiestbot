@@ -217,6 +217,18 @@ first; phrases match a whole message exactly, so the two never compete.
 - **Worth a line of chat.** A card needs a title plus a description or image; a bare `<title>` is
   usually a login or error page. All page text is HTML-escaped and truncated, and an image URL with
   anything that could break out of markup is dropped.
+- **Image fallbacks, `<head>` only.** Without a card image, the image is taken from
+  `<link rel="image_src">`, then JSON-LD `image` / `thumbnailUrl` (top-level and `@graph` nodes,
+  skipping `LINK_PREVIEW_JSON_LD_SKIPPED_TYPES` — logos and avatars), then `itemprop="image"`. The
+  first candidate safe to post wins, so a malformed tag falls through to the next. Body `<img>` tags
+  are never guessed from: without layout, a hero image can't be told from a logo or an ad.
+- **Reddit is fetched from old Reddit.** New Reddit serves unfurlers a stub — a branded placeholder
+  `og:image` (`share.redd.it/preview/post/…`) and "Explore this post…" — identical for every post.
+  `metadata_url` rewrites `REDDIT_REWRITTEN_HOSTS` to `old.reddit.com` on **every redirect hop**, so
+  `redd.it` short links land there too. App share links (`/r/<sub>/s/<id>`) are the exception: only
+  new Reddit resolves them (old Reddit bounces them to its submit page), so that hop goes to new
+  Reddit and the permalink it redirects to is rewritten. Old Reddit only serves this to the
+  unfurler user agent — a desktop browser UA gets a page with no OpenGraph at all.
 
 ### Sumo
 

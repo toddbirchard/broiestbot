@@ -339,7 +339,8 @@ IMAGE_URL_HOSTS = (
 # Generic link previews
 # -------------------------------------------------
 # Any link in chat which no dedicated preview handler claims is previewed from the page's own
-# metadata (OpenGraph, Twitter card, then plain `<title>` / `<meta name="description">`). See
+# metadata (OpenGraph, Twitter card, then plain `<title>` / `<meta name="description">`, with
+# further fallbacks for the image). See
 # `broiestbot/commands/previews.py:generate_link_preview`.
 #
 # Hosts never previewed generically: either a dedicated handler owns them (YouTube, X, Wikipedia),
@@ -375,6 +376,20 @@ LINK_PREVIEW_USER_AGENT = (
     "Mozilla/5.0 (compatible; broiestbot/1.0; +https://github.com/toddbirchard/broiestbot) "
     "facebookexternalhit/1.1 Twitterbot/1.0"
 )
+
+# New Reddit serves link unfurlers a stub page: a generic "Explore this post" description and a
+# branded placeholder card as `og:image`, identical for every post. Old Reddit still serves the
+# post's own text and image, so Reddit links are fetched from there instead — at every redirect
+# hop, so `redd.it` short links land there too.
+REDDIT_PREVIEW_HOST = "old.reddit.com"
+REDDIT_REWRITTEN_HOSTS = ("reddit.com", "www.reddit.com", "new.reddit.com", "m.reddit.com", "np.reddit.com")
+# App share links (`/r/<sub>/s/<id>`) only resolve on new Reddit, which redirects them to the full
+# post permalink — that hop is the one rewritten. Old Reddit bounces them to its submit page.
+REDDIT_SHARE_LINK_REGEX = re.compile(r"^/(?:r|u|user)/[^/]+/s/", re.IGNORECASE)
+
+# JSON-LD node types whose `image` is a logo or an avatar rather than a picture of the page's
+# subject, so they're never used for a preview image.
+LINK_PREVIEW_JSON_LD_SKIPPED_TYPES = ("Organization", "Person", "Brand", "WebSite")
 
 # Marks an `@bro` prompt as being *about* an image, which is what lets the bot go looking for one
 # in the room history. A prompt carrying its own image link skips this check — see

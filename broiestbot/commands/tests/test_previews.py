@@ -7,6 +7,7 @@ anything that isn't on the public internet, at every redirect hop.
 
 import asyncio
 from unittest.mock import AsyncMock, patch
+from urllib.parse import urlparse
 
 import pytest
 from aiohttp import ClientConnectionError
@@ -15,6 +16,7 @@ from broiestbot.commands.previews import (
     _is_public_host,
     format_link_preview,
     generate_link_preview,
+    metadata_url,
     parse_link_metadata,
     previewable_url,
 )
@@ -127,6 +129,92 @@ def test_unsafe_image_urls_dropped(image: str):
 def test_declared_charset_used_to_decode():
     html = '<head><meta property="og:title" content="Café crème"></head>'.encode("latin-1")
     assert parse_link_metadata(html, URL, "latin-1")["title"] == "Café crème"
+
+
+# Image fallbacks
+# -------------------------------------------------
+# A page without a card image can still name one elsewhere in its `<head>`: the older
+# `<link rel="image_src">`, JSON-LD, or schema.org microdata — tried in that order.
+
+
+def image_of(head: str) -> str:
+    return parse_link_metadata(f"<head><title>t</title>{head}</head>".encode(), URL)["image"]
+
+
+def test_card_image_outranks_every_fallback():
+    head = """<meta property="og:image" content="https://cdn.example.com/og.jpg">
+    <link rel="image_src" href="https://cdn.example.com/link.jpg">
+    <script type="application/ld+json">{"@type": "NewsArticle", "image": "https://cdn.example.com/ld.jpg"}</script>
+    <meta itemprop="image" content="https://cdn.example.com/microdata.jpg">"""
+    assert image_of(head) == "https://cdn.example.com/og.jpg"
+
+
+def test_link_image_src():
+    assert image_of('<link rel="image_src" href="/img/lead.jpg">') == "https://news.example.com/img/lead.jpg"
+
+
+def test_link_image_src_outranks_json_ld():
+    head = """<script type="application/ld+json">{"@type": "NewsArticle", "image": "https://cdn.example.com/ld.jpg"}</script>
+    <link rel="image_src" href="https://cdn.example.com/link.jpg">"""
+    assert image_of(head) == "https://cdn.example.com/link.jpg"
+
+
+@pytest.mark.parametrize(
+    "json_ld",
+    [
+        '{"@type": "NewsArticle", "image": "https://cdn.example.com/lead.jpg"}',
+        '{"@type": "NewsArticle", "image": ["https://cdn.example.com/lead.jpg", "https://cdn.example.com/2.jpg"]}',
+        '{"@type": "NewsArticle", "image": {"@type": "ImageObject", "url": "https://cdn.example.com/lead.jpg"}}',
+        '{"@type": "NewsArticle", "image": [{"@type": "ImageObject", "contentUrl": "https://cdn.example.com/lead.jpg"}]}',
+        '{"@type": "VideoObject", "thumbnailUrl": ["https://cdn.example.com/lead.jpg"]}',
+        # A list of documents, and a `@graph`.
+        '[{"@type": "BreadcrumbList"}, {"@type": "Article", "image": "https://cdn.example.com/lead.jpg"}]',
+        '{"@context": "https://schema.org", "@graph": [{"@type": "Article", "image": "https://cdn.example.com/lead.jpg"}]}',
+    ],
+)
+def test_json_ld_image_shapes(json_ld: str):
+    assert image_of(f'<script type="application/ld+json">{json_ld}</script>') == "https://cdn.example.com/lead.jpg"
+
+
+def test_json_ld_logos_and_avatars_skipped():
+    """An `Organization` or `Person` image is a logo or headshot, not a picture of the page."""
+    json_ld = """{"@graph": [
+        {"@type": "Organization", "image": "https://cdn.example.com/logo.png"},
+        {"@type": ["Person"], "image": "https://cdn.example.com/author.jpg"},
+        {"@type": "Article", "author": {"image": "https://cdn.example.com/nested.jpg"},
+         "image": "https://cdn.example.com/lead.jpg"}
+    ]}"""
+    assert image_of(f'<script type="application/ld+json">{json_ld}</script>') == "https://cdn.example.com/lead.jpg"
+
+
+def test_malformed_json_ld_skipped():
+    head = """<script type="application/ld+json">{"image": "https://cdn.example.com/broken.jpg",</script>
+    <script type="application/ld+json">{"@type": "Article", "image": "https://cdn.example.com/lead.jpg"}</script>"""
+    assert image_of(head) == "https://cdn.example.com/lead.jpg"
+
+
+@pytest.mark.parametrize(
+    "tag",
+    [
+        '<meta itemprop="image" content="https://cdn.example.com/lead.jpg">',
+        '<link itemprop="image" href="https://cdn.example.com/lead.jpg">',
+        '<img itemprop="image" src="https://cdn.example.com/lead.jpg">',
+    ],
+)
+def test_microdata_image(tag: str):
+    assert image_of(tag) == "https://cdn.example.com/lead.jpg"
+
+
+def test_unsafe_candidate_falls_through_to_the_next():
+    """One malformed tag doesn't cost the card its image when another candidate is fine."""
+    head = """<meta property="og:image" content="javascript:alert(1)">
+    <meta name="twitter:image" content="https://cdn.example.com/card.jpg">"""
+    assert image_of(head) == "https://cdn.example.com/card.jpg"
+
+
+def test_body_images_never_guessed():
+    html = b'<head><title>t</title></head><body><img src="https://cdn.example.com/logo.png"></body>'
+    assert parse_link_metadata(html, URL)["image"] is None
 
 
 # Rendering the card
@@ -342,43 +430,43 @@ def test_short_link_to_instagram_is_not_followed():
 
 # Reddit
 # -------------------------------------------------
-# Reddit is previewed generically. The fixtures mirror the metadata Reddit serves on post pages:
-# OpenGraph title/description/image, a `summary_large_image` Twitter card, and HTML-entity-encoded
-# `&amp;` in its image query strings.
+# New Reddit serves link unfurlers a stub — the same placeholder image and "Explore this post"
+# description for every post — so Reddit links are fetched from old Reddit, which still serves the
+# post's own metadata. The fixtures mirror each: old Reddit's has HTML-entity-encoded `&amp;` in
+# its image query strings, and declares its tags on `property` throughout, Twitter's included.
 
 REDDIT_POST_URL = "https://www.reddit.com/r/eagles/comments/1g2abcd/hurts_to_brown_for_6/"
-REDDIT_IMAGE = "https://external-preview.redd.it/hurts-brown.jpg?width=1080&format=pjpg&auto=webp&s=0a1b2c"
-REDDIT_POST_PAGE = """<!DOCTYPE html><html lang="en-US"><head>
-<meta charset="utf-8">
-<title>Hurts to Brown for 6 : r/eagles</title>
-<meta name="description" content="Meta description which OpenGraph outranks">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Reddit">
-<meta property="og:title" content="r/eagles on Reddit: Hurts to Brown for 6 &amp; we&#39;re up 21-3">
-<meta property="og:description" content="Posted by u/birdsfan - 1,234 votes and 210 comments">
+OLD_REDDIT_POST_URL = "https://old.reddit.com/r/eagles/comments/1g2abcd/hurts_to_brown_for_6/"
+REDDIT_IMAGE = "https://preview.redd.it/hurts-brown.png?width=1200&height=628&auto=webp&s=0a1b2c"
+REDDIT_POST_PAGE = """<!doctype html><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
+<title>Hurts to Brown for 6 &amp; we&#39;re up 21-3 : eagles</title>
+<meta name="description" content="Meta description which OpenGraph outranks" />
+<meta property="og:site_name" content="reddit">
+<meta property="og:description" content="Posted in r/eagles by u/birdsfan • 1,234 points and 210 comments">
+<meta property="og:title" content="Hurts to Brown for 6 &amp; we&#39;re up 21-3">
 <meta property="og:image"
-  content="https://external-preview.redd.it/hurts-brown.jpg?width=1080&amp;format=pjpg&amp;auto=webp&amp;s=0a1b2c">
-<meta property="og:image:width" content="1080">
-<meta property="og:image:height" content="607">
-<meta property="og:url" content="https://www.reddit.com/r/eagles/comments/1g2abcd/hurts_to_brown_for_6/">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Twitter title which OpenGraph outranks">
-<meta name="twitter:image" content="https://share.redd.it/preview/post/1g2abcd">
-</head><body><shreddit-app></shreddit-app></body></html>"""
+  content="https://preview.redd.it/hurts-brown.png?width=1200&amp;height=628&amp;auto=webp&amp;s=0a1b2c">
+<meta property="og:image:height" content="628">
+<meta property="og:image:width" content="1200">
+<meta property="twitter:image"
+  content="https://preview.redd.it/hurts-brown.png?width=600&amp;height=300&amp;auto=webp&amp;s=3d4e5f">
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:title" content="Twitter title which OpenGraph outranks">
+</head><body></body></html>"""
 
-REDDIT_TEXT_POST_PAGE = """<!DOCTYPE html><html><head>
-<title>Game thread etiquette : r/eagles</title>
-<meta property="og:site_name" content="Reddit">
-<meta property="og:title" content="r/eagles on Reddit: Game thread etiquette">
+REDDIT_TEXT_POST_PAGE = """<!doctype html><html><head>
+<title>Game thread etiquette : eagles</title>
+<meta property="og:site_name" content="reddit">
+<meta property="og:title" content="Game thread etiquette">
 <meta property="og:description" content="Please keep the game thread to the game. Memes go in the post-game thread.">
 </head><body></body></html>"""
 
-REDDIT_SUBREDDIT_PAGE = """<!DOCTYPE html><html><head>
-<title>r/eagles</title>
-<meta property="og:site_name" content="Reddit">
-<meta property="og:title" content="r/eagles">
+REDDIT_SUBREDDIT_PAGE = """<!doctype html><html><head>
+<title>Philadelphia Eagles</title>
+<meta property="og:site_name" content="reddit">
+<meta property="og:title" content="Philadelphia Eagles • r/eagles">
 <meta property="og:description" content="The home of Philadelphia Eagles fans on Reddit.">
-<meta property="og:image" content="https://styles.redditmedia.com/t5_2qhqk/styles/communityIcon_abc.png">
+<meta property="og:image" content="https://styles.redditmedia.com/t5_2qhqk/styles/bannerBackgroundImage_abc.jpg">
 </head><body></body></html>"""
 
 
@@ -389,66 +477,108 @@ def reddit_preview(page: str, *responses: FakeResponse, url: str = REDDIT_POST_U
     return preview, [call[1] for call in session_mock.return_value.calls]
 
 
-def test_reddit_post_preview_elements():
-    """A Reddit post renders title, site name, description and image — taken from OpenGraph."""
+@pytest.mark.parametrize(
+    "url, expected",
+    [
+        (REDDIT_POST_URL, OLD_REDDIT_POST_URL),
+        ("https://reddit.com/r/eagles/", "https://old.reddit.com/r/eagles/"),
+        ("https://m.reddit.com/comments/1g2abcd", "https://old.reddit.com/comments/1g2abcd"),
+        ("https://new.reddit.com/r/eagles/?sort=top", "https://old.reddit.com/r/eagles/?sort=top"),
+        ("https://WWW.Reddit.com/r/eagles/", "https://old.reddit.com/r/eagles/"),
+        # Already old Reddit.
+        (OLD_REDDIT_POST_URL, OLD_REDDIT_POST_URL),
+        # App share links only resolve on new Reddit; old Reddit bounces them to its submit page.
+        ("https://www.reddit.com/r/eagles/s/AbCdEf1234", "https://www.reddit.com/r/eagles/s/AbCdEf1234"),
+        ("https://www.reddit.com/u/birdsfan/s/AbCdEf1234", "https://www.reddit.com/u/birdsfan/s/AbCdEf1234"),
+        # Reddit's other hosts, and lookalikes, are left alone.
+        ("https://redd.it/1g2abcd", "https://redd.it/1g2abcd"),
+        ("https://notreddit.com/r/eagles/", "https://notreddit.com/r/eagles/"),
+        (URL, URL),
+    ],
+)
+def test_metadata_url(url: str, expected: str):
+    assert metadata_url(url) == expected
+
+
+def test_reddit_post_fetched_from_old_reddit():
+    """A Reddit post renders title, site name, description and image — taken from old Reddit's OpenGraph."""
     preview, requested = reddit_preview(REDDIT_POST_PAGE)
-    assert requested == [REDDIT_POST_URL]
+    assert requested == [OLD_REDDIT_POST_URL]
     assert preview == (
-        "\n\n<b>r/eagles on Reddit: Hurts to Brown for 6 &amp; we&#x27;re up 21-3</b>\n"
-        "🔗 <i>Reddit</i>\n"
-        "\nPosted by u/birdsfan - 1,234 votes and 210 comments\n"
+        "\n\n<b>Hurts to Brown for 6 &amp; we&#x27;re up 21-3</b>\n"
+        "🔗 <i>reddit</i>\n"
+        "\nPosted in r/eagles by u/birdsfan • 1,234 points and 210 comments\n"
         f"\n{REDDIT_IMAGE}\n"
     )
     # OpenGraph outranks the Twitter card, the meta description and the page `<title>`.
     assert "Twitter title" not in preview
     assert "Meta description" not in preview
-    assert "share.redd.it" not in preview
 
 
 def test_reddit_post_metadata():
-    """The raw elements read from a Reddit post, before rendering."""
-    assert parse_link_metadata(REDDIT_POST_PAGE.encode(), REDDIT_POST_URL) == {
-        "title": "r/eagles on Reddit: Hurts to Brown for 6 & we're up 21-3",
-        "description": "Posted by u/birdsfan - 1,234 votes and 210 comments",
+    """The raw elements read from an old Reddit post, before rendering."""
+    assert parse_link_metadata(REDDIT_POST_PAGE.encode(), OLD_REDDIT_POST_URL) == {
+        "title": "Hurts to Brown for 6 & we're up 21-3",
+        "description": "Posted in r/eagles by u/birdsfan • 1,234 points and 210 comments",
         # Entity-encoded `&amp;` comes back as a plain `&`, so the link works when posted.
         "image": REDDIT_IMAGE,
-        "site_name": "Reddit",
+        "site_name": "reddit",
     }
+
+
+def test_new_reddit_stub_is_never_fetched():
+    """The stub's placeholder image is what the bot used to post; it's no longer requested at all."""
+    with public_hosts(), patch_http_session(MODULE, html_response(REDDIT_POST_PAGE)) as session_mock:
+        preview = asyncio.run(generate_link_preview(REDDIT_POST_URL))
+    assert all(urlparse(call[1]).hostname == "old.reddit.com" for call in session_mock.return_value.calls)
+    assert "share.redd.it" not in preview
+    assert "Explore this post" not in preview
 
 
 def test_reddit_text_post_has_no_image_line():
     """A self post without an image still previews; the card simply has no image."""
     preview, _ = reddit_preview(REDDIT_TEXT_POST_PAGE)
     assert preview == (
-        "\n\n<b>r/eagles on Reddit: Game thread etiquette</b>\n"
-        "🔗 <i>Reddit</i>\n"
+        "\n\n<b>Game thread etiquette</b>\n"
+        "🔗 <i>reddit</i>\n"
         "\nPlease keep the game thread to the game. Memes go in the post-game thread.\n"
     )
 
 
 def test_reddit_subreddit_link_previewed():
-    preview, _ = reddit_preview(REDDIT_SUBREDDIT_PAGE, url="https://www.reddit.com/r/eagles/")
-    assert "<b>r/eagles</b>" in preview
+    preview, requested = reddit_preview(REDDIT_SUBREDDIT_PAGE, url="https://www.reddit.com/r/eagles/")
+    assert requested == ["https://old.reddit.com/r/eagles/"]
+    assert "<b>Philadelphia Eagles • r/eagles</b>" in preview
     assert "The home of Philadelphia Eagles fans on Reddit." in preview
-    assert "https://styles.redditmedia.com/t5_2qhqk/styles/communityIcon_abc.png" in preview
+    assert "https://styles.redditmedia.com/t5_2qhqk/styles/bannerBackgroundImage_abc.jpg" in preview
 
 
 @pytest.mark.parametrize(
-    "short_url",
+    "short_url, redirects_to",
     [
-        # Post short link.
-        "https://redd.it/1g2abcd",
-        # Mobile app share link.
-        "https://www.reddit.com/r/eagles/s/AbCdEf1234",
+        # Post short link: Reddit redirects it to new Reddit's ID-only permalink.
+        ("https://redd.it/1g2abcd", "https://www.reddit.com/comments/1g2abcd"),
+        # Mobile app share link: new Reddit resolves it to the full permalink.
+        ("https://www.reddit.com/r/eagles/s/AbCdEf1234", REDDIT_POST_URL),
         # Hosted video, which redirects to the post it belongs to.
-        "https://v.redd.it/abc123xyz",
+        ("https://v.redd.it/abc123xyz", REDDIT_POST_URL),
     ],
 )
-def test_reddit_short_links_follow_redirect_to_post(short_url: str):
-    redirect = FakeResponse(status=301, headers={"Location": REDDIT_POST_URL})
+def test_reddit_short_links_land_on_old_reddit(short_url: str, redirects_to: str):
+    """Every redirect hop is rewritten, so a short link's destination is still fetched from old Reddit."""
+    redirect = FakeResponse(status=301, headers={"Location": redirects_to})
     preview, requested = reddit_preview(REDDIT_POST_PAGE, redirect, url=short_url)
-    assert requested == [short_url, REDDIT_POST_URL]
-    assert "<b>r/eagles on Reddit: Hurts to Brown for 6" in preview
+    assert requested == [short_url, metadata_url(redirects_to)]
+    assert urlparse(requested[-1]).hostname == "old.reddit.com"
+    assert "<b>Hurts to Brown for 6" in preview
+
+
+def test_old_reddit_id_only_permalink_redirect_followed():
+    """Old Reddit answers an ID-only permalink with a redirect to the full one, which is followed."""
+    redirect = FakeResponse(status=301, headers={"Location": OLD_REDDIT_POST_URL})
+    preview, requested = reddit_preview(REDDIT_POST_PAGE, redirect, url="https://www.reddit.com/comments/1g2abcd")
+    assert requested == ["https://old.reddit.com/comments/1g2abcd", OLD_REDDIT_POST_URL]
+    assert REDDIT_IMAGE in preview
 
 
 @pytest.mark.parametrize(

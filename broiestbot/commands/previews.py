@@ -2,9 +2,10 @@
 
 import asyncio
 import ipaddress
+import json
 import socket
 from html import escape
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Iterator, Optional, Tuple
 from urllib.parse import ParseResult, urljoin, urlparse
 
 from aiohttp import ClientError
@@ -19,11 +20,15 @@ from config import (
     IMAGE_URL_HOSTS,
     LINK_PREVIEW_DESCRIPTION_LENGTH,
     LINK_PREVIEW_EXCLUDED_HOSTS,
+    LINK_PREVIEW_JSON_LD_SKIPPED_TYPES,
     LINK_PREVIEW_MAX_BYTES,
     LINK_PREVIEW_MAX_REDIRECTS,
     LINK_PREVIEW_REQUEST_TIMEOUT,
     LINK_PREVIEW_TITLE_LENGTH,
     LINK_PREVIEW_USER_AGENT,
+    REDDIT_PREVIEW_HOST,
+    REDDIT_REWRITTEN_HOSTS,
+    REDDIT_SHARE_LINK_REGEX,
     URL_REGEX,
 )
 
@@ -101,7 +106,8 @@ async def fetch_page_head(url: str) -> Optional[Tuple[bytes, str, Optional[str]]
     point at the public internet before it's requested — otherwise a link (or a redirect) to
     `localhost` or a private address would have the bot probing its own network. Redirects are
     followed manually for that reason, rather than by `aiohttp`. Each hop is also checked against
-    `LINK_PREVIEW_EXCLUDED_HOSTS`, so a short link can't reach a host excluded by name.
+    `LINK_PREVIEW_EXCLUDED_HOSTS`, so a short link can't reach a host excluded by name, and
+    rewritten to the variant of the page with usable metadata (see `metadata_url`).
 
     Only the start of the body is read: the metadata lives in `<head>`, so reading stops once that
     closes, or at `LINK_PREVIEW_MAX_BYTES` regardless.
@@ -114,6 +120,7 @@ async def fetch_page_head(url: str) -> Optional[Tuple[bytes, str, Optional[str]]
     session = await get_http_session()
     headers = {"User-Agent": LINK_PREVIEW_USER_AGENT, "Accept": "text/html,application/xhtml+xml"}
     for _ in range(LINK_PREVIEW_MAX_REDIRECTS + 1):
+        url = metadata_url(url)
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https") or not parsed.hostname:
             return None
@@ -148,9 +155,31 @@ async def fetch_page_head(url: str) -> Optional[Tuple[bytes, str, Optional[str]]
     return None
 
 
+def metadata_url(url: str) -> str:
+    """
+    Point a link at the variant of its page which serves usable preview metadata.
+
+    New Reddit hands link unfurlers a stub with a placeholder image, so Reddit links are fetched
+    from old Reddit — except app share links, which only new Reddit can resolve. Anything else is
+    returned unchanged.
+
+    :param str url: Link about to be fetched.
+
+    :returns: str
+    """
+    parsed = urlparse(url)
+    if (parsed.hostname or "").lower() in REDDIT_REWRITTEN_HOSTS and not REDDIT_SHARE_LINK_REGEX.match(parsed.path):
+        return parsed._replace(netloc=REDDIT_PREVIEW_HOST).geturl()
+    return url
+
+
 def parse_link_metadata(html: bytes, url: str, encoding: Optional[str] = None) -> Dict[str, Optional[str]]:
     """
     Read a page's preview metadata, preferring OpenGraph, then Twitter cards, then plain HTML.
+
+    The image has further fallbacks for pages without a card image — `<link rel="image_src">`,
+    JSON-LD, then schema.org `itemprop="image"` — and the first candidate which is safe to post
+    wins, so one malformed tag doesn't cost the card its image.
 
     :param bytes html: Start of the page's HTML.
     :param str url: URL the page was served from; relative image paths are resolved against it.
@@ -172,19 +201,93 @@ def parse_link_metadata(html: bytes, url: str, encoding: Optional[str] = None) -
         return next((tags[key] for key in keys if key in tags), None)
 
     page_title = _clean_text(soup.title.get_text()) if soup.title else None
-    image = first("og:image:secure_url", "og:image", "og:image:url", "twitter:image", "twitter:image:src")
-    if image:
-        image = urljoin(url, image)
-        # It's posted into chat as-is, so it must be a well-formed http(s) link with nothing in it
-        # which could break out into markup.
-        if urlparse(image).scheme not in ("http", "https") or any(char in image for char in " <>\"'`"):
-            image = None
+    images = (urljoin(url, image.strip()) for image in _image_candidates(soup, tags) if image.strip())
     return {
         "title": first("og:title", "twitter:title") or page_title,
         "description": first("og:description", "twitter:description", "description"),
-        "image": image,
+        "image": next((image for image in images if _is_postable_url(image)), None),
         "site_name": first("og:site_name", "application-name"),
     }
+
+
+def _image_candidates(soup: BeautifulSoup, tags: Dict[str, str]) -> Iterator[str]:
+    """
+    Yield a page's candidate preview images, most authoritative first.
+
+    Card tags first, then the older `<link rel="image_src">`, then JSON-LD (which publishers fill in
+    for Google even when they skip OpenGraph), then schema.org microdata. Nothing is guessed from
+    the page's `<img>` tags: without layout, a hero image can't be told from a logo or an ad.
+
+    :param BeautifulSoup soup: Parsed page.
+    :param Dict[str, str] tags: The page's `<meta>` tags, keyed by lowercased `property` / `name`.
+
+    :returns: Iterator[str]
+    """
+    for key in ("og:image:secure_url", "og:image", "og:image:url", "twitter:image", "twitter:image:src"):
+        if key in tags:
+            yield tags[key]
+    for link in soup.find_all("link", rel="image_src", href=True):
+        yield link["href"]
+    yield from _json_ld_images(soup)
+    for tag in soup.find_all(attrs={"itemprop": "image"}):
+        source = tag.get("content") or tag.get("href") or tag.get("src")
+        if isinstance(source, str):
+            yield source
+
+
+def _json_ld_images(soup: BeautifulSoup) -> Iterator[str]:
+    """
+    Yield the `image` / `thumbnailUrl` of each JSON-LD node on the page, skipping logos and avatars.
+
+    Only top-level nodes (and those in an `@graph`) are read — a nested `image` usually belongs to
+    the publisher or author.
+
+    :param BeautifulSoup soup: Parsed page.
+
+    :returns: Iterator[str]
+    """
+    for script in soup.find_all("script", type=lambda value: value and "ld+json" in value.lower()):
+        try:
+            data = json.loads(script.string or "")
+        except ValueError:
+            continue
+        for node in _json_ld_nodes(data):
+            node_types = node.get("@type")
+            node_types = node_types if isinstance(node_types, list) else [node_types]
+            if any(node_type in LINK_PREVIEW_JSON_LD_SKIPPED_TYPES for node_type in node_types):
+                continue
+            yield from _json_ld_urls(node.get("image"))
+            yield from _json_ld_urls(node.get("thumbnailUrl"))
+
+
+def _json_ld_nodes(data: Any) -> Iterator[Dict[str, Any]]:
+    """Flatten a JSON-LD document's top-level nodes, including any inside an `@graph`."""
+    if isinstance(data, list):
+        for item in data:
+            yield from _json_ld_nodes(item)
+    elif isinstance(data, dict):
+        yield data
+        yield from _json_ld_nodes(data.get("@graph"))
+
+
+def _json_ld_urls(value: Any) -> Iterator[str]:
+    """Read URLs out of a JSON-LD image value: a URL, an `ImageObject`, or a list of either."""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, list):
+        for item in value:
+            yield from _json_ld_urls(item)
+    elif isinstance(value, dict):
+        yield from _json_ld_urls(value.get("url") or value.get("contentUrl"))
+
+
+def _is_postable_url(url: str) -> bool:
+    """
+    Whether an image URL is safe to post into chat as-is.
+
+    It must be a well-formed http(s) link with nothing in it which could break out into markup.
+    """
+    return urlparse(url).scheme in ("http", "https") and not any(char in url for char in " <>\"'`")
 
 
 def format_link_preview(metadata: Dict[str, Optional[str]], url: str) -> Optional[str]:
