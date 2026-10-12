@@ -129,7 +129,7 @@ def test_bot_never_answers_its_own_mention(bot, room, message):
 def test_bot_s_own_messages_are_still_logged(bot, room, message):
     """Ignoring its own messages stops the bot answering them, not recording them."""
     message.user.name = CHATANGO_BOT_USERNAME
-    message.body = "@broiestbot i am trash, sry m8"
+    message.body = "i am trash, sry m8"
     with (
         patch("broiestbot.bot.check_blacklisted_users", new=AsyncMock()),
         patch("broiestbot.bot.ban_daddy_anons", new=AsyncMock()),
