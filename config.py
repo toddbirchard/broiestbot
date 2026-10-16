@@ -360,6 +360,17 @@ LINK_PREVIEW_EXCLUDED_HOSTS = (
     "facebook.com",
 )
 
+# URLs never previewed generically, for links a bare host can't describe: a family of mirror
+# domains, or one path on an otherwise previewable site. Each pattern is `search`ed against the
+# whole URL, scheme included, and re-checked on every redirect hop like the excluded hosts above.
+LINK_PREVIEW_IGNORED_URL_PATTERNS = (
+    # Daddylive's mirrors: any host containing one of its names (`daddylive`, `daddyhd`, or the
+    # `dlhd` abbreviation), on any TLD or subdomain, over http or https (`daddylive.app`,
+    # `d.daddylivehd.sx`, `daddyhd.com`, `dlhd.dad`). Only the host is searched, so a path or
+    # credentials mentioning one don't count.
+    re.compile(r"^https?://(?:[^/?#]*@)?[^/?#@]*(?:daddylive|daddyhd|dlhd)[^/?#@]*(?:[/?#]|$)", re.IGNORECASE),
+)
+
 # A preview is a nicety nobody asked for, so it must be cheap: a slow site gets no preview rather
 # than a late one, and only the start of the page is read — the metadata lives in `<head>`.
 LINK_PREVIEW_REQUEST_TIMEOUT = 6

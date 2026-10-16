@@ -428,6 +428,62 @@ def test_short_link_to_instagram_is_not_followed():
     assert [call[1] for call in session_mock.return_value.calls] == ["https://bit.ly/3abcDEF"]
 
 
+# Ignored URL patterns
+# -------------------------------------------------
+# `LINK_PREVIEW_IGNORED_URL_PATTERNS` covers links a bare host can't describe — here, any host
+# containing one of Daddylive's names, whatever its TLD — and, like the excluded hosts, is never fetched or redirected into.
+
+
+@pytest.mark.parametrize(
+    "chat_message",
+    [
+        "https://daddylive.app",
+        "http://daddylive.at/",
+        "https://www.daddylive.mov/24-7-channels.php",
+        "https://DADDYLIVE.NL/stream/stream-343.php",
+        "https://cdn.mirror.daddylive.app:8443/watch?id=1",
+        "eagles stream https://daddylive.nl?ref=chat",
+        # Any TLD, and any host which merely contains the name.
+        "https://daddylive.dad/",
+        "https://daddylivehd.sx/",
+        "https://thedaddylive.to/",
+        "https://user@daddylive.app/",
+        "https://dad.daddylivehd1.my/",
+        "https://daddylives.top/test-dash-m3u8-streams/",
+        "https://daddylives.top/match-schedule/",
+        "https://d.daddylivehd.sx/extra/stream-307.php",
+        # Its other names: `daddyhd`, and the `dlhd` abbreviation.
+        "https://daddyhd.com/webmasters.php",
+        "https://dlhd.dad/",
+    ],
+)
+def test_ignored_url_patterns_are_never_previewed_or_fetched(chat_message: str):
+    with public_hosts(), patch_http_session(MODULE, html_response()) as session_mock:
+        assert asyncio.run(generate_link_preview(chat_message)) is None
+    assert session_mock.return_value.calls == []
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        # Only the host is searched: a path, query or credentials naming it don't count.
+        "https://news.example.com/daddylive.app",
+        "https://news.example.com/?q=daddylive",
+        "https://daddylive@news.example.com/",
+        "https://news.example.com/dlhd/daddyhd",
+    ],
+)
+def test_ignored_url_patterns_match_the_host_only(url: str):
+    assert previewable_url(url) == url
+
+
+def test_short_link_to_ignored_url_is_not_followed():
+    redirect = FakeResponse(status=302, headers={"Location": "https://www.daddylive.mov/"})
+    with public_hosts(), patch_http_session(MODULE, redirect, html_response()) as session_mock:
+        assert asyncio.run(generate_link_preview("https://bit.ly/3abcDEF")) is None
+    assert [call[1] for call in session_mock.return_value.calls] == ["https://bit.ly/3abcDEF"]
+
+
 # Reddit
 # -------------------------------------------------
 # New Reddit serves link unfurlers a stub — the same placeholder image and "Explore this post"

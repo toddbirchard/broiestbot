@@ -20,6 +20,7 @@ from config import (
     IMAGE_URL_HOSTS,
     LINK_PREVIEW_DESCRIPTION_LENGTH,
     LINK_PREVIEW_EXCLUDED_HOSTS,
+    LINK_PREVIEW_IGNORED_URL_PATTERNS,
     LINK_PREVIEW_JSON_LD_SKIPPED_TYPES,
     LINK_PREVIEW_MAX_BYTES,
     LINK_PREVIEW_MAX_REDIRECTS,
@@ -82,8 +83,9 @@ def previewable_url(chat_message: str) -> Optional[str]:
 
     Only the sender's own words count — a quoted link was previewed when it was first posted.
     Image links are skipped, since Chatango already renders those inline, as are hosts a dedicated
-    handler owns or which only ever serve a login wall. Only the first eligible link is previewed,
-    so a message pasting a list of links costs the room one card rather than a wall of them.
+    handler owns or which only ever serve a login wall, and URLs matching
+    `LINK_PREVIEW_IGNORED_URL_PATTERNS`. Only the first eligible link is previewed, so a message
+    pasting a list of links costs the room one card rather than a wall of them.
 
     :param str chat_message: Raw chat message which may carry a link.
 
@@ -92,7 +94,7 @@ def previewable_url(chat_message: str) -> Optional[str]:
     for url in URL_REGEX.findall(CHATANGO_QUOTE_REGEX.sub(" ", chat_message)):
         parsed = urlparse(url)
         host = (parsed.hostname or "").lower()
-        if not host or _host_matches(host, LINK_PREVIEW_EXCLUDED_HOSTS) or _is_image_url(parsed, host):
+        if not host or _is_excluded_url(url, host) or _is_image_url(parsed, host):
             continue
         return url
     return None
@@ -106,8 +108,9 @@ async def fetch_page_head(url: str) -> Optional[Tuple[bytes, str, Optional[str]]
     point at the public internet before it's requested — otherwise a link (or a redirect) to
     `localhost` or a private address would have the bot probing its own network. Redirects are
     followed manually for that reason, rather than by `aiohttp`. Each hop is also checked against
-    `LINK_PREVIEW_EXCLUDED_HOSTS`, so a short link can't reach a host excluded by name, and
-    rewritten to the variant of the page with usable metadata (see `metadata_url`).
+    `LINK_PREVIEW_EXCLUDED_HOSTS` and `LINK_PREVIEW_IGNORED_URL_PATTERNS`, so a short link can't
+    reach a host or URL excluded by name, and rewritten to the variant of the page with usable
+    metadata (see `metadata_url`).
 
     Only the start of the body is read: the metadata lives in `<head>`, so reading stops once that
     closes, or at `LINK_PREVIEW_MAX_BYTES` regardless.
@@ -125,8 +128,8 @@ async def fetch_page_head(url: str) -> Optional[Tuple[bytes, str, Optional[str]]
         if parsed.scheme not in ("http", "https") or not parsed.hostname:
             return None
         # Re-checked on every hop, so a shortener (or `instagr.am`) can't launder an excluded host.
-        if _host_matches(parsed.hostname.lower(), LINK_PREVIEW_EXCLUDED_HOSTS):
-            LOGGER.info(f"Not previewing `{url}`: redirected to an excluded host.")
+        if _is_excluded_url(url, parsed.hostname.lower()):
+            LOGGER.info(f"Not previewing `{url}`: redirected to an excluded host or URL.")
             return None
         if not await _is_public_host(parsed.hostname):
             LOGGER.warning(f"Refusing to preview `{url}`: host is not on the public internet.")
@@ -352,6 +355,13 @@ async def _is_public_host(host: str) -> bool:
 def _host_matches(host: str, domains: Tuple[str, ...]) -> bool:
     """Whether `host` is one of `domains`, or a subdomain of one."""
     return any(host == domain or host.endswith(f".{domain}") for domain in domains)
+
+
+def _is_excluded_url(url: str, host: str) -> bool:
+    """Whether a link is never previewed: its host is excluded, or it matches an ignored URL pattern."""
+    return _host_matches(host, LINK_PREVIEW_EXCLUDED_HOSTS) or any(
+        pattern.search(url) for pattern in LINK_PREVIEW_IGNORED_URL_PATTERNS
+    )
 
 
 def _is_image_url(parsed: ParseResult, host: str) -> bool:
