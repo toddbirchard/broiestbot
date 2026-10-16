@@ -24,3 +24,4 @@ async def parse_mlb_game(game: dict) -> Optional[str]:
             return parse_live_mlb_game(game)
     except Exception as e:
         LOGGER.exception(f"Unexpected error while parsing MLB games: {e}")
+    return None

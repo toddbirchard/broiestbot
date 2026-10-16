@@ -157,6 +157,7 @@ async def fetch_head_to_head(rikishi_id: int, opponent_id: int) -> Optional[dict
         LOGGER.exception(f"ClientError while fetching sumo head-to-head `{rikishi_id}` vs `{opponent_id}`: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching sumo head-to-head `{rikishi_id}` vs `{opponent_id}`: {e}")
+    return None
 
 
 def _cache_key(bout: dict) -> Tuple[str, bool]:
@@ -240,6 +241,7 @@ async def fetch_rikishi_profile(rikishi_id: int) -> Optional[dict]:
         LOGGER.exception(f"ClientError while fetching sumo rikishi profile `{rikishi_id}`: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching sumo rikishi profile `{rikishi_id}`: {e}")
+    return None
 
 
 async def _cached_rikishi_profile(rikishi_id: int, semaphore: asyncio.Semaphore) -> Optional[dict]:

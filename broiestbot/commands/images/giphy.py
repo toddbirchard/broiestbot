@@ -1,7 +1,7 @@
 """Perform Giphy query to fetch randomized top trending image."""
 
 from random import randint
-from typing import Optional
+from typing import Optional, cast
 
 from aiohttp import ClientError, ClientResponseError
 from emoji import emojize
@@ -20,7 +20,7 @@ async def giphy_image_search(query: str) -> Optional[str]:
     :returns: Optional[str]
     """
     rand = randint(0, 15)
-    params = {
+    params: dict[str, str | int] = {
         "api_key": GIPHY_API_KEY,
         "q": query,
         "limit": 1,
@@ -36,7 +36,7 @@ async def giphy_image_search(query: str) -> Optional[str]:
             return None
         image = images[0]["images"]["downsized"].get("url")
         if image is not None:
-            return image
+            return cast(Optional[str], image)
     except ClientResponseError as e:
         LOGGER.error(f"Giphy failed to fetch `{query}`: {e}")
         return emojize(f":warning: yoooo giphy is down rn lmao :warning:", language="en")
@@ -46,3 +46,4 @@ async def giphy_image_search(query: str) -> Optional[str]:
     except Exception as e:
         LOGGER.error(f"Giphy unexpected error for `{query}`: {e}")
         return emojize(f":warning: AAAAAA I'M BROKEN WHAT DID YOU DO :warning:", language="en")
+    return None

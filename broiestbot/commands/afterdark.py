@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime
 from random import randint
-from typing import Optional
+from typing import Optional, cast
 
 import pytz
 import redgifs.aio
@@ -146,7 +146,7 @@ async def get_redgifs_gif(query: str, username: str, after_dark_only: bool = Fal
         if (after_dark_only and night_mode) or after_dark_only is False:
             token = await redgifs_auth_token()
             endpoint = REDGIFS_IMAGE_SEARCH_ENDPOINT
-            params = {"search_text": query.title(), "order": "trending", "count": 80}
+            params: dict[str, str | int] = {"search_text": query.title(), "order": "trending", "count": 80}
             headers = {"Authorization": f"Bearer {token}"}
             session = await get_http_session()
             async with session.get(endpoint, params=params, headers=headers) as resp:
@@ -225,9 +225,10 @@ async def redgifs_auth_token() -> Optional[str]:
         async with session.post(endpoint, json=body, headers=headers) as resp:
             token_response = await resp.json(content_type=None)
             if resp.status == 200:
-                return token_response.get("access_token")
+                return cast(Optional[str], token_response.get("access_token"))
             LOGGER.error(f"Failed to get Redgifs token with status code {resp.status}: {token_response}")
     except ClientError as e:
         LOGGER.exception(f"ClientError when fetching Redgifs auth token: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Redgifs auth token: {e}")
+    return None

@@ -1,6 +1,6 @@
 """Fetch the starting grid of a grand prix from the Hyprace API."""
 
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from logger import LOGGER
 
@@ -84,7 +84,7 @@ async def _qualifying_session_id(grand_prix_id: str) -> Optional[str]:
     sessions = data.get("items") or []
     for session in sessions:
         if session.get("type") == GRAND_PRIX_QUALIFYING_TYPE and session.get("id"):
-            return session["id"]
+            return cast(Optional[str], session["id"])
     return None
 
 
@@ -98,7 +98,7 @@ def _best_lap(result: dict) -> Optional[str]:
     """
     for segment in QUALIFYING_SEGMENTS:
         if result.get(segment):
-            return result[segment]
+            return cast(Optional[str], result[segment])
     return None
 
 

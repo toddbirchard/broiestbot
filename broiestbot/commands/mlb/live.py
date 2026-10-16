@@ -41,3 +41,4 @@ def parse_live_mlb_game(game: dict) -> Optional[str]:
         LOGGER.exception(f"ValueError while parsing live Phillies game: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while parsing live Phillies game: {e}")
+    return None

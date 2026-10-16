@@ -5,7 +5,7 @@ from typing import Collection, List, Optional, Tuple
 
 import pytz
 from pytz import BaseTzInfo
-from sqlalchemy import Column, select
+from sqlalchemy import select
 
 from config import (
     AFCON_CUP_ID,
@@ -46,13 +46,13 @@ from database import async_session
 from database.models import ChatangoUser
 
 
-async def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]:
+async def lookup_user_preferred_timezone(username: str) -> Optional[str]:
     """
     Lookup user to determine preferred timezone.
 
     :param str username: Chatango username.
 
-    :returns: Optional[Column[str]]
+    :returns: Optional[str]
     """
     async with async_session() as db:
         result = await db.execute(
@@ -61,6 +61,7 @@ async def lookup_user_preferred_timezone(username: str) -> Optional[Column[str]]
         user = result.scalars().first()
     if user and user.time_zone_name is not None:
         return user.time_zone_name
+    return None
 
 
 async def get_preferred_timezone(room: str, username: str) -> str:

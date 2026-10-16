@@ -1,6 +1,7 @@
 """Track number of cliche phrases uttered on The Bachelor."""
 
 from datetime import datetime, timedelta
+from typing import Dict, Optional, cast
 
 from emoji import emojize
 from logger import LOGGER
@@ -69,15 +70,15 @@ def update_recorded_counts_for_phrase(user_name: str, phrase: str):
     :param str phrase: Overly-used phrase (e.g. "vulnerable", "journey", "connection")
     """
     try:
-        bach_phrases = r.hget("bachcount", phrase)
+        # `r` is created with `decode_responses=True`, so hash values come back as `str`.
+        bach_phrases = cast(Optional[str], r.hget("bachcount", phrase))
         if bach_phrases is None:
             r.hset("bachcount", phrase, user_name)
             create_bach_poll_if_needed()
         else:
             LOGGER.info(f"bach_phrases = {bach_phrases}")
             bach_phrases += f"{user_name}"
-            bach_phrases = r.hset("bachcount", phrase, bach_phrases)
-            LOGGER.info(f"bach_phrases = {bach_phrases}")
+            r.hset("bachcount", phrase, bach_phrases)
     except RedisError as e:
         LOGGER.error(f"RedisError while persisting bach word {phrase} from @{user_name}: {e}")
         return emojize(
@@ -100,7 +101,7 @@ def tally_words_per_user() -> str:
 
     :returns: str
     """
-    current_results = r.hgetall("bachcount")
+    current_results = cast(Dict[str, str], r.hgetall("bachcount"))
     LOGGER.warning(f"current_results = {current_results}")
     response_summary = ":bust_in_silhouette: Contributors:\n"
     for k, v in current_results.items():

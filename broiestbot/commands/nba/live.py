@@ -1,5 +1,7 @@
 """Parse live NBA scores, or fallback to upcoming games."""
 
+from typing import Optional
+
 from aiohttp import ClientError
 from emoji import emojize
 from logger import LOGGER
@@ -8,7 +10,7 @@ from .today import today_nba_games
 from .upcoming import upcoming_nba_games
 
 
-async def live_nba_games() -> str:
+async def live_nba_games() -> Optional[str]:
     """
     Fetch all live NBA games.
 
@@ -36,7 +38,7 @@ async def live_nba_games() -> str:
             elif len(today_games) > 0:
                 upcoming_games = await upcoming_nba_games()
                 games += "No live NBA games. Upcoming games today:\n"
-                games += upcoming_games
+                games += upcoming_games or ""
                 return games
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching NBA games: {e}")
@@ -44,6 +46,7 @@ async def live_nba_games() -> str:
         LOGGER.exception(f"LookupError while fetching NBA games: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching NBA games: {e}")
+    return None
 
 
 """def live_nba_games() -> str:

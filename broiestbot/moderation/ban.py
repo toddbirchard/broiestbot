@@ -1,5 +1,7 @@
 """Ban a user from a room and delete their chat history."""
 
+from typing import cast
+
 from chatango import Room, RoomMessage
 from logger import LOGGER
 
@@ -21,4 +23,4 @@ async def ban_user(room: Room, message: RoomMessage) -> bool:
             f"Could not ban user (bot lacks mod privileges in `{room.name}`): "
             f"username={message.user.name} ip={message.ip}"
         )
-    return banned
+    return cast(bool, banned)

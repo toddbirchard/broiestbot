@@ -76,6 +76,7 @@ async def today_upcoming_fixtures_per_league(
         LOGGER.error(f"ValueError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+    return None
 
 
 async def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
@@ -90,7 +91,7 @@ async def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str
     """
     try:
         today = get_current_day(room)
-        params = {
+        params: dict[str, str | int] = {
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
             "season": get_season_year(league_id),
@@ -106,6 +107,7 @@ async def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+    return None
 
 
 async def parse_upcoming_fixture(

@@ -200,7 +200,7 @@ def test_active_mode_persona_still_gets_link_rules(client_class):
 class FakeClock:
     """Stands in for `time.monotonic`, advanced by hand instead of by waiting."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.now = 1000.0
 
     def __call__(self) -> float:

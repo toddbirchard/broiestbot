@@ -1,8 +1,10 @@
 """Define data models for chat commands, phrases, user logs, etc."""
 
+from datetime import datetime
+from typing import Optional
+
 from sqlalchemy import (
     Boolean,
-    Column,
     DateTime,
     Float,
     ForeignKey,
@@ -10,10 +12,12 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import declarative_base, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """Declarative base for all models."""
 
 
 class Chat(Base):
@@ -21,11 +25,11 @@ class Chat(Base):
 
     __tablename__ = "chat"
 
-    id = Column(Integer, primary_key=True)
-    username = Column(String(255), nullable=False, index=True)
-    room = Column(String(255), nullable=False, index=True)
-    message = Column(Text, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    room: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
 
     def __repr__(self):
         return f"id={self.id}, username={self.username}, room={self.room}, chat={self.message}, time={self.created_at}"
@@ -36,11 +40,11 @@ class Command(Base):
 
     __tablename__ = "commands"
 
-    id = Column(Integer, primary_key=True, index=True)
-    command = Column(String(255), nullable=False, unique=True, index=True)
-    type = Column(String(255), nullable=False)
-    response = Column(Text, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    command: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    type: Mapped[str] = mapped_column(String(255), nullable=False)
+    response: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
 
     def __repr__(self):
         return f"command={self.command}, type={self.type}, response={self.response}"
@@ -51,10 +55,10 @@ class Phrase(Base):
 
     __tablename__ = "phrases"
 
-    id = Column(Integer, primary_key=True, index=True)
-    phrase = Column(String(255), nullable=False, unique=True, index=True)
-    response = Column(Text, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    phrase: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    response: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
 
     def __repr__(self):
         return f"command={self.phrase}, type={self.response}"
@@ -65,40 +69,40 @@ class ChatangoUser(Base):
 
     __tablename__ = "user"
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(255), index=True, nullable=False)
-    chatango_room = Column(String(255))
-    ip = Column(String(255), index=True, unique=False)
-    city = Column(String(255))
-    region = Column(String(255))
-    country_name = Column(String(255))
-    company = Column(String(255))
-    latitude = Column(Float)
-    longitude = Column(Float)
-    postal = Column(String(255))
-    emoji_flag = Column(Text)
-    language = Column(String(255))
-    currency_name = Column(String(255))
-    currency_symbol = Column(String(255))
-    time_zone_name = Column(String(255))
-    time_zone_abbr = Column(String(255))
-    time_zone_offset = Column(Integer)
-    time_zone_is_dst = Column(Integer)
-    time_zone_current_time = Column(DateTime)
-    carrier_name = Column(String(255))
-    carrier_mnc = Column(Text)
-    carrier_mcc = Column(Text)
-    asn_asn = Column(Text)
-    asn_name = Column(String(255))
-    asn_domain = Column(String(255))
-    asn_route = Column(String(255))
-    asn_type = Column(String(255))
-    is_tor = Column(Boolean)
-    is_proxy = Column(Boolean)
-    is_known_attacker = Column(Boolean)
-    is_threat = Column(Boolean)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
+    chatango_room: Mapped[Optional[str]] = mapped_column(String(255))
+    ip: Mapped[Optional[str]] = mapped_column(String(255), index=True, unique=False)
+    city: Mapped[Optional[str]] = mapped_column(String(255))
+    region: Mapped[Optional[str]] = mapped_column(String(255))
+    country_name: Mapped[Optional[str]] = mapped_column(String(255))
+    company: Mapped[Optional[str]] = mapped_column(String(255))
+    latitude: Mapped[Optional[float]] = mapped_column(Float)
+    longitude: Mapped[Optional[float]] = mapped_column(Float)
+    postal: Mapped[Optional[str]] = mapped_column(String(255))
+    emoji_flag: Mapped[Optional[str]] = mapped_column(Text)
+    language: Mapped[Optional[str]] = mapped_column(String(255))
+    currency_name: Mapped[Optional[str]] = mapped_column(String(255))
+    currency_symbol: Mapped[Optional[str]] = mapped_column(String(255))
+    time_zone_name: Mapped[Optional[str]] = mapped_column(String(255))
+    time_zone_abbr: Mapped[Optional[str]] = mapped_column(String(255))
+    time_zone_offset: Mapped[Optional[int]] = mapped_column(Integer)
+    time_zone_is_dst: Mapped[Optional[int]] = mapped_column(Integer)
+    time_zone_current_time: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    carrier_name: Mapped[Optional[str]] = mapped_column(String(255))
+    carrier_mnc: Mapped[Optional[str]] = mapped_column(Text)
+    carrier_mcc: Mapped[Optional[str]] = mapped_column(Text)
+    asn_asn: Mapped[Optional[str]] = mapped_column(Text)
+    asn_name: Mapped[Optional[str]] = mapped_column(String(255))
+    asn_domain: Mapped[Optional[str]] = mapped_column(String(255))
+    asn_route: Mapped[Optional[str]] = mapped_column(String(255))
+    asn_type: Mapped[Optional[str]] = mapped_column(String(255))
+    is_tor: Mapped[Optional[bool]] = mapped_column(Boolean)
+    is_proxy: Mapped[Optional[bool]] = mapped_column(Boolean)
+    is_known_attacker: Mapped[Optional[bool]] = mapped_column(Boolean)
+    is_threat: Mapped[Optional[bool]] = mapped_column(Boolean)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         return f"id={self.id}, username={self.username}, chatango_room={self.chatango_room}, ip={self.ip}, city={self.city}"
@@ -109,11 +113,11 @@ class Weather(Base):
 
     __tablename__ = "weather"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    code = Column(Integer, nullable=False)
-    condition = Column(Text, nullable=False)
-    icon = Column(String(255), nullable=False)
-    group = Column(String(255), nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
+    code: Mapped[int] = mapped_column(Integer, nullable=False)
+    condition: Mapped[str] = mapped_column(Text, nullable=False)
+    icon: Mapped[str] = mapped_column(String(255), nullable=False)
+    group: Mapped[str] = mapped_column(String(255), nullable=False)
 
     def __repr__(self):
         return f"group={self.group}, icon={self.icon}, condition={self.condition}"
@@ -124,10 +128,10 @@ class PollResult(Base):
 
     __tablename__ = "poll"
 
-    id = Column(Integer, primary_key=True, index=True)
-    type = Column(String(255), nullable=False, index=True, unique=True)
-    count = Column(Integer)
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    type: Mapped[str] = mapped_column(String(255), nullable=False, index=True, unique=True)
+    count: Mapped[Optional[int]] = mapped_column(Integer)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         return f"id={self.id}, type={self.type}, count={self.count}, updated_at={self.updated_at}"
@@ -138,12 +142,12 @@ class Sport(Base):
 
     __tablename__ = "sport"
 
-    id = mapped_column(Integer, primary_key=True)
-    name = Column(String(255))
-    abbr = Column(String(255))
-    emoji = Column(String(255))
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[Optional[str]] = mapped_column(String(255))
+    abbr: Mapped[Optional[str]] = mapped_column(String(255))
+    emoji: Mapped[Optional[str]] = mapped_column(String(255))
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         return f"id={self.id}, name={self.name}, emoji={self.emoji}"
@@ -154,17 +158,17 @@ class League(Base):
 
     __tablename__ = "league"
 
-    id = mapped_column(Integer, primary_key=True)
-    name = Column(String(255))
-    display_name = Column(Text)
-    abbr = Column(String(255))
-    country = Column(String(255))
-    sport_id = Column(Integer, ForeignKey("sport.id"), index=True)
-    season_year = Column(Integer)
-    season_start_date = Column(DateTime)
-    is_active = Column(Boolean, index=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[Optional[str]] = mapped_column(String(255))
+    display_name: Mapped[Optional[str]] = mapped_column(Text)
+    abbr: Mapped[Optional[str]] = mapped_column(String(255))
+    country: Mapped[Optional[str]] = mapped_column(String(255))
+    sport_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("sport.id"), index=True)
+    season_year: Mapped[Optional[int]] = mapped_column(Integer)
+    season_start_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, index=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         return f"id={self.id}, name={self.name}, country={self.country}, is_active={self.is_active}"

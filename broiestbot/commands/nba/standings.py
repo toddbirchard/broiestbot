@@ -1,5 +1,7 @@
 """Fetch NBA team standings."""
 
+from typing import Optional
+
 from aiohttp import ClientError
 from http_client import get_http_session
 from logger import LOGGER
@@ -7,7 +9,7 @@ from logger import LOGGER
 from config import NBA_API_KEY, NBA_BASE_URL, NBA_CONFERENCE_NAMES, NBA_SEASON_YEAR
 
 
-async def nba_standings() -> str:
+async def nba_standings() -> Optional[str]:
     """
     Fetch NBA team standings per conference for the regular season.
 
@@ -44,3 +46,4 @@ async def nba_standings() -> str:
         LOGGER.error(f"LookupError while fetching NBA standings: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching NBA standings: {e}")
+    return None

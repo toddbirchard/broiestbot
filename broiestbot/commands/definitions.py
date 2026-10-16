@@ -4,7 +4,7 @@ import asyncio
 from typing import Optional
 
 from aiohttp import ClientError
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from emoji import emojize
 from http_client import get_http_session, request_timeout
 from logger import LOGGER
@@ -142,7 +142,7 @@ async def create_wiki_preview(url: str) -> Optional[str]:
         wiki_preview += f"<b>{display_title}</b>\n\n"
         wiki_preview += f"{summary}\n\n"
         img_tag = BeautifulSoup(page_html, "html.parser").find("meta", property="og:image") if page_html else None
-        wiki_preview += f"{img_tag.get('content')} \n\n" if img_tag is not None else ""
+        wiki_preview += f"{img_tag.get('content')} \n\n" if isinstance(img_tag, Tag) else ""
         # Guarded on the sections themselves; the old check named a bound method, so it was
         # always true and `sections[0]` raised on a page which had none.
         wiki_preview += f"{sections[0].text[0:500]}\n\n" if sections else "\n\n"

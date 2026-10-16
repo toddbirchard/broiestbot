@@ -1,7 +1,7 @@
 """Create cloud-hosted Candlestick charts of company stock data."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union, cast
 
 import chart_studio
 import chart_studio.plotly as py
@@ -40,7 +40,7 @@ class CryptoChartHandler:
         if not prices:
             return emojize("⚠️ dats nought a COIN u RETART :@ ⚠️", language="en")
         percentage = prices["change"]["percentage"] * 100
-        if prices.get("last") > 1:
+        if (prices.get("last") or 0) > 1:
             return emojize(
                 f"\n\n\n:coin: <b>{symbol.upper()}:</b>\n"
                 f':money_bag: CURRENTLY at ${prices["last"]:.2f}\n'
@@ -60,7 +60,7 @@ class CryptoChartHandler:
             )
         return emojize("⚠️ dats nought a COIN u RETART :@ ⚠️", language="en")
 
-    async def get_crypto_chart(self, symbol: str) -> str:
+    async def get_crypto_chart(self, symbol: str) -> Optional[str]:
         """
         Get crypto data and generate Plotly chart.
 
@@ -71,14 +71,14 @@ class CryptoChartHandler:
         return await self._create_chart(symbol)
 
     @staticmethod
-    async def _fetch_price_data(symbol: str, endpoint: str) -> Optional[dict]:
+    async def _fetch_price_data(symbol: str, endpoint: str) -> Optional[Union[dict, str]]:
         """
         Get crypto price for a coin symbol.
 
         :param str symbol: Crypto symbol to fetch price performance for.
         :param str endpoint: Endpoint for the requested crypto.
 
-        :returns: Optional[dict]
+        :returns: Optional[Union[dict, str]] — a chat-ready warning string when rate-limited.
         """
         try:
             session = await get_http_session()
@@ -86,11 +86,12 @@ class CryptoChartHandler:
                 if resp.status == 429:
                     return emojize(":warning: jfc you exceeded the crypto API limit :@ :warning:", language="en")
                 if resp.status == 200:
-                    return (await resp.json(content_type=None))["result"]["price"]
+                    return cast(Optional[dict], (await resp.json(content_type=None))["result"]["price"])
         except ClientError as e:
             raise ClientError(f"ClientError while fetching crypto price for `{symbol}`: {e}")
         except Exception as e:
             raise Exception(f"Unexpected error while crypto price for `{symbol}`: {e}")
+        return None
 
     async def _get_chart_data(self, symbol: str) -> Optional[dict]:
         """
@@ -112,20 +113,21 @@ class CryptoChartHandler:
                 if resp.status == 200:
                     chart_data = await resp.json(content_type=None)
                     if chart_data:
-                        return chart_data
+                        return cast(Optional[dict], chart_data)
         except ClientError as e:
             raise ClientError(f"Failed to fetch crypto data for `{symbol}`: {e}")
         except Exception as e:
             raise Exception(f"Unexpected error while crypto data for `{symbol}`: {e}")
+        return None
 
     @staticmethod
-    def _parse_chart_data(coin_data: dict) -> Optional[pd.DataFrame]:
+    def _parse_chart_data(coin_data: dict) -> pd.DataFrame:
         """
         Parse JSON response into Pandas DataFrame.
 
         :param dict coin_data: Time series data of prices for a given coin.
 
-        :returns: Optional[pd.DataFrame]
+        :returns: pd.DataFrame
         """
         df = pd.DataFrame.from_dict(coin_data["Time Series (Digital Currency Daily)"], orient="index")[:60]
         return df
@@ -198,8 +200,12 @@ class CryptoChartHandler:
                     sharing="public",
                     auto_open=False,
                 )
-                return chart.replace("https://plotly.com/", "https://chart-studio.plotly.com/")[:-1] + ".png"
+                return cast(
+                    Optional[str],
+                    chart.replace("https://plotly.com/", "https://chart-studio.plotly.com/")[:-1] + ".png",
+                )
         except ClientError as e:
             return emojize(f":warning: fk bro's plotly subscription died: {e} :warning:", language="en")
         except Exception as e:
             return emojize(f":warning: idk wot happened: {e} :warning:", language="en")
+        return None

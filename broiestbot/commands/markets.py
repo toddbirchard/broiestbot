@@ -1,5 +1,7 @@
 """Fetch crypto or stock market data."""
 
+from typing import Optional, cast
+
 from aiohttp import ClientError
 from emoji import emojize
 from http_client import get_http_session
@@ -9,13 +11,13 @@ from clients import cch, sch
 from config import COINMARKETCAP_API_KEY, COINMARKETCAP_LATEST_ENDPOINT
 
 
-async def get_crypto_chart(symbol: str) -> str:
+async def get_crypto_chart(symbol: str) -> Optional[str]:
     """
     Fetch crypto price and generate 60-day performance chart.
 
     :param str symbol: Crypto symbol to fetch prices for.
 
-    :returns: str
+    :returns: Optional[str]
     """
     try:
         return await cch.get_crypto_chart(symbol)
@@ -52,13 +54,13 @@ async def get_crypto_price(symbol: str, endpoint) -> str:
         )
 
 
-async def get_stock(symbol: str) -> str:
+async def get_stock(symbol: str) -> Optional[str]:
     """
     Fetch stock price and generate 30-day performance chart.
 
     :param str symbol: Stock symbol to fetch prices for.
 
-    :returns: str
+    :returns: Optional[str]
     """
     try:
         # chart = sch.get_chart(symbol)
@@ -71,7 +73,7 @@ async def get_stock(symbol: str) -> str:
         return emojize(":warning: i broke bc im a shitty bot :warning:", language="en")
 
 
-async def get_top_crypto() -> str:
+async def get_top_crypto() -> Optional[str]:
     """
     Fetch top 10 crypto coin performance.
 
@@ -87,13 +89,14 @@ async def get_top_crypto() -> str:
         async with session.get(COINMARKETCAP_LATEST_ENDPOINT, params=params, headers=headers) as resp:
             if resp.status == 200:
                 coins = (await resp.json(content_type=None)).get("data")
-                return format_top_crypto_response(coins)
+                return cast(Optional[str], format_top_crypto_response(coins))
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching top coins: {e}")
         return emojize(":warning: FUCK the bot broke :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected exception while fetching top coins: {e}")
         return emojize(":warning: FUCK the bot broke :warning:", language="en")
+    return None
 
 
 def format_top_crypto_response(coins: dict):

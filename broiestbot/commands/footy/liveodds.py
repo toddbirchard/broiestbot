@@ -1,6 +1,6 @@
 """Live betting odds for currently-active footy fixtures."""
 
-from typing import Optional
+from typing import Optional, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -98,6 +98,7 @@ async def footy_live_odds_per_league(league_id: int, league_name: str, username:
         LOGGER.exception(f"KeyError while fetching live footy odds: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching live footy odds: {e}")
+    return None
 
 
 async def fetch_live_odds_per_fixture(fixture_id: int) -> Optional[list]:
@@ -117,7 +118,7 @@ async def fetch_live_odds_per_fixture(fixture_id: int) -> Optional[list]:
                 data = (await resp.json(content_type=None)).get("response", [])
                 if not data:
                     LOGGER.warning(f"Empty live odds response for fixture {fixture_id}: {body[:300]}")
-                return data
+                return cast(Optional[list], data)
             LOGGER.warning(f"Non-200 live odds response for fixture {fixture_id}: {resp.status} {body[:300]}")
     except ClientError as e:
         LOGGER.exception(f"ClientError fetching live odds for fixture {fixture_id}: {e}")

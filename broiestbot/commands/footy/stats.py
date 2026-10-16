@@ -1,6 +1,6 @@
 """Get general fixture stats for live fixtures."""
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -18,7 +18,7 @@ from .live import fetch_live_fixtures
 from .util import get_preferred_timezone
 
 
-async def footy_stats_for_live_fixtures(room: str, username: str):
+async def footy_stats_for_live_fixtures(room: str, username: str) -> Optional[str]:
     """
     Fetch live fixture odds for EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
 
@@ -48,6 +48,7 @@ async def footy_stats_for_live_fixtures(room: str, username: str):
         return emojize(f":warning: sry @{username} I couldn't find live fixtures bc im gay :warning:", language="en")
     except Exception as e:
         LOGGER.error(f"Unexpected error when serving live fixture stats: {e}")
+    return None
 
 
 async def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[dict]:
@@ -63,13 +64,14 @@ async def fetch_stats_per_live_fixture(fixture_id: int) -> Optional[dict]:
         session = await get_http_session()
         async with session.get(FOOTY_FIXTURE_STATS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             fixture_stats = await resp.json(content_type=None)
-            return fixture_stats["response"]
+            return cast(Optional[dict], fixture_stats["response"])
     except ClientError as e:
         LOGGER.error(f"ClientError while fetching live fixtures: {e}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching live fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching live fixtures: {e}")
+    return None
 
 
 def parse_live_fixture_stats(fixture_stats: dict, live_fixture_score: tuple[int, int]) -> Optional[str]:
@@ -105,6 +107,7 @@ def parse_live_fixture_stats(fixture_stats: dict, live_fixture_score: tuple[int,
         LOGGER.error(f"ValueError when parsing live fixture stats: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when parsing live fixture stats: {e}")
+    return None
 
 
 def unpack_team_statistics(team_stats_list: list) -> dict:
@@ -146,3 +149,4 @@ async def get_fixture_score(fixture_id: int) -> Optional[Tuple[int, int]]:
         LOGGER.error(f"KeyError while fetching fixture score: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching fixture score: {e}")
+    return None

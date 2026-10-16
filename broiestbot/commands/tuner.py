@@ -3,7 +3,7 @@
 import asyncio
 import json
 import time
-from typing import Optional
+from typing import Optional, Union, cast
 
 from emoji import emojize
 from http_client import get_http_session
@@ -36,13 +36,13 @@ def get_proper_caps(channel_name: str) -> str:
     return str(channel[0]["channel"])
 
 
-def get_channel_number(channel_name: str) -> int:
+def get_channel_number(channel_name: str) -> Union[int, str]:
     """
     Fetch channel number by name.
 
     :params str channel_name: Name of channel to tune stream to.
 
-    :returns: int
+    :returns: Union[int, str] — an error message listing close matches when no channel matches exactly.
     """
     try:
         channel = [channel for channel in CHANNEL_DATA if channel["channel"].lower() == channel_name]
@@ -58,7 +58,7 @@ def get_channel_number(channel_name: str) -> int:
         return emojize(f":warning: omfg bot just broke wtf did u do :warning:", language="en")
 
 
-async def tuner(channel_name: str, username: str, bot_username: str) -> str:
+async def tuner(channel_name: str, username: str, bot_username: str) -> Optional[str]:
     """
     Fetch channel by name and tune stream if user is whitelisted.
 
@@ -99,6 +99,7 @@ async def tuner(channel_name: str, username: str, bot_username: str) -> str:
         # return get_channel_number(channel_name)
     except Exception as e:
         LOGGER.exception(f"Unexpected error when changing channel: {e}")
+    return None
 
 
 def resolve_requested_channel_name(channel_name: str) -> str:
@@ -147,7 +148,7 @@ async def get_current_show(detailed: bool, bot_username: str) -> Optional[str]:
             plot = json["VideoPlayer.Plot"]
             icon = json["Pvr.EPGEventIcon"]
             if not detailed:
-                return title
+                return cast(Optional[str], title)
             if season and episode:
                 return emojize(
                     f":tv: On now: <b>{title.upper()}</b> - S{season}E{episode}: {episode_name} \n \n <i>{plot}</i> \n {icon}",
@@ -161,3 +162,4 @@ async def get_current_show(detailed: bool, bot_username: str) -> Optional[str]:
         LOGGER.exception(f"LookupError error when getting current show info: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when getting current show info: {e}")
+    return None

@@ -1,7 +1,7 @@
 """Fetch all (live & upcoming) NBA games for today."""
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import pytz
 from aiohttp import ClientError
@@ -33,7 +33,7 @@ async def today_nba_games() -> Optional[List[dict]]:
         async with session.get(endpoint, headers=headers, params=params) as resp:
             if resp.status == 200:
                 games = await resp.json(content_type=None)
-                return games.get("response")
+                return cast(Optional[List[dict]], games.get("response"))
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching today's NBA games: {e}")
     except LookupError as e:

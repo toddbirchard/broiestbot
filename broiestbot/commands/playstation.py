@@ -87,6 +87,7 @@ def create_active_psn_user_response(active_friend: User, friend_meta: dict) -> O
         return f"• <b>{active_friend.online_id}</b>: playing {playing_game} on {platform}\n"
     except Exception as e:
         LOGGER.exception(e)
+    return None
 
 
 def get_psn_game_trophies():

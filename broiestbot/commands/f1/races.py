@@ -1,7 +1,7 @@
 """Fetch F1 seasons, grands prix & circuits from the Hyprace API."""
 
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from aiohttp import ClientError
 from http_client import get_http_session
@@ -105,7 +105,7 @@ def _main_race_start(grand_prix: dict) -> Optional[str]:
     """
     for session in grand_prix.get("schedule") or []:
         if session.get("type") == MAIN_RACE_SESSION_TYPE and session.get("startDate"):
-            return session["startDate"]
+            return cast(Optional[str], session["startDate"])
     return grand_prix.get("startDate")
 
 
@@ -122,7 +122,7 @@ async def resolve_season_id(season: int) -> Optional[str]:
         return None
     for item in data.get("items") or []:
         if item.get("year") == season and item.get("id"):
-            return item["id"]
+            return cast(Optional[str], item["id"])
     return None
 
 

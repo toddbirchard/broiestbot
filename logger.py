@@ -4,11 +4,15 @@ import json
 import re
 from datetime import datetime
 from sys import stdout
+from typing import TYPE_CHECKING, Optional
 
 from loguru import logger
 
 from clients import sms
 from config import BASE_DIR, ENVIRONMENT, TWILIO_BRO_PHONE_NUMBER, TWILIO_SENDER_PHONE
+
+if TYPE_CHECKING:
+    from loguru import Logger
 
 CHAT_LOG_PATTERN = re.compile(
     r"^\[(?P<room>[^]]*)] \[(?P<user>[^]]*)](?: \[(?P<ip>[^]]*)])?: (?P<body>.*)",
@@ -84,7 +88,7 @@ def serialize_error(log: dict) -> str:
     return serialize_default(log)
 
 
-def serialize_default(log: dict, error: str = None) -> str:
+def serialize_default(log: dict, error: Optional[str] = None) -> str:
     """
     Construct a bare log record out of a message which has no additional metadata.
 
@@ -224,4 +228,4 @@ def create_logger():
     return logger
 
 
-LOGGER = create_logger()
+LOGGER: "Logger" = create_logger()

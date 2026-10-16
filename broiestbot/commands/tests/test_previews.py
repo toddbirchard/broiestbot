@@ -6,6 +6,7 @@ anything that isn't on the public internet, at every redirect hop.
 """
 
 import asyncio
+from typing import Optional
 from unittest.mock import AsyncMock, patch
 from urllib.parse import urlparse
 
@@ -38,7 +39,7 @@ OG_PAGE = """<!doctype html><html><head>
 </head><body><p>body</p></body></html>"""
 
 
-def html_response(html: str = OG_PAGE, status: int = 200, headers: dict = None) -> FakeResponse:
+def html_response(html: str = OG_PAGE, status: int = 200, headers: Optional[dict] = None) -> FakeResponse:
     return FakeResponse(status=status, text=html, headers=headers or HTML_HEADERS)
 
 
@@ -137,7 +138,7 @@ def test_declared_charset_used_to_decode():
 # `<link rel="image_src">`, JSON-LD, or schema.org microdata — tried in that order.
 
 
-def image_of(head: str) -> str:
+def image_of(head: str) -> Optional[str]:
     return parse_link_metadata(f"<head><title>t</title>{head}</head>".encode(), URL)["image"]
 
 

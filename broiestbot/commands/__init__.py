@@ -1,5 +1,7 @@
 """Construct responses to bot commands from third-party APIs."""
 
+from typing import Optional
+
 from .afterdark import close_redgifs_client, fetch_redgifs_gif, get_redgifs_gif
 from .definitions import (
     create_wiki_preview,
@@ -8,7 +10,7 @@ from .definitions import (
     get_urban_definition,
     wiki_summary,
 )
-from .embeds import create_instagram_preview, generate_twitter_preview
+from .embeds import create_instagram_preview
 from .f1 import f1_grand_prix
 from .footy import (
     aafk_league_table_standings,
@@ -84,6 +86,6 @@ from .video import (
 from .weather import get_current_weather
 
 
-def basic_message(message):
+def basic_message(message: Optional[str]) -> Optional[str]:
     """Send basic text message to room."""
     return message

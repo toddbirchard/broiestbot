@@ -32,10 +32,11 @@ async def get_today_footy_odds_for_league(league_id: int):
         return emojize(":yellow_square: idk what happened bot died rip :yellow_square:", language="en")
 
 
-@DeprecationWarning
 async def fetch_today_footy_odds_for_league(league_id: int):
     """
     Get odds for today's fixtures for a given league.
+
+    .. deprecated:: Superseded by `predicts.fetch_today_fixture_odds_by_league`.
 
     :param int league_id: ID of league for which to fetch odds.
 

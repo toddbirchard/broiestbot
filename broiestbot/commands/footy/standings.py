@@ -1,6 +1,6 @@
 """Get team standings for a given league."""
 
-from typing import Optional
+from typing import Optional, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -49,6 +49,7 @@ async def league_table_standings(league_id: int) -> Optional[str]:
         LOGGER.exception(f"KeyError while fetching {league_id} standings: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching {league_id} standings: {e}")
+    return None
 
 
 async def fetch_league_table_standings(league_id: int) -> Optional[dict]:
@@ -65,11 +66,12 @@ async def fetch_league_table_standings(league_id: int) -> Optional[dict]:
         async with session.get(FOOTY_STANDINGS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             if resp.status == 200:
                 standings = await resp.json(content_type=None)
-                return standings.get("response")
+                return cast(Optional[dict], standings.get("response"))
     except ClientError as e:
         LOGGER.error(f"ClientError while fetching {league_id} standings: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching {league_id} standings: {e}")
+    return None
 
 
 async def aafk_league_table_standings() -> Optional[str]:
@@ -108,6 +110,7 @@ async def aafk_league_table_standings() -> Optional[str]:
         LOGGER.exception(f"KeyError while fetching AAFK standings: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching AAFK standings: {e}")
+    return None
 
 
 async def fetch_team_current_league(team_id: int, eligible_league_ids: tuple) -> Optional[int]:
@@ -128,12 +131,13 @@ async def fetch_team_current_league(team_id: int, eligible_league_ids: tuple) ->
                 league_ids = [league["league"]["id"] for league in standings.get("response", [])]
                 for league_id in eligible_league_ids:
                     if league_id in league_ids:
-                        return league_id
+                        return cast(Optional[int], league_id)
                 LOGGER.warning(f"Team {team_id} not found in leagues {eligible_league_ids}; found {league_ids}")
     except ClientError as e:
         LOGGER.error(f"ClientError while resolving current league for team {team_id}: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when resolving current league for team {team_id}: {e}")
+    return None
 
 
 async def mls_standings() -> Optional[str]:
@@ -159,6 +163,7 @@ async def mls_standings() -> Optional[str]:
         LOGGER.error(f"ClientError while fetching {MLS_LEAGUE_ID} standings: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching {MLS_LEAGUE_ID} standings: {e}")
+    return None
 
 
 def mls_conference_standings(conference_standings: dict):

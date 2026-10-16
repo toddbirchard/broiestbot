@@ -94,7 +94,7 @@ async def find_movie(movie_title: str) -> str:
         return emojize(":warning: omfg u broke me with ur shit movie :warning:", language="en")
 
 
-def find_imdb_movie(movie_title: str) -> str:
+def find_imdb_movie(movie_title: str) -> Optional[str]:
     """
     Get movie summary, rating, actors, poster, & box office info from IMDB.
 
@@ -156,6 +156,7 @@ def find_imdb_movie(movie_title: str) -> str:
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching IMDB movie `{movie_title}`: {e}")
         return emojize(":warning: omfg u broke me with ur shit movie :warning:", language="en")
+    return None
 
 
 def get_box_office_data(movie: Movie) -> Optional[str]:
@@ -184,9 +185,10 @@ def get_box_office_data(movie: Movie) -> Optional[str]:
         LOGGER.warning(f"KeyError when fetching box office info for `{movie}`: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching box office info for `{movie}`: {e}")
+    return None
 
 
-async def streaming_service_show(tv_show_name: str) -> str:
+async def streaming_service_show(tv_show_name: str) -> Optional[str]:
     """
     Placeholder for future streaming service availability feature.
 
@@ -210,15 +212,16 @@ async def streaming_service_show(tv_show_name: str) -> str:
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching show availability `{tv_show_name}`: {e}")
         return emojize(f":warning: wtf kind of show is {tv_show_name} :warning:", language="en")
+    return None
 
 
-def streaming_service_movie(movie_name: str) -> str:
+def streaming_service_movie(movie_name: str) -> Optional[str]:
     """
     Placeholder for future streaming service availability feature.
 
     :param str query: Movie to search for.
 
-    :returns: str
+    :returns: Optional[str]
     """
     pass
 
@@ -231,8 +234,8 @@ def streaming_service_show_description(result: dict) -> str:
     """
     # LOGGER.info(f"Streaming-availability API found: `{result}`")
     streaming_options = result.get("streamingOptions")
-    streaming_options_us = streaming_options.get("us")
-    if streaming_options is not None and streaming_options_us is not None:
+    streaming_options_us = streaming_options.get("us") if streaming_options is not None else None
+    if streaming_options_us is not None:
         title = result.get("title", "Unknown Title")
         overview = result.get("overview", "No overview available.")
         first_air_date = result.get("firstAirYear", "Unknown release date")

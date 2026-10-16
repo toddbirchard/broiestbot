@@ -1,5 +1,7 @@
 """Fetch sports betting markets."""
 
+from typing import cast
+
 from http_client import get_http_session, request_timeout
 from logger import LOGGER
 
@@ -63,4 +65,4 @@ async def fetch_odds_for_sport(sport_id: str) -> dict:
         body = await resp.text()
         LOGGER.info(f"Response from odds API: {resp.status} {resp.reason} {body}")
         events = await resp.json(content_type=None)
-    return events.get("events")
+    return cast(dict, events.get("events"))

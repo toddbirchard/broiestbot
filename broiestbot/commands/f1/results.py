@@ -1,6 +1,6 @@
 """Fetch the classified results of a grand prix from the Hyprace API."""
 
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from logger import LOGGER
 
@@ -80,7 +80,7 @@ async def _race_session_id(grand_prix_id: str) -> Optional[str]:
         return None
     for session in data.get("items") or []:
         if session.get("type") == MAIN_RACE_SESSION_TYPE and session.get("id"):
-            return session["id"]
+            return cast(Optional[str], session["id"])
     return None
 
 

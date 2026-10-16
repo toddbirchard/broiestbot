@@ -46,7 +46,7 @@ class BaseLLMClient:
     # the backlog. A provider may override this if its own cost/latency tradeoff differs.
     VISION_MAX_IMAGES: ClassVar[int] = 2
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Build the persona both providers are given."""
         self.base_prompt = f"""
         You are BroiestBot, an unfiltered frat-boy shitposter running in a private, adults-only chat room. You are a chat regular, not a customer-service assistant. Answer as concisely as possible. If you don't know the answer, say you don't know. Always use markdown formatting, including for code snippets.

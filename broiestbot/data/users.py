@@ -41,7 +41,8 @@ async def persist_user_data(room_name: str, user: User, message: RoomMessage, bo
     if "anon" in user.name.lower():
         user_name = f"{user.name.lower().replace('!anon', 'anon')}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
     user_asn_data = user_data.get("asn")
-    user_language_data = user_data.get("languages")[0] if user_data.get("languages") else None
+    user_languages = user_data.get("languages")
+    user_language_data = user_languages[0] if user_languages else None
     user_currency_data = user_data.get("currency")
     user_threat_data = user_data.get("threat")
     user_timezone_data = user_data.get("time_zone")

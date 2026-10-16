@@ -71,3 +71,4 @@ async def generate_llm_response(user_name: str, room_name: str, history, chat_me
     except Exception as e:
         LOGGER.error(f"Error generating LLM response: {e}")
         return "😵🤖 omg i died 🤖😵"
+    return None

@@ -7,6 +7,7 @@ async client, whose equivalent properties are awaitables.
 """
 
 import asyncio
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from broiestbot.commands.definitions import create_wiki_preview
@@ -15,7 +16,7 @@ URL = "https://en.wikipedia.org/wiki/Association_football"
 PAGE_HTML = b'<html><head><meta property="og:image" content="https://upload.test/img.jpg"></head></html>'
 
 
-def build_page(exists: bool = True, sections: list = None, display_title: str = "Association football"):
+def build_page(exists: bool = True, sections: Optional[list] = None, display_title: str = "Association football"):
     """
     Build a stand-in `AsyncWikipediaPage` whose data properties are awaitables.
 

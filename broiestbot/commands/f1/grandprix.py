@@ -118,7 +118,7 @@ def race_results_message(race: dict, results: List[dict], next_race: Optional[di
     message += _race_details(race)
     message += _results_section(results)
     start_time = parse_race_date((next_race or {}).get("date"))
-    if start_time:
+    if start_time and next_race:
         message += emojize(
             f"\n:calendar: Next up: <b>{_grand_prix_name(next_race)}</b> on {format_race_date(start_time)} "
             f"<i>({format_countdown(start_time - now)})</i>\n",
@@ -177,8 +177,11 @@ def _first_race_of_season(races: List[dict]) -> Optional[Tuple[dict, datetime]]:
 
     :returns: Optional[Tuple[dict, datetime]]
     """
-    scheduled_races = [(race, parse_race_date(race.get("date"))) for race in races]
-    scheduled_races = [(race, start_time) for race, start_time in scheduled_races if start_time]
+    scheduled_races: List[Tuple[dict, datetime]] = []
+    for race in races:
+        start_time = parse_race_date(race.get("date"))
+        if start_time:
+            scheduled_races.append((race, start_time))
     if scheduled_races:
         return min(scheduled_races, key=lambda race: race[1])
     return None

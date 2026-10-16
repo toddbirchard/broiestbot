@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import date, datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
 import pytz
 from aiohttp import ClientError
@@ -12,7 +12,12 @@ from logger import LOGGER
 
 from config import SUMO_API_BASE_URL, SUMO_DETAILED_BOUT_COUNT, SUMO_DIVISION
 
-from .records import fetch_basho_records, fetch_head_to_heads, fetch_last_basho_records, fetch_rikishi_profiles
+from .records import (
+    fetch_basho_records,
+    fetch_head_to_heads,
+    fetch_last_basho_records,
+    fetch_rikishi_profiles,
+)
 
 # Six honbasho per year, held in odd-numbered months.
 SUMO_BASHO_MONTHS = (1, 3, 5, 7, 9, 11)
@@ -42,11 +47,12 @@ async def fetch_basho(basho_id: str) -> Optional[dict]:
                 basho = await resp.json(content_type=None)
                 # Unknown basho IDs still return 200 with an empty `date` field.
                 if basho.get("date"):
-                    return basho
+                    return cast(Optional[dict], basho)
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching sumo basho `{basho_id}`: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching sumo basho `{basho_id}`: {e}")
+    return None
 
 
 async def fetch_torikumi(basho_id: str, day: int) -> Optional[dict]:
@@ -63,11 +69,12 @@ async def fetch_torikumi(basho_id: str, day: int) -> Optional[dict]:
         session = await get_http_session()
         async with session.get(endpoint) as resp:
             if resp.status == 200:
-                return await resp.json(content_type=None)
+                return cast(Optional[dict], await resp.json(content_type=None))
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching sumo torikumi for `{basho_id}` day {day}: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching sumo torikumi for `{basho_id}` day {day}: {e}")
+    return None
 
 
 async def get_current_or_next_basho(today: date) -> Optional[dict]:
@@ -88,6 +95,7 @@ async def get_current_or_next_basho(today: date) -> Optional[dict]:
         month += 2
         if month > 12:
             year, month = year + 1, 1
+    return None
 
 
 def _parse_basho_date(timestamp: str) -> date:
@@ -131,7 +139,7 @@ def _format_head_to_head(bout: dict, head_to_heads: Dict[str, dict]) -> str:
 
     :returns: str
     """
-    series = head_to_heads.get(bout.get("id"))
+    series = head_to_heads.get(bout.get("id", ""))
     if series is None:
         return ""
     east_wins, west_wins = series.get("rikishiWins", 0), series.get("opponentWins", 0)
@@ -233,7 +241,7 @@ def _format_last_meeting(last_meeting: Optional[dict]) -> str:
     if not last_meeting:
         return ""
     basho_id = last_meeting.get("bashoId", "")
-    year, month = basho_id[:4], int(basho_id[4:6]) if len(basho_id) == 6 else None
+    year, month = basho_id[:4], int(basho_id[4:6]) if len(basho_id) == 6 else 0
     basho_name = SUMO_BASHO_NAMES.get(month, "Basho")
     winner = last_meeting.get("winnerEn") or "unknown"
     return emojize(f":crossed_swords: Last met: {winner} ({basho_name} {year})", language="en")
@@ -254,7 +262,7 @@ def _format_bout_detail(
 
     :returns: str
     """
-    east_id, west_id = bout.get("eastId"), bout.get("westId")
+    east_id, west_id = bout.get("eastId", 0), bout.get("westId", 0)
     east_profile, west_profile = profiles.get(east_id) or {}, profiles.get(west_id) or {}
     east_last_basho, west_last_basho = last_basho.get(east_id) or {}, last_basho.get(west_id) or {}
     lines = [
@@ -281,7 +289,7 @@ def _format_bout_detail(
             east_last_basho.get("wins", 0),
             west_last_basho.get("wins", 0),
         ),
-        _format_last_meeting((head_to_heads.get(bout.get("id")) or {}).get("lastMeeting")),
+        _format_last_meeting((head_to_heads.get(bout.get("id", "")) or {}).get("lastMeeting")),
     ]
     return "\n".join(line for line in lines if line)
 

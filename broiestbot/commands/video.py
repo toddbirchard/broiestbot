@@ -3,7 +3,7 @@
 from datetime import datetime
 from threading import Lock
 from time import monotonic
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -47,6 +47,8 @@ async def get_all_live_twitch_streams() -> str:
     :returns: str
     """
     token = await get_twitch_auth_token()
+    if token is None:
+        return "🙁 twitch is down or something idk 🙁"
     try:
         twitch_streams = []
         i = 0
@@ -98,6 +100,7 @@ async def get_live_twitch_stream(broadcaster_id: str, token: str) -> Optional[st
         LOGGER.exception(f"IndexError when fetching Twitch channel: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Twitch channel: {e}")
+    return None
 
 
 def format_twitch_response(stream: dict) -> str:
@@ -112,9 +115,9 @@ def format_twitch_response(stream: dict) -> str:
     game = stream.get("game_name")
     title = stream.get("title")
     viewers = stream.get("viewer_count")
-    start_time = stream.get("started_at").replace("Z", "")
+    start_time = stream["started_at"].replace("Z", "")
     duration = (datetime.utcnow() - datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S")).seconds / 60
-    thumbnail = stream.get("thumbnail_url").replace("{width}", "550").replace("{height}", "300")
+    thumbnail = stream["thumbnail_url"].replace("{width}", "550").replace("{height}", "300")
     url = f"https://www.twitch.tv/{broadcaster}"
     return f"\n\n\n<b>{broadcaster}</b> is streaming <b>{game}</b>\n<i>{title}</i>\n{viewers} viewers, {int(duration)} minutes\n{url}\n\n{thumbnail}"
 
@@ -135,11 +138,12 @@ async def get_twitch_auth_token() -> Optional[str]:
         session = await get_http_session()
         async with session.post(endpoint, params=params) as resp:
             token_response = await resp.json(content_type=None)
-            return token_response.get("access_token")
+            return cast(Optional[str], token_response.get("access_token"))
     except ClientError as e:
         LOGGER.exception(f"ClientError when fetching Twitch auth token: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching Twitch auth token: {e}")
+    return None
 
 
 # Consecutive failed scrapes, & the point in time (per `monotonic()`) until which YouTube lookups

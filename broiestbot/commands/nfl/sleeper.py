@@ -1,6 +1,6 @@
 """Commands related to Sleeper Fantasy Football."""
 
-from typing import Optional
+from typing import Optional, cast
 
 from http_client import get_http_session, request_timeout
 from logger import LOGGER
@@ -21,7 +21,7 @@ async def get_sleeper_week_number() -> Optional[int]:
         if resp.status == 200:
             data = await resp.json(content_type=None)
             LOGGER.info(f"Sleeper NFL Week: {data['week']}")
-            return data["week"]
+            return cast(Optional[int], data["week"])
     return None
 
 

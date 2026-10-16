@@ -1,7 +1,7 @@
 """Fetch Phillies MLB game summaries for the current date."""
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional, cast
 
 import pytz
 from aiohttp import ClientError
@@ -22,7 +22,7 @@ async def today_phillies_games() -> str:
     """
     today_games_response = "\n\n\n\n"
     today_games = await get_today_games()
-    if bool(today_games):
+    if today_games:
         for game in today_games:
             mlb_game = await parse_mlb_game(game)
             if mlb_game is not None:
@@ -31,11 +31,11 @@ async def today_phillies_games() -> str:
     return emojize(":warning: Couldn't find any MLB games :warning:", language="en")
 
 
-async def get_today_games() -> Optional[dict]:
+async def get_today_games() -> Optional[List[dict]]:
     """
     Fetch Phillies games scheduled for the current date.
 
-    :returns: Optional[dict]
+    :returns: Optional[List[dict]]
     """
     try:
         url = f"{MLB_BASE_ENDPOINT}/games"
@@ -55,10 +55,11 @@ async def get_today_games() -> Optional[dict]:
         async with session.get(url, headers=headers, params=params) as resp:
             games = await resp.json(content_type=None) if resp.status == 200 else None
             if games:
-                return games.get("response")
+                return cast(Optional[List[dict]], games.get("response"))
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching MLB games: {e}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching MLB games: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching MLB games: {e}")
+    return None

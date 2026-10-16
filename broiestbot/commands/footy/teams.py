@@ -1,7 +1,7 @@
 """Fetch football data per team."""
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -39,7 +39,7 @@ async def fetch_aafk_fixture_data(room: str, username: str) -> Optional[str]:
         tz_name = await get_preferred_timezone(room, username)
         season = get_season_year(OBOS_LIGAEN_ID)
         live_fixture = await fetch_live_fixture_for_team(AALESUND_TEAM_ID, tz_name)
-        if bool(live_fixture):
+        if live_fixture:
             pass
             fixture_id = live_fixture[0]["fixture"]["id"]
         return await fetch_next_five_fixtures_per_team(
@@ -49,9 +49,10 @@ async def fetch_aafk_fixture_data(room: str, username: str) -> Optional[str]:
         LOGGER.exception(f"ClientError while fetching AAFK data: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching AAFK data: {e}")
+    return None
 
 
-async def fetch_live_fixture_for_team(team_id: int, tz_name: str) -> Optional[dict]:
+async def fetch_live_fixture_for_team(team_id: int, tz_name: str) -> Optional[List[dict]]:
     """
     Fetch live footy fixture for provided team.
 
@@ -59,22 +60,23 @@ async def fetch_live_fixture_for_team(team_id: int, tz_name: str) -> Optional[di
     :param str tz_name: Timezone of the user who triggered the command.
     :param int season: Season year.
 
-    :returns: Optional[dict]
+    :returns: Optional[List[dict]]
     """
     try:
-        params = {"league": team_id, "live": "all", "timezone": tz_name}
+        params: dict[str, str | int] = {"league": team_id, "live": "all", "timezone": tz_name}
         session = await get_http_session()
         async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             if resp.status == 200:
                 fixtures = await resp.json(content_type=None)
                 if fixtures.get("response"):
-                    return fixtures.get("response")
+                    return cast(Optional[List[dict]], fixtures.get("response"))
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching footy fixtures: {e}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
+    return None
 
 
 async def fetch_next_five_fixtures_per_team(
@@ -95,7 +97,7 @@ async def fetch_next_five_fixtures_per_team(
         tz_name = await get_preferred_timezone(room, username)
         upcoming_fixtures = f"\n\n\n\n<b>{team_name}</b>\n"
         season = get_season_year(league_id)
-        params = {"season": season, "team": team_id, "next": "5", "timezone": tz_name}
+        params: dict[str, str | int] = {"season": season, "team": team_id, "next": "5", "timezone": tz_name}
         session = await get_http_session()
         async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             fixtures = (await resp.json(content_type=None)).get("response")
@@ -118,6 +120,7 @@ async def fetch_next_five_fixtures_per_team(
         LOGGER.exception(f"KeyError while fetching fox fixtures: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching fox fixtures: {e}")
+    return None
 
 
 async def fetch_fox_fixtures(room: str, username: str) -> Optional[str]:
@@ -133,7 +136,7 @@ async def fetch_fox_fixtures(room: str, username: str) -> Optional[str]:
         tz_name = await get_preferred_timezone(room, username)
         upcoming_foxtures = "\n\n\n\n<b>:fox: FOXTURES</b>\n"
         season = get_season_year(ENGLISH_CHAMPIONSHIP_LEAGUE_ID)
-        params = {"season": season, "team": FOXES_TEAM_ID, "next": "7", "timezone": tz_name}
+        params: dict[str, str | int] = {"season": season, "team": FOXES_TEAM_ID, "next": "7", "timezone": tz_name}
         session = await get_http_session()
         async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             fixtures = (await resp.json(content_type=None)).get("response")
@@ -156,3 +159,4 @@ async def fetch_fox_fixtures(room: str, username: str) -> Optional[str]:
         LOGGER.exception(f"KeyError while fetching fox fixtures: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching fox fixtures: {e}")
+    return None

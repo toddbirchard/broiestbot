@@ -82,7 +82,7 @@ def get_current_total() -> int:
         with Session() as db:
             total_count = db.query(PollResult).filter(PollResult.type == "tovala").one_or_none()
         if total_count is not None:
-            return total_count.count
+            return total_count.count or 0
         return 0
     except SQLAlchemyError as e:
         LOGGER.exception(f"SQLAlchemyError while fetching Tovala total count: {e}")

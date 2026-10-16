@@ -1,6 +1,7 @@
 """Live NFL game stats."""
 
 from datetime import datetime
+from typing import List, Optional, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -21,12 +22,12 @@ async def get_live_nfl_game_summaries(username: str) -> str:
     try:
         game_summaries = "\n\n\n"
         games = await fetch_live_nfl_games()
-        if bool(games):
+        if games:
             for game in games:
                 game_id = game["game"]["id"]
                 game_summaries += parse_live_nfl_game_summary(game)
                 game_events = await fetch_live_nfl_game_events(game_id)
-                game_summaries += parse_live_nfl_scoring_events(game_events)
+                game_summaries += parse_live_nfl_scoring_events(game_events) or ""
             return game_summaries
         return emojize(f"tired_face: aw jeez @{username} idt theres any tovalaball on rn tired_face:", language="en")
     except Exception as e:
@@ -34,26 +35,27 @@ async def get_live_nfl_game_summaries(username: str) -> str:
         return emojize(f":no_entry: o shit i died: `{e}` :no_entry:", language="en")
 
 
-async def fetch_live_nfl_games() -> dict:
+async def fetch_live_nfl_games() -> Optional[List[dict]]:
     """
     Fetch live NFL games.
 
-    :returns: dict
+    :returns: Optional[List[dict]]
     """
     try:
         current_year = datetime.now().year
-        params = {"league": 1, "season": current_year, "live": "all"}
+        params: dict[str, str | int] = {"league": 1, "season": current_year, "live": "all"}
         session = await get_http_session()
         async with session.get(
             NFL_LIVE_GAMES_URL, headers=NFL_LIVE_HTTP_HEADERS, params=params, timeout=request_timeout(30)
         ) as resp:
             games = await resp.json(content_type=None)
-            return games.get("response")
+            return cast(Optional[List[dict]], games.get("response"))
     except ClientError as e:
         LOGGER.error(f"ClientError when fetching live NFL games: {e}")
         raise e
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching live NFL games: {e}")
+    return None
 
 
 def parse_live_nfl_game_summary(game: dict) -> str:
@@ -79,7 +81,7 @@ def parse_live_nfl_game_summary(game: dict) -> str:
             language="en",
         )
     except Exception as e:
-        raise f"{__name__}: {e}"
+        raise RuntimeError(f"{__name__}: {e}") from e
 
 
 async def fetch_live_nfl_game_events(game_id: int):
@@ -102,7 +104,7 @@ async def fetch_live_nfl_game_events(game_id: int):
         LOGGER.exception(f"Unexpected error when fetching live NFL games: {e}")
 
 
-def parse_live_nfl_scoring_events(game_events: dict) -> str:
+def parse_live_nfl_scoring_events(game_events: dict) -> Optional[str]:
     """
     Parse live NFL scoring events.
 
@@ -119,3 +121,4 @@ def parse_live_nfl_scoring_events(game_events: dict) -> str:
         return emojize(game_event_summary, language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when parsing live NFL scoring events: {e}")
+    return None

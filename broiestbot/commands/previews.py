@@ -5,11 +5,11 @@ import ipaddress
 import json
 import socket
 from html import escape
-from typing import Any, Dict, Iterator, Optional, Tuple
+from typing import Any, Dict, Iterator, Optional, Tuple, cast
 from urllib.parse import ParseResult, urljoin, urlparse
 
 from aiohttp import ClientError
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from emoji import emojize
 from http_client import get_http_session, request_timeout
 from logger import LOGGER
@@ -96,7 +96,7 @@ def previewable_url(chat_message: str) -> Optional[str]:
         host = (parsed.hostname or "").lower()
         if not host or _is_excluded_url(url, host) or _is_image_url(parsed, host):
             continue
-        return url
+        return cast(Optional[str], url)
     return None
 
 
@@ -194,9 +194,11 @@ def parse_link_metadata(html: bytes, url: str, encoding: Optional[str] = None) -
     soup = BeautifulSoup(html, "html.parser", from_encoding=encoding)
     tags: Dict[str, str] = {}
     for tag in soup.find_all("meta"):
+        if not isinstance(tag, Tag):
+            continue
         # OpenGraph is specified on `property`, but plenty of sites put it on `name` instead.
-        key = (tag.get("property") or tag.get("name") or "").strip().lower()
-        content = _clean_text(tag.get("content"))
+        key = (_attr(tag, "property") or _attr(tag, "name") or "").strip().lower()
+        content = _clean_text(_attr(tag, "content"))
         if key and content:
             tags.setdefault(key, content)
 
@@ -211,6 +213,19 @@ def parse_link_metadata(html: bytes, url: str, encoding: Optional[str] = None) -
         "image": next((image for image in images if _is_postable_url(image)), None),
         "site_name": first("og:site_name", "application-name"),
     }
+
+
+def _attr(tag: Tag, name: str) -> Optional[str]:
+    """
+    Read a single-valued attribute off a tag.
+
+    :param Tag tag: Parsed HTML tag.
+    :param str name: Attribute name.
+
+    :returns: Optional[str]: The value, or None when it is absent or multi-valued (`rel`, `class`).
+    """
+    value = tag.get(name)
+    return value if isinstance(value, str) else None
 
 
 def _image_candidates(soup: BeautifulSoup, tags: Dict[str, str]) -> Iterator[str]:
@@ -230,11 +245,13 @@ def _image_candidates(soup: BeautifulSoup, tags: Dict[str, str]) -> Iterator[str
         if key in tags:
             yield tags[key]
     for link in soup.find_all("link", rel="image_src", href=True):
-        yield link["href"]
+        href = _attr(link, "href") if isinstance(link, Tag) else None
+        if href:
+            yield href
     yield from _json_ld_images(soup)
     for tag in soup.find_all(attrs={"itemprop": "image"}):
-        source = tag.get("content") or tag.get("href") or tag.get("src")
-        if isinstance(source, str):
+        source = (_attr(tag, "content") or _attr(tag, "href") or _attr(tag, "src")) if isinstance(tag, Tag) else None
+        if source:
             yield source
 
 
@@ -250,6 +267,8 @@ def _json_ld_images(soup: BeautifulSoup) -> Iterator[str]:
     :returns: Iterator[str]
     """
     for script in soup.find_all("script", type=lambda value: value and "ld+json" in value.lower()):
+        if not isinstance(script, Tag):
+            continue
         try:
             data = json.loads(script.string or "")
         except ValueError:
@@ -423,3 +442,4 @@ async def generate_twitter_preview(tweet_url: str) -> Optional[str]:
         LOGGER.error(f"KeyError while generating Twitter preview: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error while generating Twitter preview for URL `{tweet_url}`: {e}")
+    return None

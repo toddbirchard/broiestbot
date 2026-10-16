@@ -134,7 +134,7 @@ class OpenAIClient(BaseLLMClient):
             request["instructions"] = request["instructions"].removesuffix(self.vision_prompt)
             return await self.client.responses.create(**request)
 
-    def _attach_images(self, messages, images: List[str]) -> list:
+    def _attach_images(self, messages: list, images: List[str]) -> list:
         """
         Hoist the images onto the turn which tagged the bot.
 

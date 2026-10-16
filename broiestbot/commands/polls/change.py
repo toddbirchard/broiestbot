@@ -1,7 +1,7 @@
 """Conduct a chat poll whether to 'change or stay'."""
 
 from datetime import timedelta
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 from chatango import Room
 from emoji import emojize
@@ -62,30 +62,23 @@ def get_live_poll_results(user_name: str) -> str:
                 :hourglass_not_done: Voting ends in <i>{time_remaining} seconds</i>.\n\n"
     change_votes, stay_votes = live_poll_results()
     if change_votes or stay_votes:
-        response += f":shuffle_tracks_button: !CHANGE: <b>{len(change_votes) if not None else 0} votes</b> ({', '.join(change_votes) if not None else 0})\n \
+        response += f":shuffle_tracks_button: !CHANGE: <b>{len(change_votes)} votes</b> ({', '.join(change_votes)})\n \
                       :stop_button: !STAY <b>{len(stay_votes)} votes</b> ({', '.join(stay_votes)})\n"
         return emojize(response, language="en")
     return emojize(f":warning: sry @{user_name}, no change-or-stay poll currently live :warning:", language="en")
 
 
-def live_poll_results() -> Tuple[Optional[List[str]], Optional[List[str]]]:
+def live_poll_results() -> Tuple[List[str], List[str]]:
     """
     Get live poll results.
 
-    :returns: Tuple[Optional[List[str]], Optional[List[str]]]
+    :returns: Tuple[List[str], List[str]]
     """
-    poll_results = r.hgetall("changeorstay")
-    change_votes = poll_results.get("change", [])
-    stay_votes = poll_results.get("stay", [])
-    if change_votes:
-        change_votes = change_votes.split(",")
-    else:
-        change_votes = []
-    if stay_votes:
-        stay_votes = stay_votes.split(",")
-    else:
-        stay_votes = []
-    return change_votes, stay_votes
+    # `r` is created with `decode_responses=True`, so hash values come back as `str`.
+    poll_results = cast(Dict[str, str], r.hgetall("changeorstay"))
+    change_votes = poll_results.get("change")
+    stay_votes = poll_results.get("stay")
+    return (change_votes.split(",") if change_votes else []), (stay_votes.split(",") if stay_votes else [])
 
 
 def submit_user_vote(user_name: str, vote: str):
@@ -105,7 +98,7 @@ def submit_user_vote(user_name: str, vote: str):
             if vote == "stay":
                 r.hset("changeorstay", "change", "")
         else:
-            current_votes = r.hget("changeorstay", vote)
+            current_votes = cast(Optional[str], r.hget("changeorstay", vote))
             if current_votes:
                 r.hset("changeorstay", vote, f"{current_votes}," + user_name)
             else:

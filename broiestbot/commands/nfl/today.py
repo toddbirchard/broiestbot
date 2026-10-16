@@ -1,7 +1,7 @@
 """NFL games scheduled for today with scores & odds."""
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import List, Optional, cast
 
 import pytz
 from aiohttp import ClientError
@@ -12,7 +12,7 @@ from logger import LOGGER
 from config import NFL_GAMES_URL, NFL_HTTP_HEADERS
 
 
-async def get_today_nfl_games() -> str:
+async def get_today_nfl_games() -> Optional[str]:
     """
     Get summary of all live NFL games, scores and odds.
 
@@ -20,7 +20,7 @@ async def get_today_nfl_games() -> str:
     """
     try:
         games = await fetch_today_nfl_games()
-        if bool(games):
+        if games:
             game_summaries = "\n\n\n\n"
             for game in games:
                 game_summaries += format_nfl_game(game)
@@ -33,13 +33,14 @@ async def get_today_nfl_games() -> str:
         LOGGER.exception(f"KeyError while fetching live NFL games: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching live NFL games: {e}")
+    return None
 
 
-async def fetch_today_nfl_games() -> Optional[dict]:
+async def fetch_today_nfl_games() -> Optional[List[dict]]:
     """
     Get summary of NFL games scheduled today; includes scores and odds.
 
-    :returns: str
+    :returns: Optional[List[dict]]
     """
     try:
         todays_date = datetime.now(pytz.timezone("America/New_York")).strftime("%Y-%m-%d")
@@ -47,11 +48,12 @@ async def fetch_today_nfl_games() -> Optional[dict]:
         session = await get_http_session()
         async with session.get(NFL_GAMES_URL, headers=NFL_HTTP_HEADERS, params=params) as resp:
             games = await resp.json(content_type=None)
-            return games.get("results")
+            return cast(Optional[List[dict]], games.get("results"))
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching NFL games: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching NFL games: {e}")
+    return None
 
 
 def format_nfl_game(game: dict) -> str:

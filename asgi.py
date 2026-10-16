@@ -1,7 +1,7 @@
 """ASGI entry point — runs the bot inside uvicorn's event loop via lifespan."""
 
 import asyncio
-from typing import List
+from typing import List, Optional
 
 from http_client import close_http_session
 from logger import LOGGER
@@ -17,7 +17,7 @@ from config import (
 )
 from database import close_db, init_db
 
-_bot_task: asyncio.Task = None
+_bot_task: Optional[asyncio.Task] = None
 
 
 async def _run_bot(rooms: List[str]) -> None:

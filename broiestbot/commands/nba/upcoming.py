@@ -1,6 +1,7 @@
 """Parse schedule of today's upcoming NBA games."""
 
 from datetime import datetime
+from typing import Optional
 
 from emoji import emojize
 from logger import LOGGER
@@ -8,7 +9,7 @@ from logger import LOGGER
 from .today import today_nba_games
 
 
-async def upcoming_nba_games() -> str:
+async def upcoming_nba_games() -> Optional[str]:
     """
     Fetch all NBA games for the current date.
 
@@ -33,3 +34,4 @@ async def upcoming_nba_games() -> str:
         LOGGER.exception(f"LookupError while fetching NBA games: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching NBA games: {e}")
+    return None

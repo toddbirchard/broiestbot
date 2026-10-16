@@ -42,10 +42,10 @@ def blaze_time_remaining() -> str:
     else:
         tomorrow_am_time = now.replace(hour=4, minute=20, second=0) + timedelta(days=1)
         remaining = f"{tomorrow_am_time - now}"
-    remaining = remaining.split(":")
+    hours, minutes, seconds = remaining.split(":")
     return emojize(
         f":herb: :fire: \
-            {remaining[0]} hours, {remaining[1]} minutes, & {remaining[2]} seconds until 4:20 \
+            {hours} hours, {minutes} minutes, & {seconds} seconds until 4:20 \
             :smoking: :kissing_face_with_closed_eyes: :dashing_away:",
         language="en",
     )
@@ -68,14 +68,12 @@ def nontent_time_remaining(user_name: str) -> str:
         return "\n\n⚽️🚫🎮 NEW EAFC NONTENT JUST DROPPED! Lets see what BULLSHIT is in store for us today! 🎮🚫⚽️ \
                 \n\n https://www.futbin.com/home-tab/new-players"
     elif nontent_time > now and nontent_time.today().weekday() == 4:
-        remaining = f"{nontent_time - now}"
-        remaining = remaining.split(":")
-        return f"\n\n⚽️👀 {remaining[0]} hours, {remaining[1]} minutes, & {remaining[2]} seconds until CONTENT!!! AHHH!!! 👀⚽️ \
+        hours, minutes, seconds = f"{nontent_time - now}".split(":")
+        return f"\n\n⚽️👀 {hours} hours, {minutes} minutes, & {seconds} seconds until CONTENT!!! AHHH!!! 👀⚽️ \
             \n\n https://x.com/FutSheriff"
     elif nontent_time > now:
-        remaining = f"{nontent_time - now}"
-        remaining = remaining.split(":")
-        return f"\n\n⚽️🚫 {remaining[0]} hours, {remaining[1]} minutes, & {remaining[2]} seconds until NONTENT! Lets see what BULLSHIT is in store for us today! 🚫⚽️ \
+        hours, minutes, seconds = f"{nontent_time - now}".split(":")
+        return f"\n\n⚽️🚫 {hours} hours, {minutes} minutes, & {seconds} seconds until NONTENT! Lets see what BULLSHIT is in store for us today! 🚫⚽️ \
             \n\n https://x.com/FutSheriff"
     return f"⚽️🤦 Nontent and/or content already dropped @{user_name}! Look at this SHIT! 🤦⚽️ \
         \n\n https://www.futbin.com/home-tab/new-players"
@@ -115,6 +113,7 @@ def send_text_message(message: str, user: str, recipient: str) -> Optional[str]:
         return emojize(f":warning: @{user} pls, only pizzaough can text brough :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when sending SMS: {e}")
+    return None
 
 
 def time_until_wayne(user_name: str) -> str:

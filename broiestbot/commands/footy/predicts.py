@@ -1,7 +1,7 @@
 """NMatch predictions for fixtures occurring today."""
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -77,7 +77,7 @@ async def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str
     """
     try:
         today = get_current_day(room)
-        params = {
+        params: dict[str, str | int] = {
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
             "season": get_season_year(league_id),
@@ -93,9 +93,10 @@ async def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+    return None
 
 
-async def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) -> Optional[dict]:
+async def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name: str) -> Optional[List[dict]]:
     """
     Get all fixtures scheduled for today's date.
 
@@ -103,11 +104,11 @@ async def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name:
     :param str room: Chatango room in which command was triggered.
     :param str tz_name:
 
-    :returns: Optional[dict]
+    :returns: Optional[List[dict]]
     """
     try:
         today = get_current_day(room)
-        params = {
+        params: dict[str, str | int] = {
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
             "season": get_season_year(league_id),
@@ -118,13 +119,14 @@ async def fetch_today_fixture_odds_by_league(league_id: int, room: str, tz_name:
         session = await get_http_session()
         async with session.get(FOOTY_ODDS_ENDPOINT_2, params=params, headers=FOOTY_HTTP_HEADERS) as resp:
             odds = await resp.json(content_type=None)
-            return odds.get("response")
+            return cast(Optional[List[dict]], odds.get("response"))
     except ClientError as e:
         LOGGER.error(f"ClientError while fetching today's footy fixtures: {e}")
     except KeyError as e:
         LOGGER.error(f"KeyError while fetching today's footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching today's footy fixtures: {e}")
+    return None
 
 
 def map_odds_by_fixture_id(fixtures_odds: List[dict]) -> dict:
@@ -169,14 +171,14 @@ def get_outcome_odds(values: List[dict], outcome: str) -> str:
 
 
 def parse_fixture_odds(
-    league_name: str, fixtures: dict, fixtures_odds: dict, room: str, username: str
+    league_name: str, fixtures: List[dict], fixtures_odds: List[dict], room: str, username: str
 ) -> Optional[str]:
     """
     Parse fixture details and odds.
 
     :param int league_name: Name of the footy league/cup.
-    :param dict fixtures: Raw JSON response of today's fixtures.
-    :param dict fixtures_odds: Raw JSON response of today's fixtures' odds.
+    :param List[dict] fixtures: Raw JSON response of today's fixtures.
+    :param List[dict] fixtures_odds: Raw JSON response of today's fixtures' odds.
     :param str room: Chatango room in which command was triggered.
     :param str username: Name of user who triggered the command.
 
@@ -202,3 +204,4 @@ def parse_fixture_odds(
         return emojize(fixtures_odds_response, language="en")
     except Exception as e:
         LOGGER.error(f"Unexpected error when parsing today's footy odds: {e}")
+    return None

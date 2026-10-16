@@ -5,6 +5,7 @@ who was in a game — once to filter the roster, once to render the line — so 
 payload is now carried alongside the friend instead of re-fetched.
 """
 
+from typing import Optional
 from unittest.mock import MagicMock, patch
 
 from broiestbot.commands.playstation import (
@@ -14,7 +15,7 @@ from broiestbot.commands.playstation import (
 )
 
 
-def build_friend(name: str, in_game: bool = True, presence_counter: dict = None) -> MagicMock:
+def build_friend(name: str, in_game: bool = True, presence_counter: Optional[dict] = None) -> MagicMock:
     """
     Build a stand-in PSN friend whose `get_presence()` calls are counted.
 

@@ -1,5 +1,7 @@
 """Fetch random trending image from a given subreddit."""
 
+from typing import Optional, cast
+
 from emoji import emojize
 from logger import LOGGER
 from praw.exceptions import RedditAPIException
@@ -7,7 +9,7 @@ from praw.exceptions import RedditAPIException
 from clients import reddit
 
 
-def subreddit_image(subreddit: str) -> str:
+def subreddit_image(subreddit: str) -> Optional[str]:
     """
     Fetch most recent image posted to a subreddit.
 
@@ -18,10 +20,11 @@ def subreddit_image(subreddit: str) -> str:
     try:
         images = [post for post in reddit.subreddit(subreddit).new(limit=10)]
         if images:
-            return images[0]
+            return cast(Optional[str], images[0].url)
     except RedditAPIException as e:
         LOGGER.exception(f"Reddit image search failed for subreddit `{subreddit}`: {e}")
         return emojize(":warning: i broke bc im a shitty bot :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when Reddit searching for `{subreddit}`: {e}")
         return emojize(":warning: i broke bc im a shitty bot :warning:", language="en")
+    return None

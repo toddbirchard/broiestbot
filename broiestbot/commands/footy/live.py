@@ -1,6 +1,6 @@
 """Match breakdown of all live fixtures."""
 
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -79,19 +79,20 @@ async def footy_live_fixtures_per_league(league_id: int, league_name: str, usern
         LOGGER.exception(f"KeyError while fetching live fixtures: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching live fixtures: {e}")
+    return None
 
 
-async def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
+async def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[List[dict]]:
     """
     Fetch live footy fixtures across EPL, LIGA, BUND, FA, UCL, EUROPA, etc.
 
     :param int league_id: ID of footy league/cup.
     :param str tz_name: Timezone of the user who triggered the command.
 
-    :returns: Optional[dict]
+    :returns: Optional[List[dict]]
     """
     try:
-        params = {"league": league_id, "live": "all", "timezone": tz_name}
+        params: dict[str, str | int] = {"league": league_id, "live": "all", "timezone": tz_name}
         session = await get_http_session()
         async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             if resp.status == 200:
@@ -103,6 +104,7 @@ async def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[dict]:
         LOGGER.exception(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching footy fixtures: {e}")
+    return None
 
 
 async def fetch_events_per_live_fixture(fixture_id: int) -> Optional[List[dict]]:
@@ -118,13 +120,14 @@ async def fetch_events_per_live_fixture(fixture_id: int) -> Optional[List[dict]]
         session = await get_http_session()
         async with session.get(FOOTY_LIVE_FIXTURE_EVENTS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             events = await resp.json(content_type=None)
-            return events.get("response")
+            return cast(Optional[List[dict]], events.get("response"))
     except ClientError as e:
         LOGGER.exception(f"ClientError while compiling events in live fixture: {e}")
     except KeyError as e:
         LOGGER.exception(f"KeyError while compiling events in live fixture: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while compiling events in live fixture: {e}")
+    return None
 
 
 def parse_events_per_live_fixture(events: List[dict], subs=False) -> Optional[str]:
@@ -194,6 +197,7 @@ def parse_events_per_live_fixture(events: List[dict], subs=False) -> Optional[st
         LOGGER.exception(f"LookupError while compiling events in live fixture: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while compiling events in live fixture: {e}")
+    return None
 
 
 '''

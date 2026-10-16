@@ -1,6 +1,6 @@
 """Top scorers for a given league."""
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -24,14 +24,11 @@ async def epl_golden_boot() -> str:
     :return: str
     """
     try:
-        top_scorers = []
-        top_scorers.extend(await golden_boot_leaders(league=EPL_LEAGUE_ID))
+        top_scorers: List[Tuple[int, str]] = []
+        top_scorers.extend(await golden_boot_leaders(league=EPL_LEAGUE_ID) or [])
         if bool(top_scorers):
             top_scorers.sort(key=lambda x: x[0], reverse=True)
-            top_scorers = top_scorers[:20]
-            top_scorers = [scorer[1] for scorer in top_scorers]
-            top_scorers.insert(0, "\n\n\n\n")
-            return "\n".join(top_scorers)
+            return "\n".join(["\n\n\n\n"] + [scorer[1] for scorer in top_scorers[:20]])
         return emojize(":warning: Couldn't find golden boot leaders; bot is shit tbh :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching golden boot leaders: {e}")
@@ -45,22 +42,19 @@ async def all_leagues_golden_boot() -> str:
     :return: str
     """
     try:
-        top_scorers = []
+        top_scorers: List[Tuple[int, str]] = []
         for league_id in GOLDEN_SHOE_LEAGUES.values():
-            top_scorers.extend(await golden_boot_leaders(league=league_id))
+            top_scorers.extend(await golden_boot_leaders(league=league_id) or [])
         if bool(top_scorers):
             top_scorers.sort(key=lambda x: x[0], reverse=True)
-            top_scorers = top_scorers[:20]
-            top_scorers = [scorer[1] for scorer in top_scorers]
-            top_scorers.insert(0, "\n\n\n\n")
-            return "\n".join(top_scorers)
+            return "\n".join(["\n\n\n\n"] + [scorer[1] for scorer in top_scorers[:20]])
         return emojize(":warning: Couldn't find golden boot shoe; bot is shit tbh :warning:", language="en")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching golden shoe leaders: {e}")
         return emojize(":warning: Couldn't find golden boot shoe; bot is shit tbh :warning:", language="en")
 
 
-async def golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str]]:
+async def golden_boot_leaders(league=EPL_LEAGUE_ID) -> Optional[List[Tuple[int, str]]]:
     """
     Fetch list of top scorers per league.
 
@@ -68,19 +62,20 @@ async def golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str]]:
     """
     try:
         goal_leaders_by_league = await fetch_golden_boot_leaders(league)
-        if bool(goal_leaders_by_league):
+        if goal_leaders_by_league:
             return parse_golden_boot_leaders(goal_leaders_by_league)
     except KeyError as e:
         LOGGER.exception(f"KeyError while fetching golden boot leaders: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching golden boot leaders: {e}")
+    return None
 
 
-async def fetch_golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str]]:
+async def fetch_golden_boot_leaders(league=EPL_LEAGUE_ID) -> Optional[List[dict]]:
     """
     Fetch list of top scorers per league via API.
 
-    :return: List[str]
+    :return: Optional[List[dict]]
     """
     try:
         season = get_season_year(EPL_LEAGUE_ID)
@@ -88,23 +83,24 @@ async def fetch_golden_boot_leaders(league=EPL_LEAGUE_ID) -> List[Tuple[int, str
         session = await get_http_session()
         async with session.get(FOOTY_TOPSCORERS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             top_scorers = await resp.json(content_type=None)
-            return top_scorers.get("response")
+            return cast(Optional[List[dict]], top_scorers.get("response"))
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching goal leaders for {league}: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error while fetching goal leaders for {league}: {e}")
+    return None
 
 
-def parse_golden_boot_leaders(players: dict) -> str:
+def parse_golden_boot_leaders(players: List[dict]) -> Optional[List[Tuple[int, str]]]:
     """
     Parse "golden boot" API response into readable chat.
 
-    :params dict players: JSON response of players' goal (and other) statistics.
+    :params List[dict] players: JSON response of players' goal (and other) statistics.
 
-    :returns: str
+    :returns: Optional[List[Tuple[int, str]]] — (goals, formatted line) per player.
     """
     try:
-        top_scorers = []
+        top_scorers: List[Tuple[int, str]] = []
         if players:
             for i, player in enumerate(players):
                 name = player["player"]["name"]
@@ -127,3 +123,4 @@ def parse_golden_boot_leaders(players: dict) -> str:
         LOGGER.exception(f"KeyError while fetching golden boot leaders: {e}")
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching golden boot leaders: {e}")
+    return None

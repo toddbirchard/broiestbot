@@ -1,6 +1,6 @@
 """User geo data client to identify bad actors."""
 
-from typing import Union
+from typing import Optional, Union, cast
 
 import ipdata
 import pandas as pd
@@ -29,7 +29,7 @@ class GeoIP:
         except Exception as e:
             print(f"Unexpected exception while creating IPData client: {e}")
 
-    def lookup_user_by_ip(self, ip_address: str) -> dict:
+    def lookup_user_by_ip(self, ip_address: str) -> Optional[dict]:
         """
         Fetch metadata associated with user's IP address.
 
@@ -38,38 +38,42 @@ class GeoIP:
         :returns: dict
         """
         try:
-            return self.client.lookup(
-                ip_address,
-                fields=[
-                    "ip",
-                    "city",
-                    "region",
-                    "region_code",
-                    "country_name",
-                    "country_code",
-                    "continent_name",
-                    "latitude",
-                    "longitude",
-                    "asn",
-                    "postal",
-                    "calling_code",
-                    "flag",
-                    "emoji_flag",
-                    "emoji_unicode",
-                    "carrier",
-                    "languages",
-                    "currency",
-                    "time_zone",
-                    "threat",
-                    "count",
-                    "status",
-                    "company",
-                ],
+            return cast(
+                Optional[dict],
+                self.client.lookup(
+                    ip_address,
+                    fields=[
+                        "ip",
+                        "city",
+                        "region",
+                        "region_code",
+                        "country_name",
+                        "country_code",
+                        "continent_name",
+                        "latitude",
+                        "longitude",
+                        "asn",
+                        "postal",
+                        "calling_code",
+                        "flag",
+                        "emoji_flag",
+                        "emoji_unicode",
+                        "carrier",
+                        "languages",
+                        "currency",
+                        "time_zone",
+                        "threat",
+                        "count",
+                        "status",
+                        "company",
+                    ],
+                ),
             )
         except IPDataException as e:
             print(f"IPData API failed to lookup user with ip=ip_address: {e}")
         except Exception as e:
             print(f"Unexpected failure for IPData user lookup, ip={ip_address}: {e}")
+        return None
 
     @staticmethod
     def save_metadata(room_name: str, user_name: str, ip_metadata: dict) -> Union[DataFrame, str]:

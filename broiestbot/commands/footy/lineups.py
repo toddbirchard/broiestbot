@@ -1,7 +1,7 @@
 """Fetch lineups before kickoff or during the match."""
 
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -45,7 +45,7 @@ async def footy_team_lineups(room: str, username: str) -> Optional[List[str]]:
     :returns: Optional[List[str]]
     """
     try:
-        leagues = []
+        leagues: List[Tuple[str, List[str]]] = []
         tz_name = await get_preferred_timezone(room, username)
         for league_name, league_id in FOOTY_XI_LEAGUES.items():
             if len(leagues) >= FOOTY_XI_MAX_LEAGUES:
@@ -67,6 +67,7 @@ async def footy_team_lineups(room: str, username: str) -> Optional[List[str]]:
         return pack_lineup_messages(leagues)
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy XIs: {e}")
+    return None
 
 
 def pack_lineup_messages(
@@ -117,20 +118,21 @@ async def fetch_lineups_per_fixture(fixture_id: int) -> Optional[List[dict]]:
         session = await get_http_session()
         async with session.get(FOOTY_XI_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             lineups = await resp.json(content_type=None)
-            return lineups.get("response")
+            return cast(Optional[List[dict]], lineups.get("response"))
     except ClientError as e:
         LOGGER.error(f"ClientError while fetching footy XIs: {e}")
     except ValueError as e:
         LOGGER.error(f"ValueError while fetching footy XIs: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy XIs: {e}")
+    return None
 
 
-def get_fixture_xis(teams: dict) -> Optional[str]:
+def get_fixture_xis(teams: List[dict]) -> Optional[str]:
     """
     Parse & format player lineups for an upcoming fixture.
 
-    :param dict teams: JSON Response containing two lineups for a given fixture.
+    :param List[dict] teams: JSON Response containing two lineups for a given fixture.
 
     :returns: Optional[str]
     """
@@ -159,6 +161,7 @@ def get_fixture_xis(teams: dict) -> Optional[str]:
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+    return None
 
 
 @LOGGER.catch
@@ -174,7 +177,7 @@ async def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name
     """
     try:
         today = get_current_day(room)
-        params = {
+        params: dict[str, str | int] = {
             "date": today.strftime("%Y-%m-%d"),
             "league": league_id,
             "season": get_season_year(league_id),
@@ -191,6 +194,7 @@ async def get_today_live_or_upcoming_fixtures(league_id: int, room: str, tz_name
         LOGGER.error(f"KeyError while fetching footy fixtures: {e}")
     except Exception as e:
         LOGGER.error(f"Unexpected error when fetching footy fixtures: {e}")
+    return None
 
 
 @LOGGER.catch
@@ -225,6 +229,7 @@ async def build_fixture_summary(
         return f"<b>{away_team.upper()} @ {home_team.upper()}</b> <i>({status_detail})</i>\n"
     except Exception as e:
         LOGGER.error(f"Unexpected error when parsing footy fixture summaries for footyXI: {e}")
+    return None
 
 
 @LOGGER.catch

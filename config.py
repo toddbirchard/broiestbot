@@ -2,7 +2,7 @@
 
 import re
 from datetime import timedelta
-from os import environ, getenv, path
+from os import getenv, path
 
 import pytz
 from dotenv import load_dotenv
@@ -10,6 +10,17 @@ from emoji import emojize
 
 BASE_DIR = path.abspath(path.dirname(__file__))
 load_dotenv(path.join(BASE_DIR, ".env"))
+
+
+def getenv_list(key: str) -> list[str]:
+    """
+    Split a comma-separated environment variable into its stripped, non-empty entries.
+
+    :param str key: Name of the environment variable.
+
+    :returns: list[str]
+    """
+    return [item.strip() for item in getenv(key, "").split(",") if item.strip()]
 
 
 # General
@@ -44,12 +55,12 @@ CHATANGO_MESSAGE_MAX_LENGTH = 2400
 
 CHATANGO_USERS = {
     "BROIESTBOT": {
-        "USERNAME": getenv("CHATANGO_BOT_USERNAME"),
-        "PASSWORD": getenv("CHATANGO_BOT_PASSWORD"),
+        "USERNAME": getenv("CHATANGO_BOT_USERNAME", ""),
+        "PASSWORD": getenv("CHATANGO_BOT_PASSWORD", ""),
     },
     "BROIESTBRO": {
-        "USERNAME": getenv("CHATANGO_BRO_USERNAME"),
-        "PASSWORD": getenv("CHATANGO_BRO_PASSWORD"),
+        "USERNAME": getenv("CHATANGO_BRO_USERNAME", ""),
+        "PASSWORD": getenv("CHATANGO_BRO_PASSWORD", ""),
     },
 }
 
@@ -57,20 +68,20 @@ CHATANGO_USERS = {
 CHATANGO_BOTS = ["BROIESTBRO", "BROIESTBOT", "ACLEEBOT", "LMAOLOVER"]
 
 # All known Chatango rooms
-CHATANGO_TEST_ROOM = getenv("CHATANGO_TEST_ROOM")
-CHATANGO_ACLEE_ROOM = getenv("CHATANGO_ACLEE_ROOM")
-CHATANGO_SIXERS_ROOM = getenv("CHATANGO_SIXERS_ROOM")
-CHATANGO_ALT_ROOM = getenv("CHATANGO_ALT_ROOM")
-CHATANGO_EAGLES_ROOM = getenv("CHATANGO_EAGLES_ROOM")
-CHATANGO_PHILLIES_ROOM = getenv("CHATANGO_PHILLIES_ROOM")
-CHATANGO_NFL_ROOM = getenv("CHATANGO_NFL_ROOM")
-CHATANGO_OBI_ROOM = getenv("CHATANGO_OBI_ROOM")
-CHATANGO_REDZONE_ROOM = getenv("CHATANGO_REDZONE_ROOM")
-CHATANGO_PATREON_ROOM = getenv("CHATANGO_PATREON_ROOM")
-CHATANGO_FLYERS_ROOM = getenv("CHATANGO_FLYERS_ROOM")
-CHATANGO_UFC_ROOM = getenv("CHATANGO_UFC_ROOM")
-CHATANGO_UNION_ROOM = getenv("CHATANGO_UNION_ROOM")
-CHATANGO_LMAO_ROOM = getenv("CHATANGO_LMAO_ROOM")
+CHATANGO_TEST_ROOM = getenv("CHATANGO_TEST_ROOM", "")
+CHATANGO_ACLEE_ROOM = getenv("CHATANGO_ACLEE_ROOM", "")
+CHATANGO_SIXERS_ROOM = getenv("CHATANGO_SIXERS_ROOM", "")
+CHATANGO_ALT_ROOM = getenv("CHATANGO_ALT_ROOM", "")
+CHATANGO_EAGLES_ROOM = getenv("CHATANGO_EAGLES_ROOM", "")
+CHATANGO_PHILLIES_ROOM = getenv("CHATANGO_PHILLIES_ROOM", "")
+CHATANGO_NFL_ROOM = getenv("CHATANGO_NFL_ROOM", "")
+CHATANGO_OBI_ROOM = getenv("CHATANGO_OBI_ROOM", "")
+CHATANGO_REDZONE_ROOM = getenv("CHATANGO_REDZONE_ROOM", "")
+CHATANGO_PATREON_ROOM = getenv("CHATANGO_PATREON_ROOM", "")
+CHATANGO_FLYERS_ROOM = getenv("CHATANGO_FLYERS_ROOM", "")
+CHATANGO_UFC_ROOM = getenv("CHATANGO_UFC_ROOM", "")
+CHATANGO_UNION_ROOM = getenv("CHATANGO_UNION_ROOM", "")
+CHATANGO_LMAO_ROOM = getenv("CHATANGO_LMAO_ROOM", "")
 
 # Chatango rooms to be joined by the bot
 CHATANGO_ROOMS = [
@@ -98,17 +109,17 @@ CHATANGO_DADDY_ANON_BAN_ROOMS = [
 
 
 # List of Chatango users with privileges to special commands
-CHATANGO_SPECIAL_USERS = getenv("CHATANGO_SPECIAL_USERS")
-if CHATANGO_SPECIAL_USERS:
-    CHATANGO_SPECIAL_USERS = CHATANGO_SPECIAL_USERS.split(",")
+CHATANGO_SPECIAL_USERS = getenv_list("CHATANGO_SPECIAL_USERS")
 
-# Chatango users to be banned or ignored
-CHATANGO_IGNORED_USERS = getenv("CHATANGO_IGNORED_USERS")
-CHATANGO_IGNORED_IPS = getenv("CHATANGO_IGNORED_IPS")
-CHATANGO_BANNED_IPS = getenv("CHATANGO_BANNED_IPS")
-CHATANGO_EGGSER_USERNAME_WHITELIST = getenv("CHATANGO_EGGSER_USERNAME_WHITELIST")
-CHATANGO_BLACKLISTED_USERS = getenv("CHATANGO_BLACKLISTED_USERS")
-CHATANGO_BLACKLIST_ROOMS = [
+# Chatango users to be banned or ignored. Parsed into lists so membership is an exact match: an
+# `in` against the raw comma-separated string matched substrings, and an empty IP (Chatango hides
+# IPs from non-mods) is a substring of every string.
+CHATANGO_IGNORED_USERS = getenv_list("CHATANGO_IGNORED_USERS")
+CHATANGO_IGNORED_IPS = getenv_list("CHATANGO_IGNORED_IPS")
+CHATANGO_BANNED_IPS = getenv_list("CHATANGO_BANNED_IPS")
+CHATANGO_EGGSER_USERNAME_WHITELIST = getenv_list("CHATANGO_EGGSER_USERNAME_WHITELIST")
+CHATANGO_BLACKLISTED_USERS = getenv_list("CHATANGO_BLACKLISTED_USERS")
+CHATANGO_BLACKLIST_ROOMS: list[str] = [
     # CHATANGO_ACLEE_ROOM,
     # CHATANGO_SIXERS_ROOM,
     # CHATANGO_PHILLIES_ROOM,
@@ -123,7 +134,7 @@ CHATANGO_BLACKLIST_ROOMS = [
 
 # Database
 # -------------------------------------------------
-SQLALCHEMY_DATABASE_URI = getenv("SQLALCHEMY_DATABASE_URI")
+SQLALCHEMY_DATABASE_URI = getenv("SQLALCHEMY_DATABASE_URI", "")
 DATABASE_USERS_TABLE = getenv("DATABASE_USERS_TABLE")
 DATABASE_ARGS = {"ssl": {"ca": f"{BASE_DIR}/creds/ca-certificate.crt"}}
 
@@ -137,10 +148,10 @@ DATABASE_POOL_RECYCLE = int(getenv("DATABASE_POOL_RECYCLE", "1800"))
 
 # Redis
 # -------------------------------------------------
-REDIS_HOST = getenv("REDIS_HOST")
+REDIS_HOST = getenv("REDIS_HOST", "")
 REDIS_USERNAME = getenv("REDIS_USERNAME")
 REDIS_PASSWORD = getenv("REDIS_PASSWORD")
-REDIS_PORT = getenv("REDIS_PORT")
+REDIS_PORT = int(getenv("REDIS_PORT", "6379"))
 REDIS_DB = getenv("REDIS_DB")
 
 # Action Log
@@ -164,24 +175,24 @@ URBAN_DICTIONARY_ENDPOINT = "http://api.urbandictionary.com/v0/define"
 
 # Gifs
 # -------------------------------------------------
-GIPHY_API_KEY = getenv("GIPHY_API_KEY")
-KLIPY_API_KEY = getenv("KLIPY_API_KEY")
+GIPHY_API_KEY = getenv("GIPHY_API_KEY", "")
+KLIPY_API_KEY = getenv("KLIPY_API_KEY", "")
 REDGIFS_ACCESS_KEY = getenv("REDGIFS_ACCESS_KEY")
 REDGIFS_TOKEN_ENDPOINT = "https://weblogin.redgifs.com/oauth/webtoken"
 REDGIFS_IMAGE_SEARCH_ENDPOINT = "https://api.redgifs.com/v2/gifs/search"
 
 # Stocks
 # -------------------------------------------------
-IEX_API_TOKEN = getenv("IEX_API_TOKEN")
+IEX_API_TOKEN = getenv("IEX_API_TOKEN", "")
 IEX_API_BASE_URL = "https://cloud.iexapis.com/stable/stock/"
 
 # Crypto
 # -------------------------------------------------
-ALPHA_VANTAGE_API_KEY = environ.get("ALPHA_VANTAGE_API_KEY")
+ALPHA_VANTAGE_API_KEY = getenv("ALPHA_VANTAGE_API_KEY", "")
 ALPHA_VANTAGE_PRICE_BASE_URL = "https://api.cryptowat.ch/markets/bitfinex/"
 ALPHA_VANTAGE_CHART_BASE_URL = "https://www.alphavantage.co/query/"
 COINMARKETCAP_LATEST_ENDPOINT = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
-COINMARKETCAP_API_KEY = getenv("COINMARKETCAP_API_KEY")
+COINMARKETCAP_API_KEY = getenv("COINMARKETCAP_API_KEY", "")
 
 # Plotly
 # -------------------------------------------------
@@ -191,11 +202,11 @@ PLOTLY_USERNAME = getenv("PLOTLY_USERNAME")
 # Weather
 # -------------------------------------------------
 WEATHERSTACK_API_ENDPOINT = "http://api.weatherstack.com/current"
-WEATHERSTACK_API_KEY = getenv("WEATHERSTACK_API_KEY")
+WEATHERSTACK_API_KEY = getenv("WEATHERSTACK_API_KEY", "")
 # Users who prefer metric units, as a comma-separated env var. Parsed into a list so that a
 # lookup is an exact membership test rather than a substring match ("led" would otherwise
 # match "ledhed"), and so an unset value yields an empty list instead of None.
-METRIC_SYSTEM_USERS = [user.strip() for user in getenv("METRIC_SYSTEM_USERS", "").split(",") if user.strip()]
+METRIC_SYSTEM_USERS = getenv_list("METRIC_SYSTEM_USERS")
 
 # Email
 # -------------------------------------------------
@@ -233,18 +244,18 @@ REDDIT_PASSWORD = getenv("REDDIT_CLIENT_SECRET")
 
 # Rapid API
 # -------------------------------------------------
-RAPID_API_KEY = getenv("RAPID_API_KEY")
+RAPID_API_KEY = getenv("RAPID_API_KEY", "")
 
 # IP Data
 # -------------------------------------------------
-IP_DATA_KEY = getenv("IP_DATA_KEY")
+IP_DATA_KEY = getenv("IP_DATA_KEY", "")
 
 # Instagram
 # -------------------------------------------------
 INSTAGRAM_USERNAME = getenv("INSTAGRAM_USERNAME")
 INSTAGRAM_PASSWORD = getenv("INSTAGRAM_PASSWORD")
-INSTAGRAM_APP_ID = getenv("INSTAGRAM_APP_ID")
-INSTAGRAM_APP_SECRET = getenv("INSTAGRAM_APP_SECRET")
+INSTAGRAM_APP_ID = getenv("INSTAGRAM_APP_ID", "")
+INSTAGRAM_APP_SECRET = getenv("INSTAGRAM_APP_SECRET", "")
 
 # Covid API
 # -------------------------------------------------
@@ -364,10 +375,6 @@ LINK_PREVIEW_EXCLUDED_HOSTS = (
 # domains, or one path on an otherwise previewable site. Each pattern is `search`ed against the
 # whole URL, scheme included, and re-checked on every redirect hop like the excluded hosts above.
 LINK_PREVIEW_IGNORED_URL_PATTERNS = (
-    # Daddylive's mirrors: any host containing one of its names (`daddylive`, `daddyhd`, or the
-    # `dlhd` abbreviation), on any TLD or subdomain, over http or https (`daddylive.app`,
-    # `d.daddylivehd.sx`, `daddyhd.com`, `dlhd.dad`). Only the host is searched, so a path or
-    # credentials mentioning one don't count.
     re.compile(r"^https?://(?:[^/?#]*@)?[^/?#@]*(?:daddylive|daddyhd|dlhd)[^/?#@]*(?:[/?#]|$)", re.IGNORECASE),
 )
 
@@ -461,32 +468,32 @@ LLM_MODE_EMOJIS = {
 # -------------------------------------------------
 
 # Twitch API endpoints, client ID, and client secret
-TWITCH_CLIENT_ID = getenv("TWITCH_CLIENT_ID")
-TWITCH_CLIENT_SECRET = getenv("TWITCH_CLIENT_SECRET")
+TWITCH_CLIENT_ID = getenv("TWITCH_CLIENT_ID", "")
+TWITCH_CLIENT_SECRET = getenv("TWITCH_CLIENT_SECRET", "")
 TWITCH_TOKEN_ENDPOINT = "https://id.twitch.tv/oauth2/token"
 TWITCH_STREAMS_ENDPOINT = "https://api.twitch.tv/helix/streams"
 
 # Twitch usernames and IDs to follow
-TWITCH_BRO_USERNAME = getenv("TWITCH_BRO_USERNAME")
-TWITCH_BRO_ID = getenv("TWITCH_BRO_ID")
-TWITCH_ATLAS_USERNAME = getenv("TWITCH_ATLAS_USERNAME")
-TWITCH_ATLAS_ID = getenv("TWITCH_ATLAS_ID")
-TWITCH_ACLEE_USERNAME = getenv("TWITCH_ACLEE_USERNAME")
-TWITCH_ACLEE_ID = getenv("TWITCH_ACLEE_ID")
-TWITCH_PANDA_USERNAME = getenv("TWITCH_PANDA_USERNAME")
-TWITCH_PANDA_ID = getenv("TWITCH_PANDA_ID")
-TWITCH_RANGER_USERNAME = getenv("TWITCH_RANGER_USERNAME")
-TWITCH_RANGER_ID = getenv("TWITCH_RANGER_USERNAME")
-TWITCH_TRAILBLAZING_USERNAME = getenv("TWITCH_TRAILBLAZING_USERNAME")
-TWITCH_TRAILBLAZING_ID = getenv("TWITCH_TRAILBLAZING_ID")
-TWITCH_CUMRAG_USERNAME = getenv("TWITCH_CUMRAG_USERNAME")
-TWITCH_CUMRAG_ID = getenv("TWITCH_CUMRAG_ID")
-TWITCH_CHIGGSY_USERNAME = getenv("TWITCH_CHIGGSY_USERNAME")
-TWITCH_CHIGGSY_ID = getenv("TWITCH_CHIGGSY_ID")
-TWITCH_MILNER_USERNAME = getenv("TWITCH_MILNER_USERNAME")
-TWITCH_MILNER_ID = getenv("TWITCH_MILNER_ID")
-TWITCH_NEPHEW_USERNAME = getenv("TWITCH_NEPHEW_USERNAME")
-TWITCH_NEPHEW_ID = getenv("TWITCH_NEPHEW_ID")
+TWITCH_BRO_USERNAME = getenv("TWITCH_BRO_USERNAME", "")
+TWITCH_BRO_ID = getenv("TWITCH_BRO_ID", "")
+TWITCH_ATLAS_USERNAME = getenv("TWITCH_ATLAS_USERNAME", "")
+TWITCH_ATLAS_ID = getenv("TWITCH_ATLAS_ID", "")
+TWITCH_ACLEE_USERNAME = getenv("TWITCH_ACLEE_USERNAME", "")
+TWITCH_ACLEE_ID = getenv("TWITCH_ACLEE_ID", "")
+TWITCH_PANDA_USERNAME = getenv("TWITCH_PANDA_USERNAME", "")
+TWITCH_PANDA_ID = getenv("TWITCH_PANDA_ID", "")
+TWITCH_RANGER_USERNAME = getenv("TWITCH_RANGER_USERNAME", "")
+TWITCH_RANGER_ID = getenv("TWITCH_RANGER_USERNAME", "")
+TWITCH_TRAILBLAZING_USERNAME = getenv("TWITCH_TRAILBLAZING_USERNAME", "")
+TWITCH_TRAILBLAZING_ID = getenv("TWITCH_TRAILBLAZING_ID", "")
+TWITCH_CUMRAG_USERNAME = getenv("TWITCH_CUMRAG_USERNAME", "")
+TWITCH_CUMRAG_ID = getenv("TWITCH_CUMRAG_ID", "")
+TWITCH_CHIGGSY_USERNAME = getenv("TWITCH_CHIGGSY_USERNAME", "")
+TWITCH_CHIGGSY_ID = getenv("TWITCH_CHIGGSY_ID", "")
+TWITCH_MILNER_USERNAME = getenv("TWITCH_MILNER_USERNAME", "")
+TWITCH_MILNER_ID = getenv("TWITCH_MILNER_ID", "")
+TWITCH_NEPHEW_USERNAME = getenv("TWITCH_NEPHEW_USERNAME", "")
+TWITCH_NEPHEW_ID = getenv("TWITCH_NEPHEW_ID", "")
 
 TWITCH_BROADCASTERS = {
     TWITCH_BRO_USERNAME: TWITCH_BRO_ID,
@@ -1029,8 +1036,8 @@ MLB_PHILLIES_ID = "27"
 # Remote tuner control
 # -------------------------------------------------
 CHANNEL_LIST_FILEPATH = f"{BASE_DIR}/channels.json"
-CHANNEL_HOST = getenv("CHANNEL_HOST")
-CHANNEL_AUTH = getenv("CHANNEL_AUTH")
+CHANNEL_HOST = getenv("CHANNEL_HOST", "")
+CHANNEL_AUTH = getenv("CHANNEL_AUTH", "")
 CHANNEL_TUNER_HEADERS = {
     "Connection": "keep-alive",
     "Authorization": CHANNEL_AUTH,
@@ -1053,7 +1060,7 @@ WINTER_OLYMPICS_LEADERBOARD_ENDPOINT = "https://www.espn.com/olympics/winter/202
 # NBA
 # -------------------------------------------------
 NBA_BASE_URL = "https://api-basketball.p.rapidapi.com"
-NBA_API_KEY = getenv("NBA_API_KEY")
+NBA_API_KEY = getenv("NBA_API_KEY", "")
 NBA_CONFERENCE_NAMES = ["Eastern Conference", "Western Conference"]
 NBA_SEASON_YEAR = "2024-2025"
 
@@ -1195,7 +1202,7 @@ F1_DRIVER_NATIONALITIES = {
 
 # Playstation PSN
 # -------------------------------------------------
-PLAYSTATION_SSO_TOKEN = getenv("PLAYSTATION_SSO_TOKEN")
+PLAYSTATION_SSO_TOKEN = getenv("PLAYSTATION_SSO_TOKEN", "")
 PLAYSTATION_EAFC_2024_ID = "PPSA13393_00"
 PLAYSTATION_EAFC_2025_ID = "PPSA20049_00"
 PLAYSTATION_EAFC_2026_ID = "PPSA27360_00"
@@ -1208,7 +1215,7 @@ STREAMING_SERVICE_HEADER = "streaming-availability.p.rapidapi.com"
 # OMDb
 # -------------------------------------------------
 OMDB_ENDPOINT = "http://www.omdbapi.com/"
-OMDB_API_KEY = getenv("OMDB_API_KEY")
+OMDB_API_KEY = getenv("OMDB_API_KEY", "")
 
 # Sleeper
 # -------------------------------------------------

@@ -1,7 +1,7 @@
 """Fetch weather for a given location."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, cast
 
 from aiohttp import ClientError
 from emoji import emojize
@@ -59,13 +59,14 @@ async def fetch_current_weather_by_location(location: str, measurement_units: st
         }
         session = await get_http_session()
         async with session.get(WEATHERSTACK_API_ENDPOINT, params=params) as resp:
-            return await resp.json(content_type=None)
+            return cast(Optional[dict], await resp.json(content_type=None))
     except ClientError as e:
         LOGGER.error(f"Failed to get weather for `{location}`: {e}")
     except LookupError as e:
         LOGGER.error(f"KeyError while fetching weather for `{location}`: {e}")
     except Exception as e:
         LOGGER.exception(f"Failed to get weather for `{location}`: {e}")
+    return None
 
 
 async def parse_weather_response(weather: dict, measurement_units: str, room: str, user: str) -> str:

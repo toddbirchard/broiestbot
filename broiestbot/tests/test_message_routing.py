@@ -6,6 +6,7 @@ extra `phrases` lookup it can never match.
 """
 
 import asyncio
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -38,7 +39,9 @@ def message() -> MagicMock:
     return message
 
 
-def dispatch(bot: Bot, room: MagicMock, message: MagicMock, chat_message: str, link_preview: str = None) -> dict:
+def dispatch(
+    bot: Bot, room: MagicMock, message: MagicMock, chat_message: str, link_preview: Optional[str] = None
+) -> dict:
     """
     Run `on_message` with every DB/network side effect stubbed out.
 

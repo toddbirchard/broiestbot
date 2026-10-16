@@ -1,7 +1,7 @@
 """Perform Giphy query to fetch randomized top trending image."""
 
 from random import randint
-from typing import Optional
+from typing import Optional, cast
 
 from aiohttp import ClientError, ClientResponseError
 from emoji import emojize
@@ -20,7 +20,7 @@ async def giphy_image_search(query: str) -> Optional[str]:
     :returns: Optional[str]
     """
     rand = randint(0, 15)
-    params = {
+    params: dict[str, str | int] = {
         "api_key": GIPHY_API_KEY,
         "q": query,
         "limit": 1,
@@ -36,7 +36,7 @@ async def giphy_image_search(query: str) -> Optional[str]:
             return None
         image = images[0]["images"]["downsized"].get("url")
         if image is not None:
-            return image
+            return cast(Optional[str], image)
     except ClientResponseError as e:
         LOGGER.error(f"Giphy failed to fetch `{query}`: {e}")
         return emojize(":warning: yoooo giphy is down rn lmao :warning:", language="en")
@@ -46,6 +46,7 @@ async def giphy_image_search(query: str) -> Optional[str]:
     except Exception as e:
         LOGGER.error(f"Giphy unexpected error for `{query}`: {e}")
         return emojize(":warning: AAAAAA I'M BROKEN WHAT DID YOU DO :warning:", language="en")
+    return None
 
 
 async def klipy_image_search(query: str) -> Optional[str]:
@@ -56,7 +57,7 @@ async def klipy_image_search(query: str) -> Optional[str]:
 
     :returns: Optional[str]
     """
-    params = {
+    params: dict[str, str | int] = {
         "q": query,
         "page": 1,
         "per_page": 10,
@@ -72,7 +73,7 @@ async def klipy_image_search(query: str) -> Optional[str]:
             rand = randint(0, len(images) - 1)
             image = images[rand]["file"]["md"]["gif"].get("url")
             if image is not None:
-                return image
+                return cast(Optional[str], image)
     except ClientResponseError as e:
         LOGGER.error(f"Klipy failed to fetch `{query}`: {e}")
         return emojize(":warning: yoooo gif API is down rn lmao :warning:", language="en")
@@ -82,3 +83,4 @@ async def klipy_image_search(query: str) -> Optional[str]:
     except Exception as e:
         LOGGER.error(f"Klipy unexpected error for `{query}`: {e}")
         return emojize(":warning: AAAAAA I'M BROKEN WHAT DID YOU DO :warning:", language="en")
+    return None
