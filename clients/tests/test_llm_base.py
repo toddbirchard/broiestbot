@@ -126,7 +126,12 @@ def test_room_defaults_to_base_prompt(client_class):
 @pytest.mark.parametrize("client_class", LLM_CLIENTS.values())
 @pytest.mark.parametrize(
     "mode,prompt_attr",
-    [("dubs", "dubs_prompt"), ("cryptkeeper", "cryptkeeper_prompt"), ("motherinlaw", "motherinlaw_prompt")],
+    [
+        ("dubs", "dubs_prompt"),
+        ("cryptkeeper", "cryptkeeper_prompt"),
+        ("motherinlaw", "motherinlaw_prompt"),
+        ("fistsrflying", "fistsrflying_prompt"),
+    ],
 )
 def test_activating_a_mode_swaps_the_persona_for_that_room(client_class, mode, prompt_attr):
     """Activating a mode in one room switches only that room's system prompt."""

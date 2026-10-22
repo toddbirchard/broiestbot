@@ -117,12 +117,22 @@ class BaseLLMClient:
         11. Use the provided chat history for contextual understanding if necessary, but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
         """
 
+        # Alternate persona, swapped in per-room via `activate_mode` / `deactivate_mode`. Content
+        # to be supplied.
+        self.fistsrflying_prompt = f"""
+        TODO: describe the fistsrflying persona.
+        1. Identify the most recent message in the provided chat history that directly tags you with "@{CHATANGO_BOT_NICKNAME}" or "@{CHATANGO_BOT_USERNAME}".
+        2. Provide a relevant response to that specific message, addressing **only** the user's explicit request.
+        3. Use the provided chat history for contextual understanding if necessary, but your response should focus on addressing the most recent message that tags "@{CHATANGO_BOT_USERNAME}".
+        """
+
         # Registered alt personas, keyed by the mode name `activate_mode`/`deactivate_mode` take.
         # Adding a mode is a new key here plus its prompt text above — no new methods required.
         self._mode_prompts: Dict[str, str] = {
             "dubs": self.dubs_prompt,
             "cryptkeeper": self.cryptkeeper_prompt,
             "motherinlaw": self.motherinlaw_prompt,
+            "fistsrflying": self.fistsrflying_prompt,
         }
         # room_name -> (active mode key, `monotonic()` deadline). A room absent from this dict is
         # always on `base_prompt`. Each joined Chatango room tracks its own mode independently,
