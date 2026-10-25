@@ -1,9 +1,13 @@
 """Helpers for footy commands."""
 
+import time
 from datetime import datetime, timedelta, tzinfo
-from typing import Collection, List, Optional, Tuple
+from typing import Collection, Dict, List, Optional, Tuple
 
 import pytz
+from aiohttp import ClientError
+from http_client import get_http_session
+from logger import LOGGER
 from pytz import BaseTzInfo
 from sqlalchemy import select
 
@@ -22,7 +26,11 @@ from config import (
     EPL_SUMMER_SERIES_LEAGUE_ID,
     EUROS_LEAGUE_ID,
     EUROS_QUALIFIERS_ID,
+    FOOTY_HTTP_HEADERS,
+    FOOTY_LEAGUE_MEMBER_FILTERS,
     FOOTY_LEAGUE_TEAM_FILTERS,
+    FOOTY_LEAGUE_TEAMS_CACHE_TTL,
+    FOOTY_TEAMS_ENDPOINT,
     FOOTY_YOUTH_FILTERED_LEAGUES,
     FOOTY_YOUTH_TEAM_REGEX,
     INT_FRIENDLIES_LEAGUE_ID,
@@ -44,6 +52,11 @@ from config import (
 )
 from database import async_session
 from database.models import ChatangoUser
+
+# Clubs competing in a league, keyed by league ID -> `(expires_at, season, team IDs)`. Only a successful
+# (non-empty) fetch is cached, and a failed refresh keeps serving the last roster fetched, since a
+# roster a day (or a season) out of date beats filtering every fixture of a cup away.
+_LEAGUE_TEAMS_CACHE: Dict[int, Tuple[float, int, List[int]]] = {}
 
 
 async def lookup_user_preferred_timezone(username: str) -> Optional[str]:
@@ -136,7 +149,70 @@ def league_is_team_filtered(league_id: int) -> bool:
 
     :returns: bool
     """
-    return league_id in FOOTY_LEAGUE_TEAM_FILTERS
+    return league_id in FOOTY_LEAGUE_TEAM_FILTERS or league_id in FOOTY_LEAGUE_MEMBER_FILTERS
+
+
+async def fetch_league_team_ids(league_id: int) -> List[int]:
+    """
+    Fetch the IDs of every club competing in a given league this season, cached in-process.
+
+    :param int league_id: ID of footy league to fetch clubs for.
+
+    :returns: List[int]
+    """
+    season = get_season_year(league_id)
+    cached = _LEAGUE_TEAMS_CACHE.get(league_id)
+    if cached and cached[0] > time.monotonic() and cached[1] == season:
+        return list(cached[2])
+    team_ids = await request_league_team_ids(league_id, season)
+    if team_ids:
+        _LEAGUE_TEAMS_CACHE[league_id] = (time.monotonic() + FOOTY_LEAGUE_TEAMS_CACHE_TTL, season, team_ids)
+        return list(team_ids)
+    if cached:
+        LOGGER.warning(f"Couldn't refresh clubs of league {league_id}; serving the {cached[1]} roster")
+        return list(cached[2])
+    return []
+
+
+async def request_league_team_ids(league_id: int, season: int) -> List[int]:
+    """
+    Request the IDs of every club competing in a given league & season from the API.
+
+    :param int league_id: ID of footy league to fetch clubs for.
+    :param int season: Season year to fetch clubs for.
+
+    :returns: List[int]
+    """
+    try:
+        params = {"league": league_id, "season": season}
+        session = await get_http_session()
+        async with session.get(FOOTY_TEAMS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
+            teams = (await resp.json(content_type=None)).get("response")
+        if not teams:
+            return []
+        return [team["team"]["id"] for team in teams if (team.get("team") or {}).get("id")]
+    except ClientError as e:
+        LOGGER.exception(f"ClientError while fetching teams for league {league_id}: {e}")
+    except KeyError as e:
+        LOGGER.exception(f"KeyError while fetching teams for league {league_id}: {e}")
+    except Exception as e:
+        LOGGER.exception(f"Unexpected error when fetching teams for league {league_id}: {e}")
+    return []
+
+
+async def league_filter_team_ids(league_id: int) -> Optional[List[int]]:
+    """
+    Resolve the clubs a league's fixtures must feature to be surfaced.
+
+    :param int league_id: ID of footy league/cup.
+
+    :returns: Optional[List[int]] — `None` when the league is unfiltered; empty when its clubs couldn't be fetched.
+    """
+    member_league_id = FOOTY_LEAGUE_MEMBER_FILTERS.get(league_id)
+    if member_league_id is not None:
+        return await fetch_league_team_ids(member_league_id)
+    team_ids = FOOTY_LEAGUE_TEAM_FILTERS.get(league_id)
+    return list(team_ids) if team_ids is not None else None
 
 
 def fixture_features_team(fixture: dict, team_ids: Collection[int]) -> bool:
@@ -166,15 +242,17 @@ def fixture_features_youth_team(fixture: dict) -> bool:
     return any(FOOTY_YOUTH_TEAM_REGEX.search((teams.get(side) or {}).get("name") or "") for side in ("home", "away"))
 
 
-def filter_league_fixtures(fixtures: Optional[List[dict]], league_id: int) -> Optional[List[dict]]:
+async def filter_league_fixtures(fixtures: Optional[List[dict]], league_id: int) -> Optional[List[dict]]:
     """
     Discard fixtures of a league which aren't worth surfacing.
 
     Some leagues are only interesting for a handful of clubs: club friendlies span every
     club on earth, and the Primeira Liga is only followed for Benfica. Fixtures of a league
     listed in `FOOTY_LEAGUE_TEAM_FILTERS` are kept only when either side is one of that
-    league's clubs. Friendlies (`FOOTY_YOUTH_FILTERED_LEAGUES`) additionally drop any fixture
-    involving a youth team. Fixtures of any other league pass through untouched.
+    league's clubs, and fixtures of a cup listed in `FOOTY_LEAGUE_MEMBER_FILTERS` only when
+    either side currently plays in that cup's league (ie: FA Cup ties featuring an EPL club).
+    Friendlies (`FOOTY_YOUTH_FILTERED_LEAGUES`) additionally drop any fixture involving a
+    youth team. Fixtures of any other league pass through untouched.
 
     :param Optional[List[dict]] fixtures: Fixtures fetched for a single league/cup.
     :param int league_id: ID of footy league/cup the fixtures belong to.
@@ -185,9 +263,11 @@ def filter_league_fixtures(fixtures: Optional[List[dict]], league_id: int) -> Op
         return fixtures
     if league_id in FOOTY_YOUTH_FILTERED_LEAGUES:
         fixtures = [fixture for fixture in fixtures if not fixture_features_youth_team(fixture)]
-    team_ids = FOOTY_LEAGUE_TEAM_FILTERS.get(league_id)
-    if not team_ids:
+    team_ids = await league_filter_team_ids(league_id)
+    if team_ids is None:
         return fixtures
+    if not team_ids:
+        LOGGER.warning(f"Couldn't resolve the clubs league {league_id} is filtered for; discarding its fixtures")
     return [fixture for fixture in fixtures if fixture_features_team(fixture, team_ids)]
 
 

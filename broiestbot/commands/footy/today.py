@@ -100,7 +100,7 @@ async def fetch_today_fixtures_by_league(league_id: int, room: str, tz_name: str
         session = await get_http_session()
         async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             fixtures = await resp.json(content_type=None)
-            return filter_league_fixtures(fixtures.get("response"), league_id)
+            return await filter_league_fixtures(fixtures.get("response"), league_id)
     except ClientError as e:
         LOGGER.error(f"ClientError while fetching footy fixtures: {e}")
     except KeyError as e:

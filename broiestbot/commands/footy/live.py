@@ -97,7 +97,7 @@ async def fetch_live_fixtures(league_id: int, tz_name: str) -> Optional[List[dic
         async with session.get(FOOTY_FIXTURES_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
             if resp.status == 200:
                 fixtures = await resp.json(content_type=None)
-                return filter_league_fixtures(fixtures.get("response"), league_id)
+                return await filter_league_fixtures(fixtures.get("response"), league_id)
     except ClientError as e:
         LOGGER.exception(f"ClientError while fetching footy fixtures: {e}")
     except KeyError as e:
