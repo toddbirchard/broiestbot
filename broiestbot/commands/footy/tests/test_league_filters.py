@@ -1,12 +1,16 @@
 """Tests for team-filtered leagues across footy commands."""
 
 import asyncio
+import time
 from typing import List, Optional
 
 import pytest
+from aiohttp import ClientError
 
+from broiestbot.commands.footy import util
 from broiestbot.commands.footy.upcoming import upcoming_fixture_fetcher
 from broiestbot.commands.footy.util import (
+    fetch_league_team_ids,
     filter_league_fixtures,
     fixture_features_team,
     fixture_features_youth_team,
@@ -14,16 +18,23 @@ from broiestbot.commands.footy.util import (
 )
 from config import (
     AALESUND_TEAM_ID,
+    ATLETICO_MADRID_TEAM_ID,
+    BARCELONA_TEAM_ID,
     BENFICA_TEAM_ID,
+    CARABOU_CUP_ID,
     CLUB_FRIENDLIES_LEAGUE_ID,
     ELITESERIEN_LEAGUE_ID,
     ENGLAND_INT_TEAM_ID,
     EPL_LEAGUE_ID,
+    FA_CUP_ID,
     FOOTY_FRIENDLY_NATIONS,
+    FOOTY_LEAGUE_MEMBER_FILTERS,
     FOOTY_LEAGUE_TEAM_FILTERS,
     INT_FRIENDLIES_LEAGUE_ID,
+    LIGA_LEAGUE_ID,
     LIVERPOOL_TEAM_ID,
     PRIMEIRA_LIGA_ID,
+    REAL_MADRID_TEAM_ID,
     SPAIN_INT_TEAM_ID,
 )
 from tests.aiohttp_mocks import FakeResponse, patch_http_session
@@ -65,11 +76,34 @@ def other_fixture() -> dict:
     return build_fixture(OTHER_TEAM_ID, ANOTHER_TEAM_ID)
 
 
+@pytest.fixture(autouse=True)
+def empty_league_teams_cache():
+    """Every test starts without any league's clubs cached."""
+    util._LEAGUE_TEAMS_CACHE.clear()
+    yield
+    util._LEAGUE_TEAMS_CACHE.clear()
+
+
+def run_filter(fixtures: Optional[List[dict]], league_id: int) -> Optional[List[dict]]:
+    """
+    Run `filter_league_fixtures` to completion.
+
+    :param Optional[List[dict]] fixtures: Fixtures fetched for a single league/cup.
+    :param int league_id: ID of footy league/cup the fixtures belong to.
+
+    :returns: Optional[List[dict]]
+    """
+    return asyncio.run(filter_league_fixtures(fixtures, league_id))
+
+
 @pytest.mark.parametrize(
     "league_id,expected",
     [
         (PRIMEIRA_LIGA_ID, True),
         (ELITESERIEN_LEAGUE_ID, True),
+        (LIGA_LEAGUE_ID, True),
+        (FA_CUP_ID, True),
+        (CARABOU_CUP_ID, True),
         (CLUB_FRIENDLIES_LEAGUE_ID, True),
         (EPL_LEAGUE_ID, False),
     ],
@@ -89,20 +123,20 @@ def test_league_is_filtered_to_a_single_club(league_id: int, team_id: int, leagu
 def test_home_fixture_kept(league_id: int, team_id: int, league_name: str):
     """A fixture with the club we care about at home survives filtering."""
     fixture = build_fixture(team_id, OTHER_TEAM_ID, league_id)
-    assert filter_league_fixtures([fixture], league_id) == [fixture]
+    assert run_filter([fixture], league_id) == [fixture]
 
 
 @pytest.mark.parametrize("league_id,team_id,league_name", SINGLE_TEAM_LEAGUES)
 def test_away_fixture_kept(league_id: int, team_id: int, league_name: str):
     """A fixture with the club we care about away survives filtering."""
     fixture = build_fixture(ANOTHER_TEAM_ID, team_id, league_id)
-    assert filter_league_fixtures([fixture], league_id) == [fixture]
+    assert run_filter([fixture], league_id) == [fixture]
 
 
 @pytest.mark.parametrize("league_id,team_id,league_name", SINGLE_TEAM_LEAGUES)
 def test_fixture_without_the_club_discarded(league_id: int, team_id: int, league_name: str, other_fixture: dict):
     """A fixture the club takes no part in is discarded."""
-    assert filter_league_fixtures([other_fixture], league_id) == []
+    assert run_filter([other_fixture], league_id) == []
 
 
 @pytest.mark.parametrize("league_id,team_id,league_name", SINGLE_TEAM_LEAGUES)
@@ -113,12 +147,12 @@ def test_only_the_clubs_fixtures_survive_a_matchday(
     home_fixture = build_fixture(team_id, OTHER_TEAM_ID, league_id)
     away_fixture = build_fixture(ANOTHER_TEAM_ID, team_id, league_id)
     matchday = [other_fixture, home_fixture, other_fixture, away_fixture]
-    assert filter_league_fixtures(matchday, league_id) == [home_fixture, away_fixture]
+    assert run_filter(matchday, league_id) == [home_fixture, away_fixture]
 
 
 def test_unfiltered_league_passes_through(other_fixture: dict):
     """Fixtures of a league with no team filter are never discarded."""
-    assert filter_league_fixtures([other_fixture], EPL_LEAGUE_ID) == [other_fixture]
+    assert run_filter([other_fixture], EPL_LEAGUE_ID) == [other_fixture]
 
 
 def test_club_friendlies_still_filtered_by_friendly_clubs():
@@ -126,7 +160,121 @@ def test_club_friendlies_still_filtered_by_friendly_clubs():
     liverpool_friendly = build_fixture(LIVERPOOL_TEAM_ID, OTHER_TEAM_ID, CLUB_FRIENDLIES_LEAGUE_ID)
     unknown_friendly = build_fixture(999999, 999998, CLUB_FRIENDLIES_LEAGUE_ID)
     fixtures = [liverpool_friendly, unknown_friendly]
-    assert filter_league_fixtures(fixtures, CLUB_FRIENDLIES_LEAGUE_ID) == [liverpool_friendly]
+    assert run_filter(fixtures, CLUB_FRIENDLIES_LEAGUE_ID) == [liverpool_friendly]
+
+
+def test_la_liga_filtered_to_its_big_three():
+    """La Liga keeps fixtures featuring Real Madrid, Atletico or Barcelona, and drops the rest."""
+    el_clasico = build_fixture(BARCELONA_TEAM_ID, REAL_MADRID_TEAM_ID, LIGA_LEAGUE_ID)
+    madrid_derby = build_fixture(ATLETICO_MADRID_TEAM_ID, REAL_MADRID_TEAM_ID, LIGA_LEAGUE_ID)
+    atleti_away = build_fixture(OTHER_TEAM_ID, ATLETICO_MADRID_TEAM_ID, LIGA_LEAGUE_ID)
+    other_liga_fixture = build_fixture(OTHER_TEAM_ID, ANOTHER_TEAM_ID, LIGA_LEAGUE_ID)
+    matchday = [other_liga_fixture, el_clasico, madrid_derby, other_liga_fixture, atleti_away]
+    assert run_filter(matchday, LIGA_LEAGUE_ID) == [el_clasico, madrid_derby, atleti_away]
+
+
+# ---------------------------------------------------------------------------
+# Cups filtered to clubs currently in another league (ie: FA Cup -> EPL)
+# ---------------------------------------------------------------------------
+
+# Stand-in EPL roster, served by a faked /v3/teams request.
+EPL_CLUB_ID = LIVERPOOL_TEAM_ID
+OTHER_EPL_CLUB_ID = 746
+EPL_TEAMS_RESPONSE = {"response": [{"team": {"id": EPL_CLUB_ID}}, {"team": {"id": OTHER_EPL_CLUB_ID}}]}
+
+DOMESTIC_CUPS = pytest.mark.parametrize("league_id", [FA_CUP_ID, CARABOU_CUP_ID], ids=["fa-cup", "carabou-cup"])
+
+
+def test_domestic_cups_filtered_to_epl_clubs_config():
+    """Both domestic cups are filtered to whichever clubs are in the EPL, not to a fixed list."""
+    assert FOOTY_LEAGUE_MEMBER_FILTERS == {FA_CUP_ID: EPL_LEAGUE_ID, CARABOU_CUP_ID: EPL_LEAGUE_ID}
+    assert FA_CUP_ID not in FOOTY_LEAGUE_TEAM_FILTERS and CARABOU_CUP_ID not in FOOTY_LEAGUE_TEAM_FILTERS
+
+
+@DOMESTIC_CUPS
+def test_domestic_cups_keep_ties_featuring_an_epl_club(league_id: int):
+    """A cup keeps ties featuring a club in this season's EPL, against anyone, and drops the rest."""
+    epl_vs_lower_league = build_fixture(OTHER_TEAM_ID, EPL_CLUB_ID, league_id)
+    epl_vs_epl = build_fixture(OTHER_EPL_CLUB_ID, EPL_CLUB_ID, league_id)
+    lower_league_tie = build_fixture(OTHER_TEAM_ID, ANOTHER_TEAM_ID, league_id)
+    round_of_ties = [lower_league_tie, epl_vs_lower_league, lower_league_tie, epl_vs_epl]
+    with patch_http_session("broiestbot.commands.footy.util", FakeResponse(json_data=EPL_TEAMS_RESPONSE)) as mock:
+        assert run_filter(round_of_ties, league_id) == [epl_vs_lower_league, epl_vs_epl]
+    params = mock.return_value.calls[0][2]["params"]
+    assert params == {"league": EPL_LEAGUE_ID, "season": util.get_season_year(EPL_LEAGUE_ID)}
+
+
+def test_epl_clubs_fetched_once_for_both_cups(other_fixture: dict):
+    """Both cups share one cached EPL roster, so filtering costs one /v3/teams request a day."""
+    fa_cup_tie = build_fixture(EPL_CLUB_ID, OTHER_TEAM_ID, FA_CUP_ID)
+    carabou_cup_tie = build_fixture(OTHER_TEAM_ID, EPL_CLUB_ID, CARABOU_CUP_ID)
+    with patch_http_session("broiestbot.commands.footy.util", FakeResponse(json_data=EPL_TEAMS_RESPONSE)) as mock:
+        assert run_filter([fa_cup_tie, other_fixture], FA_CUP_ID) == [fa_cup_tie]
+        assert run_filter([carabou_cup_tie], CARABOU_CUP_ID) == [carabou_cup_tie]
+        assert run_filter([fa_cup_tie], FA_CUP_ID) == [fa_cup_tie]
+    assert len(mock.return_value.calls) == 1
+
+
+def test_cup_without_fixtures_skips_the_roster_lookup():
+    """A cup with nothing on today never pays for an EPL roster request."""
+    with patch_http_session("broiestbot.commands.footy.util", FakeResponse(json_data=EPL_TEAMS_RESPONSE)) as mock:
+        assert run_filter([], FA_CUP_ID) == []
+    assert mock.return_value.calls == []
+
+
+def test_expired_roster_is_refreshed():
+    """Once the cached roster expires it is fetched again, so promoted clubs are picked up."""
+    promoted_club_tie = build_fixture(ANOTHER_TEAM_ID, OTHER_TEAM_ID, FA_CUP_ID)
+    season = util.get_season_year(EPL_LEAGUE_ID)
+    util._LEAGUE_TEAMS_CACHE[EPL_LEAGUE_ID] = (time.monotonic() - 1, season, [EPL_CLUB_ID])
+    promoted_roster = {"response": [{"team": {"id": EPL_CLUB_ID}}, {"team": {"id": ANOTHER_TEAM_ID}}]}
+    with patch_http_session("broiestbot.commands.footy.util", FakeResponse(json_data=promoted_roster)):
+        assert run_filter([promoted_club_tie], FA_CUP_ID) == [promoted_club_tie]
+
+
+def test_roster_from_last_season_is_refreshed():
+    """A roster cached for last season is refetched even before its TTL is up."""
+    season = util.get_season_year(EPL_LEAGUE_ID)
+    util._LEAGUE_TEAMS_CACHE[EPL_LEAGUE_ID] = (time.monotonic() + 3600, season - 1, [ANOTHER_TEAM_ID])
+    with patch_http_session("broiestbot.commands.footy.util", FakeResponse(json_data=EPL_TEAMS_RESPONSE)) as mock:
+        assert asyncio.run(fetch_league_team_ids(EPL_LEAGUE_ID)) == [EPL_CLUB_ID, OTHER_EPL_CLUB_ID]
+    assert len(mock.return_value.calls) == 1
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [ClientError("boom"), FakeResponse(json_data={"response": []}), FakeResponse(status=500, text="upstream boom")],
+    ids=["client-error", "empty-response", "server-error"],
+)
+def test_failed_refresh_serves_the_stale_roster(failure):
+    """A failed refresh keeps the last roster rather than discarding every tie of the cup."""
+    epl_tie = build_fixture(EPL_CLUB_ID, OTHER_TEAM_ID, FA_CUP_ID)
+    season = util.get_season_year(EPL_LEAGUE_ID)
+    util._LEAGUE_TEAMS_CACHE[EPL_LEAGUE_ID] = (time.monotonic() - 1, season - 1, [EPL_CLUB_ID])
+    with patch_http_session("broiestbot.commands.footy.util", failure):
+        assert run_filter([epl_tie], FA_CUP_ID) == [epl_tie]
+
+
+def test_cup_ties_discarded_when_the_roster_cannot_be_fetched(other_fixture: dict):
+    """With no roster fetched yet and the API failing, the cup's ties are discarded, not dumped unfiltered."""
+    epl_tie = build_fixture(EPL_CLUB_ID, OTHER_TEAM_ID, FA_CUP_ID)
+    with patch_http_session("broiestbot.commands.footy.util", ClientError("boom")):
+        assert run_filter([epl_tie, other_fixture], FA_CUP_ID) == []
+    assert util._LEAGUE_TEAMS_CACHE == {}
+
+
+def test_fetch_league_team_ids_parses_response():
+    """Team IDs are extracted from a /teams response, skipping entries without one."""
+    response = {"response": [{"team": {"id": 33, "name": "Manchester United"}}, {"team": {}}, {"team": {"id": 51}}]}
+    with patch_http_session("broiestbot.commands.footy.util", FakeResponse(json_data=response)):
+        assert asyncio.run(fetch_league_team_ids(39)) == [33, 51]
+
+
+def test_fetch_league_team_ids_empty_response():
+    """An empty /teams response yields no IDs rather than raising, and isn't cached."""
+    with patch_http_session("broiestbot.commands.footy.util", FakeResponse(json_data={"response": []})):
+        assert asyncio.run(fetch_league_team_ids(39)) == []
+    assert util._LEAGUE_TEAMS_CACHE == {}
 
 
 def build_named_fixture(home_team_name: str, away_team_name: str, league_id: int = INT_FRIENDLIES_LEAGUE_ID) -> dict:
@@ -169,7 +317,7 @@ def test_int_friendlies_drop_youth_fixtures():
     for fixture in (senior, youth):
         fixture["teams"]["home"]["id"] = ENGLAND_INT_TEAM_ID
         fixture["teams"]["away"]["id"] = SPAIN_INT_TEAM_ID
-    assert filter_league_fixtures([senior, youth], INT_FRIENDLIES_LEAGUE_ID) == [senior]
+    assert run_filter([senior, youth], INT_FRIENDLIES_LEAGUE_ID) == [senior]
 
 
 @pytest.mark.parametrize("nation_id", FOOTY_FRIENDLY_NATIONS)
@@ -181,14 +329,14 @@ def test_int_friendlies_keep_fixtures_of_friendly_nations(nation_id: int, home: 
         if home
         else build_fixture(OTHER_TEAM_ID, nation_id, INT_FRIENDLIES_LEAGUE_ID)
     )
-    assert filter_league_fixtures([fixture], INT_FRIENDLIES_LEAGUE_ID) == [fixture]
+    assert run_filter([fixture], INT_FRIENDLIES_LEAGUE_ID) == [fixture]
 
 
 def test_int_friendlies_drop_fixtures_without_friendly_nations():
     """A friendly between two nations nobody follows (e.g. Russia v Namibia) is discarded."""
     england_friendly = build_fixture(ENGLAND_INT_TEAM_ID, OTHER_TEAM_ID, INT_FRIENDLIES_LEAGUE_ID)
     other_friendly = build_named_fixture("Russia", "Namibia")
-    assert filter_league_fixtures([england_friendly, other_friendly], INT_FRIENDLIES_LEAGUE_ID) == [england_friendly]
+    assert run_filter([england_friendly, other_friendly], INT_FRIENDLIES_LEAGUE_ID) == [england_friendly]
 
 
 def test_club_friendlies_drop_youth_fixtures_of_friendly_clubs():
@@ -197,19 +345,19 @@ def test_club_friendlies_drop_youth_fixtures_of_friendly_clubs():
     youth = build_named_fixture("Liverpool U21", "Everton U21", CLUB_FRIENDLIES_LEAGUE_ID)
     senior["teams"]["home"]["id"] = LIVERPOOL_TEAM_ID
     youth["teams"]["home"]["id"] = LIVERPOOL_TEAM_ID
-    assert filter_league_fixtures([senior, youth], CLUB_FRIENDLIES_LEAGUE_ID) == [senior]
+    assert run_filter([senior, youth], CLUB_FRIENDLIES_LEAGUE_ID) == [senior]
 
 
 def test_youth_fixtures_of_other_leagues_are_kept():
     """Only friendlies are youth-filtered; a youth competition keeps its youth fixtures."""
     youth = build_named_fixture("England U21", "Spain U21", EPL_LEAGUE_ID)
-    assert filter_league_fixtures([youth], EPL_LEAGUE_ID) == [youth]
+    assert run_filter([youth], EPL_LEAGUE_ID) == [youth]
 
 
 @pytest.mark.parametrize("fixtures", [None, []])
 def test_empty_fixtures_pass_through(fixtures: Optional[List[dict]]):
     """An empty or absent response is returned as-is rather than raising."""
-    assert filter_league_fixtures(fixtures, PRIMEIRA_LIGA_ID) == fixtures
+    assert run_filter(fixtures, PRIMEIRA_LIGA_ID) == fixtures
 
 
 @pytest.mark.parametrize(
@@ -224,7 +372,7 @@ def test_empty_fixtures_pass_through(fixtures: Optional[List[dict]]):
 def test_malformed_fixture_is_discarded_without_raising(fixture: dict):
     """A fixture missing team data can't feature the club we care about, but must not raise."""
     assert fixture_features_team(fixture, [BENFICA_TEAM_ID]) is False
-    assert filter_league_fixtures([fixture], PRIMEIRA_LIGA_ID) == []
+    assert run_filter([fixture], PRIMEIRA_LIGA_ID) == []
 
 
 # ---------------------------------------------------------------------------

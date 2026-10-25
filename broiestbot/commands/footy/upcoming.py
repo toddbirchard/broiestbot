@@ -119,7 +119,7 @@ async def upcoming_fixture_fetcher(league_name: str, league_id: int, tz_name: st
     try:
         if league_is_team_filtered(league_id):
             fixtures = await fetch_upcoming_fixtures_by_date_range(league_id, tz_name)
-            return filter_league_fixtures(fixtures, league_id)
+            return await filter_league_fixtures(fixtures, league_id)
         params = {
             "next": (
                 8

@@ -652,9 +652,9 @@ FOOTY_LEAGUES = {
     # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
-    # ":trophy: :England: FA CUP": FA_CUP_ID,
-    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":trophy: :England: FA CUP": FA_CUP_ID,
+    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
@@ -716,12 +716,12 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    # ":trophy: :England: FA CUP": FA_CUP_ID,
-    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    ":trophy: :England: FA CUP": FA_CUP_ID,
+    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: :keycap_2: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
-    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: Serie A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
@@ -789,9 +789,9 @@ FOOTY_XI_LEAGUES = {
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: :keycap_2: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
-    # ":trophy: :England: FA CUP": FA_CUP_ID,
-    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":trophy: :England: FA CUP": FA_CUP_ID,
+    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
@@ -833,9 +833,9 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
-    # ":trophy: :England: FA CUP": FA_CUP_ID,
-    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":trophy: :England: FA CUP": FA_CUP_ID,
+    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
@@ -873,9 +873,9 @@ FOOTY_LIVE_STATS_LEAGUES = {
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
-    # ":trophy: :England: FA CUP": FA_CUP_ID,
-    # ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    # ":Spain: LA LIGA": LIGA_LEAGUE_ID,
+    ":trophy: :England: FA CUP": FA_CUP_ID,
+    ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
+    ":Spain: LA LIGA": LIGA_LEAGUE_ID,
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
@@ -991,7 +991,18 @@ FOOTY_LEAGUE_TEAM_FILTERS = {
     INT_FRIENDLIES_LEAGUE_ID: FOOTY_FRIENDLY_NATIONS,
     PRIMEIRA_LIGA_ID: [BENFICA_TEAM_ID],
     ELITESERIEN_LEAGUE_ID: [AALESUND_TEAM_ID],
+    LIGA_LEAGUE_ID: [REAL_MADRID_TEAM_ID, ATLETICO_MADRID_TEAM_ID, BARCELONA_TEAM_ID],
 }
+
+# Cups whose ties are only worth surfacing when a club currently in another league is involved, ie: FA Cup
+# ties featuring an EPL club. Each league's clubs are fetched from the API for its current season (see
+# `footy/util.py:fetch_league_team_ids`), so promotion & relegation need no config changes.
+FOOTY_LEAGUE_MEMBER_FILTERS = {
+    FA_CUP_ID: EPL_LEAGUE_ID,
+    CARABOU_CUP_ID: EPL_LEAGUE_ID,
+}
+# A league's clubs change once a season, so its roster is cached in-process for a day.
+FOOTY_LEAGUE_TEAMS_CACHE_TTL = 24 * 60 * 60
 
 # Friendlies fill international breaks & preseasons with youth sides (`England U17`, `Arsenal U21`),
 # which are dropped from every footy command. Reserve sides (`Barcelona B`, `Rangers II`) are kept.
@@ -1006,28 +1017,6 @@ FOOTY_TEAMS_PRIORITY = {
     "Aalesund": AALESUND_TEAM_ID,
     "USMNT": USA_INT_TEAM_ID,
 }
-
-# Footy team IDs for EPL
-EPL_TEAM_IDS = [
-    LIVERPOOL_TEAM_ID,
-    MANC_TEAM_ID,
-    MANU_TEAM_ID,
-    CHELSEA_TEAM_ID,
-    NEWCASTLE_TEAM_ID,
-    WESTHAM_TEAM_ID,
-    ARSENAL_TEAM_ID,
-    TOTTENHAM_TEAM_ID,
-    EVERTON_TEAM_ID,
-    VILLA_TEAM_ID,
-    LEEDS_TEAM_ID,
-    CRYSTAL_TEAM_ID,
-    NOTTINGHAM_TEAM_ID,
-    BRENTFORD_TEAM_ID,
-    SOUTHHAMPTON_TEAM_ID,
-    WOLVES_TEAM_ID,
-    FULHAM_TEAM_ID,
-    BOURNEMOUTH_TEAM_ID,
-]
 
 # MLB
 # -------------------------------------------------

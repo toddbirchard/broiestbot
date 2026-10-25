@@ -2,14 +2,14 @@
 
 import asyncio
 from datetime import date, timedelta
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from broiestbot.commands.footy.transfers import (
     TRANSFER_LEDGER_LIMIT,
-    epl_recent_transfers,
     deduplicate_transfers,
-    fetch_league_team_ids,
+    epl_recent_transfers,
     filter_incoming_transfers,
     format_transfer_ledger,
     format_transfer_type,
@@ -23,6 +23,11 @@ MODULE = "broiestbot.commands.footy.transfers"
 
 MANU = 33
 BRIGHTON = 51
+
+
+def patch_league_teams(team_ids):
+    """Serve a league's clubs without the (cached, separately tested) /v3/teams lookup."""
+    return patch(f"{MODULE}.fetch_league_team_ids", AsyncMock(return_value=team_ids))
 
 
 def _player_record(player_id, player_name, transfers):
@@ -331,24 +336,6 @@ def test_format_transfer_ledger_caps_output():
 
 
 # ---------------------------------------------------------------------------
-# fetch_league_team_ids
-# ---------------------------------------------------------------------------
-
-
-def test_fetch_league_team_ids_parses_response():
-    """Team IDs are extracted from a /teams response."""
-    response = {"response": [{"team": {"id": 33, "name": "Manchester United"}}, {"team": {"id": 51}}]}
-    with patch_http_session(MODULE, FakeResponse(json_data=response)):
-        assert asyncio.run(fetch_league_team_ids(39)) == [33, 51]
-
-
-def test_fetch_league_team_ids_empty_response():
-    """An empty /teams response yields no IDs rather than raising."""
-    with patch_http_session(MODULE, FakeResponse(json_data={"response": []})):
-        assert asyncio.run(fetch_league_team_ids(39)) == []
-
-
-# ---------------------------------------------------------------------------
 # league_recent_transfers (end to end)
 # ---------------------------------------------------------------------------
 
@@ -358,16 +345,17 @@ def test_league_recent_transfers_end_to_end():
     today = date.today()
     recent = (today - timedelta(days=1)).strftime("%Y-%m-%d")
     stale = (today - timedelta(days=90)).strftime("%Y-%m-%d")
-    teams_response = {"response": [{"team": {"id": MANU}}, {"team": {"id": BRIGHTON}}]}
     move = _transfer(recent, "€ 60M", BRIGHTON, "Brighton", MANU, "Manchester United")
     old_move = _transfer(stale, "Loan", MANU, "Manchester United", 60, "West Brom")
     manu_response = {"response": [_player_record(356041, "C. Baleba", [move, old_move])]}
     brighton_response = {"response": [_player_record(356041, "C. Baleba", [move])]}
-    with patch_http_session(
-        MODULE,
-        FakeResponse(json_data=teams_response),
-        FakeResponse(json_data=manu_response),
-        FakeResponse(json_data=brighton_response),
+    with (
+        patch_league_teams([MANU, BRIGHTON]),
+        patch_http_session(
+            MODULE,
+            FakeResponse(json_data=manu_response),
+            FakeResponse(json_data=brighton_response),
+        ),
     ):
         result = asyncio.run(league_recent_transfers(39, ":lion: EPL"))
     assert result.count("C. Baleba") == 1
@@ -379,17 +367,18 @@ def test_league_recent_transfers_survives_failing_team():
     """One club's request failing doesn't sink the whole ledger."""
     today = date.today()
     recent = (today - timedelta(days=1)).strftime("%Y-%m-%d")
-    teams_response = {"response": [{"team": {"id": MANU}}, {"team": {"id": BRIGHTON}}]}
     manu_response = {
         "response": [
             _player_record(1, "C. Baleba", [_transfer(recent, "Transfer", BRIGHTON, "Brighton", MANU, "Manu")])
         ]
     }
-    with patch_http_session(
-        MODULE,
-        FakeResponse(json_data=teams_response),
-        FakeResponse(json_data=manu_response),
-        FakeResponse(status=500, text="upstream boom"),
+    with (
+        patch_league_teams([MANU, BRIGHTON]),
+        patch_http_session(
+            MODULE,
+            FakeResponse(json_data=manu_response),
+            FakeResponse(status=500, text="upstream boom"),
+        ),
     ):
         result = asyncio.run(league_recent_transfers(39, ":lion: EPL"))
     assert "C. Baleba" in result
@@ -397,7 +386,7 @@ def test_league_recent_transfers_survives_failing_team():
 
 def test_league_recent_transfers_no_teams():
     """A league whose clubs can't be resolved reports a warning."""
-    with patch_http_session(MODULE, FakeResponse(json_data={"response": []})):
+    with patch_league_teams([]):
         result = asyncio.run(league_recent_transfers(39, ":lion: EPL"))
     assert "Couldn't find any" in result
 
@@ -406,7 +395,6 @@ def test_epl_recent_transfers_excludes_departures():
     """`epl_recent_transfers` renders arrivals at EPL clubs and drops moves away from them."""
     today = date.today()
     recent = (today - timedelta(days=1)).strftime("%Y-%m-%d")
-    teams_response = {"response": [{"team": {"id": MANU}}, {"team": {"id": BRIGHTON}}]}
     arrival = _transfer(recent, "€ 60M", BRIGHTON, "Brighton", MANU, "Manchester United")
     departure = _transfer(recent, "Loan", MANU, "Manchester United", 95, "Strasbourg")
     manu_response = {
@@ -416,11 +404,13 @@ def test_epl_recent_transfers_excludes_departures():
         ]
     }
     brighton_response = {"response": [_player_record(356041, "C. Baleba", [arrival])]}
-    with patch_http_session(
-        MODULE,
-        FakeResponse(json_data=teams_response),
-        FakeResponse(json_data=manu_response),
-        FakeResponse(json_data=brighton_response),
+    with (
+        patch_league_teams([MANU, BRIGHTON]),
+        patch_http_session(
+            MODULE,
+            FakeResponse(json_data=manu_response),
+            FakeResponse(json_data=brighton_response),
+        ),
     ):
         result = asyncio.run(epl_recent_transfers())
     assert result.count("C. Baleba") == 1

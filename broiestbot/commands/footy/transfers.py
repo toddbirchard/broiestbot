@@ -12,11 +12,10 @@ from logger import LOGGER
 from config import (
     EPL_LEAGUE_ID,
     FOOTY_HTTP_HEADERS,
-    FOOTY_TEAMS_ENDPOINT,
     FOOTY_TRANSFERS_ENDPOINT,
 )
 
-from .util import abbreviate_team_name, get_season_year
+from .util import abbreviate_team_name, fetch_league_team_ids
 
 # Number of days back a transfer must fall within to make the ledger.
 TRANSFER_WINDOW_DAYS = 10
@@ -83,31 +82,6 @@ async def league_recent_transfers(league_id: int, league_name: str, incoming_onl
     except Exception as e:
         LOGGER.exception(f"Unexpected error when fetching {league_name} transfers: {e}")
     return emojize(":warning: Couldn't fetch transfers; bot is shit tbh :warning:", language="en")
-
-
-async def fetch_league_team_ids(league_id: int) -> List[int]:
-    """
-    Fetch the IDs of every club currently competing in a given league.
-
-    :param int league_id: ID of footy league to fetch clubs for.
-
-    :returns: List[int]
-    """
-    try:
-        params = {"league": league_id, "season": get_season_year(league_id)}
-        session = await get_http_session()
-        async with session.get(FOOTY_TEAMS_ENDPOINT, headers=FOOTY_HTTP_HEADERS, params=params) as resp:
-            teams = (await resp.json(content_type=None)).get("response")
-        if not teams:
-            return []
-        return [team["team"]["id"] for team in teams if (team.get("team") or {}).get("id")]
-    except ClientError as e:
-        LOGGER.exception(f"ClientError while fetching teams for league {league_id}: {e}")
-    except KeyError as e:
-        LOGGER.exception(f"KeyError while fetching teams for league {league_id}: {e}")
-    except Exception as e:
-        LOGGER.exception(f"Unexpected error when fetching teams for league {league_id}: {e}")
-    return []
 
 
 async def fetch_team_transfers(team_id: int) -> List[dict]:
