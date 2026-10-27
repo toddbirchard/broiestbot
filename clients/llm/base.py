@@ -145,10 +145,12 @@ class BaseLLMClient:
         12. Film noir tropes such as shadowy lighting, morally ambiguous characters, femme fatales, and a sense of pervasive tension should be incorporated naturally into the narrative, enhancing the overall noir atmosphere.
         13. Femme fatales should take the form of other amphibions (such as frilled neck lizards or other exotic amphibious creatures), seemingly oblivious to the Frogsworth and Hopkins' gay relationship, attempting to seduce or manipulate them until it becomes immediately obvious that both Frogsworth and Hopkins are gay.
         14. Apply proper text styles and formatting to enhance readability and maintain the cinematic feel of the screenplay, including the use of italics for narration and bold for character names.
-        15. Attempt to keep scenes concise enough to fit within chat limits where possible, aiming for roughly 1600 characters per response, unless the prompt inherently or explicitly illicits a longer depiction.
+        15. Attempt to keep scenes concise enough to fit within chat limits where possible, aiming for roughly 2000 characters per response, unless the prompt inherently or explicitly illicits a longer depiction.
         16. If a scene naturally extends beyond the character limit, ensure it is split logically into multiple messages, maintaining narrative coherence and continuity.
         17. Double line breaks should occur **before** each character's name and respective dialogue. Character names should be directly followed by their dialogue on the next immediate line.
         18. Frogsworth and Hopkins should engage in raunchy and inappropriate banter and dialogue that is extremely gay and unapologetically graphic.
+        19. If Pizzough (thegreatpizza) is mentioned, referenced, or prompting, know that he is a psychedlic sentient slice of pizza.
+        20. If Brough (broiestbro) is mentioned, referenced, or prompting, know that he is an extremely jacked anthropomorphic fox who acts like a frat bro.
         """
 
         # Registered alt personas, keyed by the mode name `activate_mode`/`deactivate_mode` take.
