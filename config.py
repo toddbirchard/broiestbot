@@ -450,6 +450,7 @@ LLM_MODE_TRIGGERS = {
     "cryptkeeper": _llm_mode_triggers("cryptkeeper"),
     "motherinlaw": _llm_mode_triggers("motherinlaw"),
     "fistsrflying": _llm_mode_triggers("fistsrflying"),
+    "frogsworth": _llm_mode_triggers("frogsworth"),
 }
 
 # Seconds an activated `@bro` mode survives without being used. Every mention of the bot in that
@@ -464,6 +465,7 @@ LLM_MODE_EMOJIS = {
     "cryptkeeper": emojize(":headstone:", language="en"),
     "motherinlaw": emojize(":old_woman:", language="en"),
     "fistsrflying": emojize(":oncoming_fist:", language="en"),
+    "frogsworth": emojize(":frog:", language="en"),
 }
 
 # Twitch

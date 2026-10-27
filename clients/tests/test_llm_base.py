@@ -131,6 +131,7 @@ def test_room_defaults_to_base_prompt(client_class):
         ("cryptkeeper", "cryptkeeper_prompt"),
         ("motherinlaw", "motherinlaw_prompt"),
         ("fistsrflying", "fistsrflying_prompt"),
+        ("frogsworth", "frogsworth_prompt"),
     ],
 )
 def test_activating_a_mode_swaps_the_persona_for_that_room(client_class, mode, prompt_attr):
