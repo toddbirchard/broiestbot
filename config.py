@@ -453,10 +453,9 @@ LLM_MODE_TRIGGERS = {
     "frogsworth": _llm_mode_triggers("frogsworth"),
 }
 
-# Seconds an activated `@bro` mode survives without being used. Every mention of the bot in that
-# room resets the clock; once it lapses the room silently reverts to `base_prompt`. See
-# `clients/llm/base.py:BaseLLMClient.refresh_mode`.
-LLM_MODE_TTL = 180
+# Seconds before an activated LLM mode survives without being used. Every mention of the bot in that
+# room resets the clock; once it lapses the room silently reverts to `base_prompt`.
+LLM_MODE_TTL = 300
 
 # Emoji shown alongside a mode's "activated" confirmation — see `commands/llm.py`. Every key in
 # `LLM_MODE_TRIGGERS` must have one here.
