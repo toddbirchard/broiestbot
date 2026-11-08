@@ -14,6 +14,7 @@ from broiestbot.commands.footy.util import (
     filter_league_fixtures,
     fixture_features_team,
     fixture_features_youth_team,
+    fixture_in_round,
     league_is_team_filtered,
 )
 from config import (
@@ -25,17 +26,22 @@ from config import (
     CLUB_FRIENDLIES_LEAGUE_ID,
     ELITESERIEN_LEAGUE_ID,
     ENGLAND_INT_TEAM_ID,
+    ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     EPL_LEAGUE_ID,
     FA_CUP_ID,
     FOOTY_FRIENDLY_NATIONS,
     FOOTY_LEAGUE_MEMBER_FILTERS,
     FOOTY_LEAGUE_TEAM_FILTERS,
+    FOOTY_LEAGUE_UNFILTERED_ROUNDS,
     INT_FRIENDLIES_LEAGUE_ID,
     LIGA_LEAGUE_ID,
     LIVERPOOL_TEAM_ID,
+    MLS_LEAGUE_ID,
+    PHILADELPHIA_UNION_TEAM_ID,
     PRIMEIRA_LIGA_ID,
     REAL_MADRID_TEAM_ID,
     SPAIN_INT_TEAM_ID,
+    WREXHAM_TEAM_ID,
 )
 from tests.aiohttp_mocks import FakeResponse, patch_http_session
 
@@ -47,6 +53,10 @@ ANOTHER_TEAM_ID = 228
 SINGLE_TEAM_LEAGUES = [
     pytest.param(PRIMEIRA_LIGA_ID, BENFICA_TEAM_ID, ":Portugal: PRIMEIRA LIGA", id="primeira-liga-benfica"),
     pytest.param(ELITESERIEN_LEAGUE_ID, AALESUND_TEAM_ID, ":Norway: ELITESERIEN", id="eliteserien-aalesund"),
+    pytest.param(MLS_LEAGUE_ID, PHILADELPHIA_UNION_TEAM_ID, ":United_States: MLS", id="mls-union"),
+    pytest.param(
+        ENGLISH_CHAMPIONSHIP_LEAGUE_ID, WREXHAM_TEAM_ID, ":England: EFL CHAMPIONSHIP", id="championship-wrexham"
+    ),
 ]
 
 
@@ -102,6 +112,8 @@ def run_filter(fixtures: Optional[List[dict]], league_id: int) -> Optional[List[
         (PRIMEIRA_LIGA_ID, True),
         (ELITESERIEN_LEAGUE_ID, True),
         (LIGA_LEAGUE_ID, True),
+        (MLS_LEAGUE_ID, True),
+        (ENGLISH_CHAMPIONSHIP_LEAGUE_ID, True),
         (FA_CUP_ID, True),
         (CARABOU_CUP_ID, True),
         (CLUB_FRIENDLIES_LEAGUE_ID, True),
@@ -171,6 +183,62 @@ def test_la_liga_filtered_to_its_big_three():
     other_liga_fixture = build_fixture(OTHER_TEAM_ID, ANOTHER_TEAM_ID, LIGA_LEAGUE_ID)
     matchday = [other_liga_fixture, el_clasico, madrid_derby, other_liga_fixture, atleti_away]
     assert run_filter(matchday, LIGA_LEAGUE_ID) == [el_clasico, madrid_derby, atleti_away]
+
+
+# ---------------------------------------------------------------------------
+# Rounds exempt from a league's team filter (ie: Championship promotion playoffs)
+# ---------------------------------------------------------------------------
+
+
+def build_round_fixture(home_team_id: int, away_team_id: int, league_id: int, league_round: str) -> dict:
+    """
+    Build a minimal fixture belonging to a named round.
+
+    :param int home_team_id: ID of the home side.
+    :param int away_team_id: ID of the away side.
+    :param int league_id: ID of the league the fixture belongs to.
+    :param str league_round: The fixture's `league.round`, as served by /v3/fixtures.
+
+    :returns: dict
+    """
+    fixture = build_fixture(home_team_id, away_team_id, league_id)
+    fixture["league"]["round"] = league_round
+    return fixture
+
+
+@pytest.mark.parametrize("league_round", ["Promotion Play-offs - Semi-finals", "Promotion Play-offs - Final"])
+def test_championship_playoffs_kept_without_wrexham(league_round: str):
+    """A Championship promotion playoff is kept whoever is playing in it."""
+    playoff = build_round_fixture(OTHER_TEAM_ID, ANOTHER_TEAM_ID, ENGLISH_CHAMPIONSHIP_LEAGUE_ID, league_round)
+    assert run_filter([playoff], ENGLISH_CHAMPIONSHIP_LEAGUE_ID) == [playoff]
+
+
+def test_championship_regular_season_filtered_to_wrexham():
+    """Outside the playoffs, the Championship keeps only Wrexham's fixtures."""
+    wrexham_fixture = build_round_fixture(
+        OTHER_TEAM_ID, WREXHAM_TEAM_ID, ENGLISH_CHAMPIONSHIP_LEAGUE_ID, "Regular Season - 46"
+    )
+    other_fixture = build_round_fixture(
+        OTHER_TEAM_ID, ANOTHER_TEAM_ID, ENGLISH_CHAMPIONSHIP_LEAGUE_ID, "Regular Season - 46"
+    )
+    playoff = build_round_fixture(
+        OTHER_TEAM_ID, ANOTHER_TEAM_ID, ENGLISH_CHAMPIONSHIP_LEAGUE_ID, "Promotion Play-offs - Final"
+    )
+    fixtures = [other_fixture, wrexham_fixture, playoff]
+    assert run_filter(fixtures, ENGLISH_CHAMPIONSHIP_LEAGUE_ID) == [wrexham_fixture, playoff]
+
+
+def test_playoff_rounds_only_exempt_where_configured():
+    """A playoff round only bypasses the team filter of a league configured for it."""
+    assert set(FOOTY_LEAGUE_UNFILTERED_ROUNDS) == {ENGLISH_CHAMPIONSHIP_LEAGUE_ID}
+    mls_playoff = build_round_fixture(OTHER_TEAM_ID, ANOTHER_TEAM_ID, MLS_LEAGUE_ID, "Play-offs - Final")
+    assert run_filter([mls_playoff], MLS_LEAGUE_ID) == []
+
+
+@pytest.mark.parametrize("fixture", [{}, {"league": None}, {"league": {}}, {"league": {"round": None}}])
+def test_fixture_without_a_round_is_not_a_playoff(fixture: dict):
+    """A fixture missing its round never matches an exempt round, and must not raise."""
+    assert fixture_in_round(fixture, FOOTY_LEAGUE_UNFILTERED_ROUNDS[ENGLISH_CHAMPIONSHIP_LEAGUE_ID]) is False
 
 
 # ---------------------------------------------------------------------------

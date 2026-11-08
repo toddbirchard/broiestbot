@@ -52,6 +52,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+.reports/
 
 # Translations
 *.mo
@@ -133,6 +134,7 @@ nohup.*
 *.out
 *.log
 *.json
+logs/
 # ...but channels.json is data the tuner reads at import, not a log.
 !channels.json
 logs/*
@@ -140,4 +142,7 @@ logs/*
 # IDEs
 .vscode
 idea
+
+# LLM temporary files
+.claude/
 

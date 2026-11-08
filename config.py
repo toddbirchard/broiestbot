@@ -650,7 +650,7 @@ FOOTY_LEAGUES = {
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    # ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    ":England: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
@@ -659,7 +659,7 @@ FOOTY_LEAGUES = {
     # ":Germany: BUND": BUND_LEAGUE_ID,
     # ":Italy: SERIE A": SERIE_A_LEAGUE_ID,
     # ":France: LIGUE 1": LIGUE_ONE_ID,
-    # ":United_States: MLS": MLS_LEAGUE_ID,
+    ":United_States: MLS": MLS_LEAGUE_ID,
     # ":globe_showing_Americas: :trophy: WORLD CUP": WORLD_CUP_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
@@ -719,7 +719,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
-    # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     # ":England: :keycap_1: ENGLISH LEAGUE 1": ENGLISH_LEAGUE_ONE_ID,
     # ":England: :keycap_2: ENGLISH LEAGUE 2": ENGLISH_LEAGUE_TWO_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
@@ -729,7 +729,7 @@ FOOTY_LIVE_SCORED_LEAGUES = {
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
-    # ":United_States: MLS": MLS_LEAGUE_ID,
+    ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :shield: MLS LEAGUES CUP": MLS_LEAGUES_CUP_ID,
     # ":trophy: :United_States: US OPEN CUP": US_OPEN_CUP_ID,
     # ":glowing_star: MLS ALL-STAR": MLS_ALL_STAR_ID,
@@ -798,7 +798,7 @@ FOOTY_XI_LEAGUES = {
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":shield: COMMUNITY SHIELD": COMMUNITY_SHIELD_CUP_ID,
-    # ":United_States: MLS": MLS_LEAGUE_ID,
+    ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :Spain: COPA DEL REY": COPA_DEL_REY,
     # ":Germany: :trophy: DFB POKAL": DFB_POKAL_CUP_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
@@ -833,7 +833,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
@@ -846,7 +846,7 @@ FOOTY_LIVE_ODDS_LEAGUES = {
     # ":globe_showing_Americas: :thumbs_down: FIFA CLUB WC (LOSERS ONLY!)": CLUB_WORLD_CUP_LEAGUE_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
-    # ":United_States: MLS": MLS_LEAGUE_ID,
+    ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":trophy: :European_Union: :rainbow: EUROS 2024": EUROS_LEAGUE_ID,
@@ -873,7 +873,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     ":blue_circle: UCL": UCL_LEAGUE_ID,
     ":orange_circle: UEFA EUROPA": UEFA_EUROPA_ID,
     ":green_circle: UEFA CONFERENCE": UEFA_CONFERENCE_LEAGUE,
-    # ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
+    ":England: :crown: EFL CHAMPIONSHIP": ENGLISH_CHAMPIONSHIP_LEAGUE_ID,
     ":trophy: :England: FA CUP": FA_CUP_ID,
     ":cow_face: CARABOU CUP": CARABOU_CUP_ID,
     ":Spain: LA LIGA": LIGA_LEAGUE_ID,
@@ -886,7 +886,7 @@ FOOTY_LIVE_STATS_LEAGUES = {
     # ":trophy: :globe_showing_Americas: CONCACAF GOLD CUP": CONCACAF_GOLD_CUP_ID,
     # ":lion: :sun: SUMMER SERIES": EPL_SUMMER_SERIES_LEAGUE_ID,
     # ":European_Union: :rainbow: UEFA DYKE EUROS": WEUROS_LEAGUE_ID,
-    # ":United_States: MLS": MLS_LEAGUE_ID,
+    ":United_States: MLS": MLS_LEAGUE_ID,
     # ":trophy: :monkey: AFCON:": AFCON_CUP_ID,
     # ":Portugal: PRIMEIRA LIGA": PRIMEIRA_LIGA_ID,
     # ":Norway: :men’s_room: OBOS-LIGAEN": OBOS_LIGAEN_ID,
@@ -945,6 +945,7 @@ BENFICA_TEAM_ID = 211
 AALESUND_TEAM_ID = 757
 BODO_GLIMT_TEAM_ID = 327
 HEARTS_TEAM_ID = 254
+PHILADELPHIA_UNION_TEAM_ID = 1599
 
 # Footy team IDs (international)
 USA_INT_TEAM_ID = 2384
@@ -993,6 +994,15 @@ FOOTY_LEAGUE_TEAM_FILTERS = {
     PRIMEIRA_LIGA_ID: [BENFICA_TEAM_ID],
     ELITESERIEN_LEAGUE_ID: [AALESUND_TEAM_ID],
     LIGA_LEAGUE_ID: [REAL_MADRID_TEAM_ID, ATLETICO_MADRID_TEAM_ID, BARCELONA_TEAM_ID],
+    MLS_LEAGUE_ID: [PHILADELPHIA_UNION_TEAM_ID],
+    ENGLISH_CHAMPIONSHIP_LEAGUE_ID: [WREXHAM_TEAM_ID],
+}
+
+# Rounds of a team-filtered league worth surfacing no matter who is playing, matched against a fixture's
+# `league.round` (ie: "Promotion Play-offs - Final"). A fixture survives `FOOTY_LEAGUE_TEAM_FILTERS` when it
+# features one of the league's clubs *or* its round matches here.
+FOOTY_LEAGUE_UNFILTERED_ROUNDS = {
+    ENGLISH_CHAMPIONSHIP_LEAGUE_ID: re.compile(r"\bplay-?offs?\b", re.IGNORECASE),
 }
 
 # Cups whose ties are only worth surfacing when a club currently in another league is involved, ie: FA Cup

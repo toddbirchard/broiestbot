@@ -2,7 +2,7 @@
 
 import time
 from datetime import datetime, timedelta, tzinfo
-from typing import Collection, Dict, List, Optional, Tuple
+from typing import Collection, Dict, List, Optional, Pattern, Tuple
 
 import pytz
 from aiohttp import ClientError
@@ -30,6 +30,7 @@ from config import (
     FOOTY_LEAGUE_MEMBER_FILTERS,
     FOOTY_LEAGUE_TEAM_FILTERS,
     FOOTY_LEAGUE_TEAMS_CACHE_TTL,
+    FOOTY_LEAGUE_UNFILTERED_ROUNDS,
     FOOTY_TEAMS_ENDPOINT,
     FOOTY_YOUTH_FILTERED_LEAGUES,
     FOOTY_YOUTH_TEAM_REGEX,
@@ -230,6 +231,20 @@ def fixture_features_team(fixture: dict, team_ids: Collection[int]) -> bool:
     return home_team_id in team_ids or away_team_id in team_ids
 
 
+def fixture_in_round(fixture: dict, round_pattern: Optional[Pattern[str]]) -> bool:
+    """
+    Determine whether a fixture belongs to a round matching a pattern, ie: a promotion playoff.
+
+    :param dict fixture: Single fixture's data.
+    :param Optional[Pattern[str]] round_pattern: Pattern searched against the fixture's `league.round`.
+
+    :returns: bool
+    """
+    if round_pattern is None:
+        return False
+    return bool(round_pattern.search((fixture.get("league") or {}).get("round") or ""))
+
+
 def fixture_features_youth_team(fixture: dict) -> bool:
     """
     Determine whether either side of a fixture is a youth team, ie: `England U17`.
@@ -251,8 +266,10 @@ async def filter_league_fixtures(fixtures: Optional[List[dict]], league_id: int)
     listed in `FOOTY_LEAGUE_TEAM_FILTERS` are kept only when either side is one of that
     league's clubs, and fixtures of a cup listed in `FOOTY_LEAGUE_MEMBER_FILTERS` only when
     either side currently plays in that cup's league (ie: FA Cup ties featuring an EPL club).
-    Friendlies (`FOOTY_YOUTH_FILTERED_LEAGUES`) additionally drop any fixture involving a
-    youth team. Fixtures of any other league pass through untouched.
+    A team-filtered league can also exempt whole rounds (`FOOTY_LEAGUE_UNFILTERED_ROUNDS`), so
+    the Championship playoffs surface regardless of who reaches them. Friendlies
+    (`FOOTY_YOUTH_FILTERED_LEAGUES`) additionally drop any fixture involving a youth team.
+    Fixtures of any other league pass through untouched.
 
     :param Optional[List[dict]] fixtures: Fixtures fetched for a single league/cup.
     :param int league_id: ID of footy league/cup the fixtures belong to.
@@ -268,7 +285,12 @@ async def filter_league_fixtures(fixtures: Optional[List[dict]], league_id: int)
         return fixtures
     if not team_ids:
         LOGGER.warning(f"Couldn't resolve the clubs league {league_id} is filtered for; discarding its fixtures")
-    return [fixture for fixture in fixtures if fixture_features_team(fixture, team_ids)]
+    unfiltered_rounds = FOOTY_LEAGUE_UNFILTERED_ROUNDS.get(league_id)
+    return [
+        fixture
+        for fixture in fixtures
+        if fixture_features_team(fixture, team_ids) or fixture_in_round(fixture, unfiltered_rounds)
+    ]
 
 
 def abbreviate_team_name(team_name: str) -> str:
